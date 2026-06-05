@@ -54,3 +54,23 @@
       Error:
       ! `year` must be numeric or coercible to numeric.
 
+# n_years must be a positive integer
+
+    Code
+      progression_ratios(gpr_fixture(), n_years = 0)
+    Condition
+      Error:
+      ! `n_years` must be a positive integer.
+
+# zero feeder enrollment warns about non-finite ratios
+
+    Code
+      progression_ratios(fx)
+    Condition
+      Warning:
+      Some progression ratios are infinite or NaN because a feeder grade had zero enrollment in at least one transition.
+    Output
+        grade_from grade_to     ratio
+      1          K        1       Inf
+      2          1        2 0.9678363
+

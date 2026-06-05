@@ -111,7 +111,10 @@ summarise_ratios <- function(R, method, weights = NULL) {
 			mean = mean(x, na.rm = TRUE),
 			median = stats::median(x, na.rm = TRUE),
 			geometric = exp(mean(log(x), na.rm = TRUE)),
-			last = x[length(x)],
+			last = {
+				nn <- x[!is.na(x)]
+				if (length(nn)) nn[[length(nn)]] else NA_real_
+			},
 			weighted = stats::weighted.mean(x, w = rev(weights), na.rm = TRUE)
 		)
 	})

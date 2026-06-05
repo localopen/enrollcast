@@ -71,3 +71,37 @@ test_that("non-numeric year is rejected", {
 	fx$year[1] <- "spring"
 	expect_snapshot(progression_ratios(fx), error = TRUE)
 })
+
+test_that("grade_order overrides factor levels", {
+	fx <- gpr_fixture()
+	fx$grade <- as.character(fx$grade)
+	r <- progression_ratios(fx, grade_order = c("K", "1", "2"))
+	expect_equal(r$grade_from, c("K", "1"))
+	expect_equal(r$ratio[1], 0.925)
+})
+
+test_that("missing transitions are dropped for averaging methods", {
+	fx <- gpr_fixture()
+	fx <- fx[!(fx$grade == "1" & fx$year == 2022), ]
+	r <- progression_ratios(fx)
+	expect_equal(r$ratio[1], 99 / 110)
+	expect_equal(r$ratio[2], 88 / 90)
+})
+
+test_that("last method skips a missing most-recent transition", {
+	fx <- gpr_fixture()
+	fx <- fx[!(fx$grade == "1" & fx$year == 2023), ]
+	r <- progression_ratios(fx, method = "last")
+	expect_equal(r$ratio[1], 95 / 100)
+	expect_equal(r$ratio[2], 91 / 95)
+})
+
+test_that("n_years must be a positive integer", {
+	expect_snapshot(progression_ratios(gpr_fixture(), n_years = 0), error = TRUE)
+})
+
+test_that("zero feeder enrollment warns about non-finite ratios", {
+	fx <- gpr_fixture()
+	fx$enrollment[fx$grade == "K" & fx$year == 2022] <- 0
+	expect_snapshot(progression_ratios(fx))
+})

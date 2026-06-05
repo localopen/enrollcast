@@ -12,7 +12,8 @@
 #' @param method How to summarise per-year ratios into one ratio per grade:
 #'   `"mean"` (default), `"geometric"`, `"median"`, `"last"` (most recent
 #'   transition only), or `"weighted"`.
-#' @param n_years Optional. Use only the most recent `n_years` transitions.
+#' @param n_years Optional. Use only the most recent `n_years` transitions. If
+#'   `n_years` exceeds the number of available transitions, all are used.
 #' @param weights For `method = "weighted"`, a numeric vector aligned
 #'   most-recent to oldest, with one weight per transition year used.
 #' @param grade_order Optional character vector giving the low-to-high grade
@@ -47,6 +48,16 @@ progression_ratios <- function(
 	grade_order = NULL
 ) {
 	method <- match.arg(method)
+	if (
+		!is.null(n_years) &&
+			(!is.numeric(n_years) ||
+				length(n_years) != 1 ||
+				is.na(n_years) ||
+				n_years < 1 ||
+				n_years != floor(n_years))
+	) {
+		stop("`n_years` must be a positive integer.", call. = FALSE)
+	}
 	check_columns(data, c(year, grade, enrollment), "data")
 
 	gr_raw <- data[[grade]]
@@ -110,6 +121,14 @@ progression_ratios <- function(
 	if (!is.null(n_years)) {
 		keep <- utils::tail(seq_len(ncol(R)), n_years)
 		R <- R[, keep, drop = FALSE]
+	}
+
+	if (any(is.infinite(R)) || any(is.nan(R))) {
+		warning(
+			"Some progression ratios are infinite or NaN because a feeder grade ",
+			"had zero enrollment in at least one transition.",
+			call. = FALSE
+		)
 	}
 
 	ratio <- summarise_ratios(R, method = method, weights = weights)
