@@ -9,6 +9,8 @@
 #'   `ratio`, as returned by [progression_ratios()].
 #' @param grade_order Optional character vector giving the low-to-high grade
 #'   order. If omitted, the order is reconstructed from the transition chain.
+#'   Every non-entry grade in `grade_order` must appear as a `grade_to` in
+#'   `ratios`.
 #'
 #' @return A square numeric matrix with grade dimnames.
 #' @export
@@ -41,6 +43,14 @@ leslie_matrix <- function(ratios, grade_order = NULL) {
 		stop("`ratios` references a grade not in `grade_order`.", call. = FALSE)
 	}
 
+	if (anyDuplicated(to)) {
+		stop(
+			"`ratios` has more than one ratio feeding the same grade; ",
+			"each grade may be fed only once.",
+			call. = FALSE
+		)
+	}
+
 	M <- matrix(
 		0,
 		nrow = G,
@@ -49,8 +59,7 @@ leslie_matrix <- function(ratios, grade_order = NULL) {
 	)
 	M[cbind(ii, jj)] <- ratios$ratio
 
-	incoming <- rowSums(M != 0)
-	missing_in <- grade_order[-1][incoming[-1] == 0]
+	missing_in <- grade_order[-1][!grade_order[-1] %in% to]
 	if (length(missing_in)) {
 		stop(
 			"Missing progression ratio(s) feeding grade(s): ",
