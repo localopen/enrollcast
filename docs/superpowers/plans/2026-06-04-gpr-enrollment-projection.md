@@ -6,9 +6,23 @@
 
 **Architecture:** Three exported functions — `progression_ratios()`, `leslie_matrix()`, `project_enrollment()` — backed by small internal helpers. The projection engine is a Leslie matrix (progression ratios on the sub-diagonal, entry-grade row zero); projection is one matrix–vector multiply per projected year with the exogenous entry grade overwritten each step. One series per call; aggregation level is the caller's concern.
 
-**Tech Stack:** Base R + `stats` (Imports). Dev/test: roxygen2, testthat 3e, knitr/rmarkdown (Suggests). MIT license.
+**Tech Stack:** Base R + `stats` + `utils` (Imports). Dev/test: roxygen2, testthat 3e, knitr/rmarkdown (Suggests). MIT license.
 
 Reference spec: `docs/superpowers/specs/2026-06-04-gpr-enrollment-projection-design.md`
+
+---
+
+## Conventions (apply to every task)
+
+These come from the project's `r-package-development` conventions. Follow them throughout:
+
+- **Test runner:** `Rscript -e "devtools::test(filter = '<name>')"` runs `tests/testthat/test-<name>.R`. `Rscript -e "devtools::test()"` runs everything. (`devtools::test()` calls `load_all()`, so internal functions are callable unqualified in tests.)
+- **Errors/warnings are tested with snapshots, not `expect_error()`/`expect_warning()`:** use `expect_snapshot(<expr>, error = TRUE)` for errors and `expect_snapshot(<expr>)` for warnings/messages. Snapshots record on first run (they do **not** fail-first), so they are added **after** the behaviour tests are green and the function exists, then reviewed by reading `tests/testthat/_snaps/<name>.md`. The behaviour tests (`expect_equal`, etc.) are the red→green TDD drivers.
+- **Avoid `expect_true()`/`expect_false()`** — prefer a specific expectation (e.g. `expect_equal`) for better failure messages.
+- **Formatting:** run `air format .` before every commit. `air` may adjust whitespace/line breaks in the code blocks below — that reformatting is expected and correct; keep the behaviour identical.
+- **Anonymous functions:** `\() ...` for one-liners; `function() {...}` otherwise. **Pipes:** base `|>` only.
+- **Docs:** every exported function has roxygen2 docs wrapped at 80 chars; internal helpers get no roxygen. Re-document with `Rscript -e "devtools::document()"` after roxygen changes.
+- This package has **no pkgdown site**, so there is no `_pkgdown.yml` to update.
 
 ---
 
@@ -28,10 +42,11 @@ Reference spec: `docs/superpowers/specs/2026-06-04-gpr-enrollment-projection-des
 - `tests/testthat/test-progression-ratios.R`
 - `tests/testthat/test-leslie-matrix.R`
 - `tests/testthat/test-project-enrollment.R`
+- `tests/testthat/_snaps/` — recorded snapshots (generated).
 
 **Metadata / docs**
 - `DESCRIPTION`, `NAMESPACE` (roxygen-generated), `LICENSE`, `LICENSE.md`
-- `.gitignore`, `.Rbuildignore`
+- `.gitignore`, `.Rbuildignore`, `NEWS.md`
 - `README.md`
 - `vignettes/gpr.Rmd`
 - `man/` (roxygen-generated)
@@ -79,9 +94,10 @@ Description: Projects school enrollment using the cohort survival / grade
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 8.0.0
 Imports:
-    stats
+    stats,
+    utils
 Suggests:
     knitr,
     rmarkdown,
@@ -164,12 +180,13 @@ test_check("gpr")
 
 - [ ] **Step 8: Generate docs/NAMESPACE and verify the package loads**
 
-Run: `R -q -e 'roxygen2::roxygenise(); devtools::load_all("."); cat("LOADED OK\n")'`
+Run: `Rscript -e 'devtools::document(); devtools::load_all("."); cat("LOADED OK\n")'`
 Expected: writes `NAMESPACE` and `man/`, prints `LOADED OK` with no errors. (`NAMESPACE` will only contain the autogen comment for now — that's expected.)
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 9: Format and commit**
 
 ```bash
+air format .
 git add DESCRIPTION LICENSE LICENSE.md .gitignore .Rbuildignore R/ NAMESPACE man/ tests/testthat.R
 git commit -m "Scaffold gpr package"
 ```
@@ -182,49 +199,31 @@ git commit -m "Scaffold gpr package"
 - Create: `R/utils.R`
 - Test: `tests/testthat/test-utils.R`
 
-- [ ] **Step 1: Write the failing tests**
+### Phase A — behaviour tests (red → green)
+
+- [ ] **Step 1: Write the failing behaviour tests**
 
 `tests/testthat/test-utils.R`:
 
 ```r
-test_that("check_columns errors on missing columns", {
-  df <- data.frame(a = 1, b = 2)
-  expect_error(check_columns(df, c("a", "c"), "df"), "missing required column")
-})
-
 test_that("resolve_grade_order uses factor levels", {
   g <- factor(c("1", "K", "2"), levels = c("K", "1", "2"))
   expect_equal(resolve_grade_order(g), c("K", "1", "2"))
 })
 
 test_that("resolve_grade_order sorts numeric grades numerically", {
-  g <- c(10, 2, 1)
-  expect_equal(resolve_grade_order(g), c("1", "2", "10"))
+  expect_equal(resolve_grade_order(c(10, 2, 1)), c("1", "2", "10"))
 })
 
 test_that("resolve_grade_order honours explicit grade_order", {
-  g <- c("1", "K", "2")
-  expect_equal(resolve_grade_order(g, grade_order = c("K", "1", "2")),
-               c("K", "1", "2"))
-})
-
-test_that("resolve_grade_order errors when grade_order omits a grade", {
-  g <- c("K", "1", "2")
-  expect_error(resolve_grade_order(g, grade_order = c("K", "1")),
-               "missing grade")
-})
-
-test_that("resolve_grade_order warns when guessing character order", {
-  g <- c("K", "1", "2")
-  expect_warning(resolve_grade_order(g), "guessed")
+  expect_equal(
+    resolve_grade_order(c("1", "K", "2"), grade_order = c("K", "1", "2")),
+    c("K", "1", "2")
+  )
 })
 
 test_that("chain_order reconstructs the grade sequence", {
   expect_equal(chain_order(c("K", "1"), c("1", "2")), c("K", "1", "2"))
-})
-
-test_that("chain_order errors on ambiguous entry grade", {
-  expect_error(chain_order(c("K", "9"), c("1", "2")), "unique entry grade")
 })
 
 test_that("summarise_ratios computes each method", {
@@ -233,19 +232,16 @@ test_that("summarise_ratios computes each method", {
   expect_equal(summarise_ratios(R, "last"), c("1" = 0.9))
   expect_equal(summarise_ratios(R, "median"), c("1" = 0.925))
   expect_equal(summarise_ratios(R, "geometric"), c("1" = sqrt(0.855)))
-  expect_equal(summarise_ratios(R, "weighted", weights = c(2, 1)),
-               c("1" = (0.9 * 2 + 0.95 * 1) / 3))
-})
-
-test_that("summarise_ratios weighted errors on length mismatch", {
-  R <- matrix(c(0.95, 0.9), nrow = 1, dimnames = list("1", c("2022", "2023")))
-  expect_error(summarise_ratios(R, "weighted", weights = c(1, 2, 3)),
-               "must equal number of transition years")
+  expect_equal(
+    summarise_ratios(R, "weighted", weights = c(2, 1)),
+    c("1" = (0.9 * 2 + 0.95 * 1) / 3)
+  )
 })
 
 test_that("as_base_vector aligns df to grade order and derives year", {
-  df <- data.frame(year = 2023, grade = c("2", "K", "1"),
-                   enrollment = c(91, 120, 99))
+  df <- data.frame(
+    year = 2023, grade = c("2", "K", "1"), enrollment = c(91, 120, 99)
+  )
   res <- as_base_vector(df, c("K", "1", "2"))
   expect_equal(res$vector, c(K = 120, `1` = 99, `2` = 91))
   expect_equal(res$year, 2023)
@@ -258,21 +254,15 @@ test_that("as_base_vector accepts a named numeric vector", {
   expect_null(res$year)
 })
 
-test_that("as_base_vector errors on missing grade", {
-  v <- c(K = 120, `1` = 99)
-  expect_error(as_base_vector(v, c("K", "1", "2")), "missing enrollment")
-})
-
-test_that("as_entry_vector validates length", {
+test_that("as_entry_vector returns a validated numeric vector", {
   expect_equal(as_entry_vector(c(130, 140), 2), c(130, 140))
-  expect_error(as_entry_vector(c(130, 140), 3), "must equal `horizon`")
 })
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `R -q -e 'devtools::load_all("."); testthat::test_file("tests/testthat/test-utils.R")'`
-Expected: FAIL — `could not find function "check_columns"` (etc.).
+Run: `Rscript -e "devtools::test(filter = 'utils')"`
+Expected: FAIL — `could not find function "resolve_grade_order"` (etc.).
 
 - [ ] **Step 3: Write `R/utils.R`**
 
@@ -282,8 +272,13 @@ Expected: FAIL — `could not find function "check_columns"` (etc.).
 check_columns <- function(data, cols, arg = "data") {
   missing <- setdiff(cols, names(data))
   if (length(missing)) {
-    stop(sprintf("`%s` is missing required column(s): %s", arg,
-                 paste(missing, collapse = ", ")), call. = FALSE)
+    stop(
+      sprintf(
+        "`%s` is missing required column(s): %s",
+        arg, paste(missing, collapse = ", ")
+      ),
+      call. = FALSE
+    )
   }
   invisible(data)
 }
@@ -295,8 +290,11 @@ resolve_grade_order <- function(grade, grade_order = NULL) {
     grade_order <- as.character(grade_order)
     missing <- setdiff(u, grade_order)
     if (length(missing)) {
-      stop("`grade_order` is missing grade(s): ",
-           paste(missing, collapse = ", "), call. = FALSE)
+      stop(
+        "`grade_order` is missing grade(s): ",
+        paste(missing, collapse = ", "),
+        call. = FALSE
+      )
     }
     return(grade_order[grade_order %in% u])
   }
@@ -308,9 +306,11 @@ resolve_grade_order <- function(grade, grade_order = NULL) {
   if (!any(is.na(num))) {
     return(u[order(num)])
   }
-  warning("Grade order guessed by sorting labels alphabetically; ",
-          "pass `grade_order` or a factor `grade` to set it explicitly.",
-          call. = FALSE)
+  warning(
+    "Grade order guessed by sorting labels alphabetically; ",
+    "pass `grade_order` or a factor `grade` to set it explicitly.",
+    call. = FALSE
+  )
   sort(u)
 }
 
@@ -320,8 +320,11 @@ chain_order <- function(from, to) {
   to <- as.character(to)
   entry <- setdiff(from, to)
   if (length(entry) != 1) {
-    stop("Could not determine a unique entry grade from `ratios`; ",
-         "pass `grade_order` explicitly.", call. = FALSE)
+    stop(
+      "Could not determine a unique entry grade from `ratios`; ",
+      "pass `grade_order` explicitly.",
+      call. = FALSE
+    )
   }
   nxt <- stats::setNames(to, from)
   order <- entry
@@ -346,10 +349,16 @@ summarise_ratios <- function(R, method, weights = NULL) {
           stop("`weights` is required for method = 'weighted'.", call. = FALSE)
         }
         if (length(weights) != length(x)) {
-          stop(sprintf(
-            paste0("`weights` length (%d) must equal number of transition ",
-                   "years used (%d)."),
-            length(weights), length(x)), call. = FALSE)
+          stop(
+            sprintf(
+              paste0(
+                "`weights` length (%d) must equal number of transition ",
+                "years used (%d)."
+              ),
+              length(weights), length(x)
+            ),
+            call. = FALSE
+          )
         }
         # weights are aligned most-recent -> oldest; x runs oldest -> newest.
         stats::weighted.mean(x, w = rev(weights), na.rm = TRUE)
@@ -374,13 +383,19 @@ as_base_vector <- function(base, go) {
   } else if (is.numeric(base) && !is.null(names(base))) {
     v <- base
   } else {
-    stop("`base` must be a data frame (grade, enrollment) or a named ",
-         "numeric vector.", call. = FALSE)
+    stop(
+      "`base` must be a data frame (grade, enrollment) or a named ",
+      "numeric vector.",
+      call. = FALSE
+    )
   }
   missing <- setdiff(go, names(v))
   if (length(missing)) {
-    stop("`base` is missing enrollment for grade(s): ",
-         paste(missing, collapse = ", "), call. = FALSE)
+    stop(
+      "`base` is missing enrollment for grade(s): ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
   }
   list(vector = v[go], year = year)
 }
@@ -390,19 +405,28 @@ as_entry_vector <- function(entry, horizon) {
   if (is.data.frame(entry)) {
     valcol <- intersect(c("enrollment", "value"), names(entry))
     if (length(valcol) == 0) {
-      stop("`entry` data frame must have an 'enrollment' or 'value' column.",
-           call. = FALSE)
+      stop(
+        "`entry` data frame must have an 'enrollment' or 'value' column.",
+        call. = FALSE
+      )
     }
     vals <- as.numeric(entry[[valcol[1]]])
   } else if (is.numeric(entry)) {
     vals <- entry
   } else {
-    stop("`entry` must be a numeric vector or a data frame with a value column.",
-         call. = FALSE)
+    stop(
+      "`entry` must be a numeric vector or a data frame with a value column.",
+      call. = FALSE
+    )
   }
   if (length(vals) != horizon) {
-    stop(sprintf("`entry` length (%d) must equal `horizon` (%d).",
-                 length(vals), horizon), call. = FALSE)
+    stop(
+      sprintf(
+        "`entry` length (%d) must equal `horizon` (%d).",
+        length(vals), horizon
+      ),
+      call. = FALSE
+    )
   }
   vals
 }
@@ -410,13 +434,64 @@ as_entry_vector <- function(entry, horizon) {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `R -q -e 'devtools::load_all("."); testthat::test_file("tests/testthat/test-utils.R")'`
-Expected: PASS (all expectations green).
+Run: `Rscript -e "devtools::test(filter = 'utils')"`
+Expected: PASS.
 
-- [ ] **Step 5: Commit**
+### Phase B — error/warning snapshot tests
+
+- [ ] **Step 5: Append snapshot tests to `tests/testthat/test-utils.R`**
+
+```r
+test_that("check_columns errors on missing columns", {
+  df <- data.frame(a = 1, b = 2)
+  expect_snapshot(check_columns(df, c("a", "c"), "df"), error = TRUE)
+})
+
+test_that("resolve_grade_order errors when grade_order omits a grade", {
+  expect_snapshot(
+    resolve_grade_order(c("K", "1", "2"), grade_order = c("K", "1")),
+    error = TRUE
+  )
+})
+
+test_that("resolve_grade_order warns when guessing character order", {
+  expect_snapshot(resolve_grade_order(c("K", "1", "2")))
+})
+
+test_that("chain_order errors on ambiguous entry grade", {
+  expect_snapshot(chain_order(c("K", "9"), c("1", "2")), error = TRUE)
+})
+
+test_that("summarise_ratios weighted errors on length mismatch", {
+  R <- matrix(c(0.95, 0.9), nrow = 1, dimnames = list("1", c("2022", "2023")))
+  expect_snapshot(
+    summarise_ratios(R, "weighted", weights = c(1, 2, 3)),
+    error = TRUE
+  )
+})
+
+test_that("as_base_vector errors on missing grade", {
+  expect_snapshot(
+    as_base_vector(c(K = 120, `1` = 99), c("K", "1", "2")),
+    error = TRUE
+  )
+})
+
+test_that("as_entry_vector errors on length mismatch", {
+  expect_snapshot(as_entry_vector(c(130, 140), 3), error = TRUE)
+})
+```
+
+- [ ] **Step 6: Record and review snapshots**
+
+Run: `Rscript -e "devtools::test(filter = 'utils')"`
+Expected: PASS; testthat reports new snapshots added. Then read `tests/testthat/_snaps/utils.md` and confirm each recorded error/warning message reads sensibly (correct grades listed, correct lengths, the alphabetical-order warning text). Re-run the command once more; expect PASS with no snapshot changes.
+
+- [ ] **Step 7: Format and commit**
 
 ```bash
-git add R/utils.R tests/testthat/test-utils.R
+air format .
+git add R/utils.R tests/testthat/test-utils.R tests/testthat/_snaps/utils.md
 git commit -m "Add internal utility helpers"
 ```
 
@@ -428,6 +503,8 @@ git commit -m "Add internal utility helpers"
 - Create: `R/progression-ratios.R`, `tests/testthat/helper-gpr.R`
 - Test: `tests/testthat/test-progression-ratios.R`
 
+### Phase A — behaviour tests (red → green)
+
 - [ ] **Step 1: Write the shared fixture helper**
 
 `tests/testthat/helper-gpr.R`:
@@ -438,15 +515,16 @@ git commit -m "Add internal utility helpers"
 gpr_fixture <- function() {
   data.frame(
     year = rep(c(2021, 2022, 2023), each = 3),
-    grade = factor(rep(c("K", "1", "2"), times = 3),
-                   levels = c("K", "1", "2")),
-    enrollment = c(100, 90, 80, 110, 95, 88, 120, 99, 91),
-    stringsAsFactors = FALSE
+    grade = factor(
+      rep(c("K", "1", "2"), times = 3),
+      levels = c("K", "1", "2")
+    ),
+    enrollment = c(100, 90, 80, 110, 95, 88, 120, 99, 91)
   )
 }
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [ ] **Step 2: Write the failing behaviour tests**
 
 `tests/testthat/test-progression-ratios.R`:
 
@@ -460,16 +538,15 @@ test_that("mean is the default method", {
 
 test_that("geometric, median, and last methods work", {
   fx <- gpr_fixture()
-  expect_equal(progression_ratios(fx, method = "geometric")$ratio[1],
-               sqrt(0.95 * 0.9))
+  expect_equal(
+    progression_ratios(fx, method = "geometric")$ratio[1], sqrt(0.95 * 0.9)
+  )
   expect_equal(progression_ratios(fx, method = "median")$ratio[1], 0.925)
-  expect_equal(progression_ratios(fx, method = "last")$ratio,
-               c(0.9, 91 / 95))
+  expect_equal(progression_ratios(fx, method = "last")$ratio, c(0.9, 91 / 95))
 })
 
 test_that("weighted method uses most-recent-first weights", {
-  r <- progression_ratios(gpr_fixture(), method = "weighted",
-                          weights = c(2, 1))
+  r <- progression_ratios(gpr_fixture(), method = "weighted", weights = c(2, 1))
   expect_equal(r$ratio[1], (0.9 * 2 + 0.95 * 1) / 3)
 })
 
@@ -484,33 +561,11 @@ test_that("column names are overridable", {
   r <- progression_ratios(fx, year = "yr", grade = "gr", enrollment = "n")
   expect_equal(r$ratio[1], 0.925)
 })
-
-test_that("non-numeric enrollment is rejected", {
-  fx <- gpr_fixture()
-  fx$enrollment <- as.character(fx$enrollment)
-  expect_error(progression_ratios(fx), "must be numeric")
-})
-
-test_that("missing columns are reported", {
-  expect_error(progression_ratios(data.frame(a = 1)),
-               "missing required column")
-})
-
-test_that("non-consecutive years yield no transitions", {
-  fx <- gpr_fixture()
-  fx <- fx[fx$year != 2022, ]  # leaves 2021 and 2023 -> gap
-  expect_error(progression_ratios(fx), "consecutive year")
-})
-
-test_that("duplicate grade-year rows are rejected", {
-  fx <- rbind(gpr_fixture(), gpr_fixture()[1, ])
-  expect_error(progression_ratios(fx), "[Dd]uplicate")
-})
 ```
 
 - [ ] **Step 3: Run tests to verify they fail**
 
-Run: `R -q -e 'devtools::load_all("."); testthat::test_file("tests/testthat/test-progression-ratios.R")'`
+Run: `Rscript -e "devtools::test(filter = 'progression-ratios')"`
 Expected: FAIL — `could not find function "progression_ratios"`.
 
 - [ ] **Step 4: Write `R/progression-ratios.R`**
@@ -519,8 +574,8 @@ Expected: FAIL — `could not find function "progression_ratios"`.
 #' Compute grade progression ratios
 #'
 #' Calculates cohort survival / grade progression ratios from historical
-#' grade-level enrollment. For each non-entry grade, the ratio is enrollment in
-#' that grade divided by enrollment in the grade below one year earlier,
+#' grade-level enrollment. For each non-entry grade, the ratio is enrollment
+#' in that grade divided by enrollment in the grade below one year earlier,
 #' summarised across the available year-to-year transitions.
 #'
 #' @param data A long data frame of historical enrollment with one row per
@@ -537,8 +592,8 @@ Expected: FAIL — `could not find function "progression_ratios"`.
 #'   order. If omitted, factor levels, numeric ordering, or (with a warning)
 #'   alphabetical ordering is used.
 #'
-#' @return A data frame with columns `grade_from`, `grade_to`, and `ratio`, one
-#'   row per non-entry grade.
+#' @return A data frame with columns `grade_from`, `grade_to`, and `ratio`,
+#'   one row per non-entry grade.
 #' @export
 #'
 #' @examples
@@ -552,8 +607,10 @@ progression_ratios <- function(data,
                                year = "year",
                                grade = "grade",
                                enrollment = "enrollment",
-                               method = c("mean", "geometric", "median",
-                                          "last", "weighted"),
+                               method = c(
+                                 "mean", "geometric", "median",
+                                 "last", "weighted"
+                               ),
                                n_years = NULL,
                                weights = NULL,
                                grade_order = NULL) {
@@ -592,8 +649,11 @@ progression_ratios <- function(data,
     stop("Duplicate (grade, year) rows in `data`.", call. = FALSE)
   }
 
-  W <- matrix(NA_real_, nrow = G, ncol = length(years),
-              dimnames = list(go, as.character(years)))
+  W <- matrix(
+    NA_real_,
+    nrow = G, ncol = length(years),
+    dimnames = list(go, as.character(years))
+  )
   W[cbind(ri, ci)] <- en
 
   trans <- which(diff(years) == 1)
@@ -602,8 +662,11 @@ progression_ratios <- function(data,
   }
   trans_years <- years[trans + 1]
 
-  R <- matrix(NA_real_, nrow = G - 1, ncol = length(trans),
-              dimnames = list(go[-1], as.character(trans_years)))
+  R <- matrix(
+    NA_real_,
+    nrow = G - 1, ncol = length(trans),
+    dimnames = list(go[-1], as.character(trans_years))
+  )
   for (j in seq_along(trans)) {
     t0 <- trans[j]
     t1 <- trans[j] + 1
@@ -627,27 +690,48 @@ progression_ratios <- function(data,
 }
 ```
 
-Note: this uses `utils::tail`, so add `utils` to `Imports` in `DESCRIPTION` (Step 6).
-
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `R -q -e 'devtools::load_all("."); testthat::test_file("tests/testthat/test-progression-ratios.R")'`
+Run: `Rscript -e "devtools::test(filter = 'progression-ratios')"`
 Expected: PASS.
 
-- [ ] **Step 6: Add `utils` to Imports**
+### Phase B — error snapshot tests
 
-Edit `DESCRIPTION`, changing the `Imports` block to:
+- [ ] **Step 6: Append snapshot tests to `tests/testthat/test-progression-ratios.R`**
 
+```r
+test_that("non-numeric enrollment is rejected", {
+  fx <- gpr_fixture()
+  fx$enrollment <- as.character(fx$enrollment)
+  expect_snapshot(progression_ratios(fx), error = TRUE)
+})
+
+test_that("missing columns are reported", {
+  expect_snapshot(progression_ratios(data.frame(a = 1)), error = TRUE)
+})
+
+test_that("non-consecutive years yield no transitions", {
+  fx <- gpr_fixture()
+  fx <- fx[fx$year != 2022, ]
+  expect_snapshot(progression_ratios(fx), error = TRUE)
+})
+
+test_that("duplicate grade-year rows are rejected", {
+  fx <- rbind(gpr_fixture(), gpr_fixture()[1, ])
+  expect_snapshot(progression_ratios(fx), error = TRUE)
+})
 ```
-Imports:
-    stats,
-    utils
-```
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 7: Record and review snapshots**
+
+Run: `Rscript -e "devtools::test(filter = 'progression-ratios')"`
+Expected: PASS with new snapshots added. Read `tests/testthat/_snaps/progression-ratios.md` and confirm the four messages are correct and clear. Re-run once more; expect PASS with no changes.
+
+- [ ] **Step 8: Format and commit**
 
 ```bash
-git add R/progression-ratios.R tests/testthat/test-progression-ratios.R tests/testthat/helper-gpr.R DESCRIPTION
+air format .
+git add R/progression-ratios.R tests/testthat/test-progression-ratios.R tests/testthat/helper-gpr.R tests/testthat/_snaps/progression-ratios.md
 git commit -m "Add progression_ratios()"
 ```
 
@@ -659,7 +743,9 @@ git commit -m "Add progression_ratios()"
 - Create: `R/leslie-matrix.R`
 - Test: `tests/testthat/test-leslie-matrix.R`
 
-- [ ] **Step 1: Write the failing tests**
+### Phase A — behaviour tests (red → green)
+
+- [ ] **Step 1: Write the failing behaviour tests**
 
 `tests/testthat/test-leslie-matrix.R`:
 
@@ -684,7 +770,7 @@ test_that("leslie_matrix builds the correct shape and sub-diagonal", {
 
 test_that("leslie_matrix zeroes the entry row and all non-feeder cells", {
   M <- leslie_matrix(ratios_fixture())
-  expect_true(all(M["K", ] == 0))
+  expect_equal(unname(M["K", ]), c(0, 0, 0))
   expect_equal(sum(M != 0), 2)
 })
 
@@ -692,24 +778,11 @@ test_that("leslie_matrix honours an explicit grade_order", {
   M <- leslie_matrix(ratios_fixture(), grade_order = c("K", "1", "2"))
   expect_equal(rownames(M), c("K", "1", "2"))
 })
-
-test_that("leslie_matrix errors on a missing feeding ratio", {
-  r <- ratios_fixture()
-  r <- r[r$grade_to != "2", ]
-  expect_error(leslie_matrix(r, grade_order = c("K", "1", "2")),
-               "Missing progression ratio")
-})
-
-test_that("leslie_matrix errors on ambiguous entry grade", {
-  r <- data.frame(grade_from = c("K", "9"), grade_to = c("1", "2"),
-                  ratio = c(0.9, 0.9), stringsAsFactors = FALSE)
-  expect_error(leslie_matrix(r), "unique entry grade")
-})
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `R -q -e 'devtools::load_all("."); testthat::test_file("tests/testthat/test-leslie-matrix.R")'`
+Run: `Rscript -e "devtools::test(filter = 'leslie-matrix')"`
 Expected: FAIL — `could not find function "leslie_matrix"`.
 
 - [ ] **Step 3: Write `R/leslie-matrix.R`**
@@ -758,15 +831,21 @@ leslie_matrix <- function(ratios, grade_order = NULL) {
     stop("`ratios` references a grade not in `grade_order`.", call. = FALSE)
   }
 
-  M <- matrix(0, nrow = G, ncol = G,
-              dimnames = list(grade_order, grade_order))
+  M <- matrix(
+    0,
+    nrow = G, ncol = G,
+    dimnames = list(grade_order, grade_order)
+  )
   M[cbind(ii, jj)] <- ratios$ratio
 
   incoming <- rowSums(M != 0)
   missing_in <- grade_order[-1][incoming[-1] == 0]
   if (length(missing_in)) {
-    stop("Missing progression ratio(s) feeding grade(s): ",
-         paste(missing_in, collapse = ", "), call. = FALSE)
+    stop(
+      "Missing progression ratio(s) feeding grade(s): ",
+      paste(missing_in, collapse = ", "),
+      call. = FALSE
+    )
   }
   M
 }
@@ -774,13 +853,42 @@ leslie_matrix <- function(ratios, grade_order = NULL) {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `R -q -e 'devtools::load_all("."); testthat::test_file("tests/testthat/test-leslie-matrix.R")'`
+Run: `Rscript -e "devtools::test(filter = 'leslie-matrix')"`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+### Phase B — error snapshot tests
+
+- [ ] **Step 5: Append snapshot tests to `tests/testthat/test-leslie-matrix.R`**
+
+```r
+test_that("leslie_matrix errors on a missing feeding ratio", {
+  r <- ratios_fixture()
+  r <- r[r$grade_to != "2", ]
+  expect_snapshot(
+    leslie_matrix(r, grade_order = c("K", "1", "2")),
+    error = TRUE
+  )
+})
+
+test_that("leslie_matrix errors on ambiguous entry grade", {
+  r <- data.frame(
+    grade_from = c("K", "9"), grade_to = c("1", "2"),
+    ratio = c(0.9, 0.9), stringsAsFactors = FALSE
+  )
+  expect_snapshot(leslie_matrix(r), error = TRUE)
+})
+```
+
+- [ ] **Step 6: Record and review snapshots**
+
+Run: `Rscript -e "devtools::test(filter = 'leslie-matrix')"`
+Expected: PASS with new snapshots added. Read `tests/testthat/_snaps/leslie-matrix.md` and confirm the "Missing progression ratio(s) feeding grade(s): 2" and ambiguous-entry messages are correct. Re-run once more; expect PASS with no changes.
+
+- [ ] **Step 7: Format and commit**
 
 ```bash
-git add R/leslie-matrix.R tests/testthat/test-leslie-matrix.R
+air format .
+git add R/leslie-matrix.R tests/testthat/test-leslie-matrix.R tests/testthat/_snaps/leslie-matrix.md
 git commit -m "Add leslie_matrix()"
 ```
 
@@ -797,20 +905,26 @@ Hand-computed projection from base year 2023 (K=120, 1=99, 2=91), ratios mean
 - **2024:** K = 130; grade 1 = 0.925 × 120 = 111; grade 2 = 0.96783626 × 99 = 95.8157897.
 - **2025:** K = 140; grade 1 = 0.925 × 130 = 120.25; grade 2 = 0.96783626 × 111 = 107.4298249.
 
-- [ ] **Step 1: Write the failing tests**
+### Phase A — behaviour tests (red → green)
+
+- [ ] **Step 1: Write the failing behaviour tests**
 
 `tests/testthat/test-project-enrollment.R`:
 
 ```r
 proj_ratios <- function() progression_ratios(gpr_fixture())
 proj_base <- function() {
-  data.frame(grade = c("K", "1", "2"), enrollment = c(120, 99, 91),
-             stringsAsFactors = FALSE)
+  data.frame(
+    grade = c("K", "1", "2"), enrollment = c(120, 99, 91),
+    stringsAsFactors = FALSE
+  )
 }
 
 test_that("project_enrollment reproduces a hand-computed projection", {
-  p <- project_enrollment(proj_base(), proj_ratios(), horizon = 2,
-                          entry = c(130, 140), start_year = 2023)
+  p <- project_enrollment(
+    proj_base(), proj_ratios(),
+    horizon = 2, entry = c(130, 140), start_year = 2023
+  )
   expect_equal(nrow(p), 6)
   expect_equal(unique(p$year), c(2024, 2025))
 
@@ -818,66 +932,53 @@ test_that("project_enrollment reproduces a hand-computed projection", {
   expect_equal(y24$enrollment[y24$grade == "K"], 130)
   expect_equal(y24$enrollment[y24$grade == "1"], 111)
   expect_equal(y24$enrollment[y24$grade == "2"], 0.96783626 * 99,
-               tolerance = 1e-6)
+    tolerance = 1e-6
+  )
 
   y25 <- p[p$year == 2025, ]
   expect_equal(y25$enrollment[y25$grade == "K"], 140)
   expect_equal(y25$enrollment[y25$grade == "1"], 120.25)
   expect_equal(y25$enrollment[y25$grade == "2"], 0.96783626 * 111,
-               tolerance = 1e-6)
+    tolerance = 1e-6
+  )
 })
 
-test_that("omitting entry holds the entry grade constant with a warning", {
-  expect_warning(
-    p <- project_enrollment(proj_base(), proj_ratios(), horizon = 2),
-    "holding entry grade"
+test_that("omitting entry holds the entry grade constant", {
+  p <- suppressWarnings(
+    project_enrollment(proj_base(), proj_ratios(), horizon = 2)
   )
   expect_equal(p$enrollment[p$grade == "K"], c(120, 120))
 })
 
 test_that("start_year is derived from a base data frame carrying a year", {
-  base <- data.frame(year = 2023, grade = c("K", "1", "2"),
-                     enrollment = c(120, 99, 91))
+  base <- data.frame(
+    year = 2023, grade = c("K", "1", "2"), enrollment = c(120, 99, 91)
+  )
   p <- project_enrollment(base, proj_ratios(), horizon = 1, entry = 130)
   expect_equal(unique(p$year), 2024)
 })
 
 test_that("without any year, output years are 1..horizon", {
-  p <- project_enrollment(proj_base(), proj_ratios(), horizon = 2,
-                          entry = c(130, 140))
+  p <- project_enrollment(
+    proj_base(), proj_ratios(),
+    horizon = 2, entry = c(130, 140)
+  )
   expect_equal(unique(p$year), c(1, 2))
 })
 
 test_that("a named numeric vector works as base", {
   v <- c(K = 120, `1` = 99, `2` = 91)
-  p <- project_enrollment(v, proj_ratios(), horizon = 1, entry = 130,
-                          start_year = 2023)
+  p <- project_enrollment(
+    v, proj_ratios(),
+    horizon = 1, entry = 130, start_year = 2023
+  )
   expect_equal(p$enrollment[p$grade == "1"], 111)
-})
-
-test_that("entry length must equal horizon", {
-  expect_error(
-    project_enrollment(proj_base(), proj_ratios(), horizon = 3,
-                       entry = c(130, 140)),
-    "must equal `horizon`"
-  )
-})
-
-test_that("horizon must be a positive integer", {
-  expect_error(
-    project_enrollment(proj_base(), proj_ratios(), horizon = 0, entry = 1),
-    "positive integer"
-  )
-  expect_error(
-    project_enrollment(proj_base(), proj_ratios(), horizon = 1.5, entry = 1),
-    "positive integer"
-  )
 })
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `R -q -e 'devtools::load_all("."); testthat::test_file("tests/testthat/test-project-enrollment.R")'`
+Run: `Rscript -e "devtools::test(filter = 'project-enrollment')"`
 Expected: FAIL — `could not find function "project_enrollment"`.
 
 - [ ] **Step 3: Write `R/project-enrollment.R`**
@@ -891,14 +992,15 @@ Expected: FAIL — `could not find function "project_enrollment"`.
 #' projected year), overwriting the entry grade with the supplied exogenous
 #' value each year.
 #'
-#' @param base Most recent observed enrollment: either a data frame with columns
-#'   `grade` and `enrollment` (optionally `year`), or a named numeric vector
-#'   (names are grades).
-#' @param ratios A data frame of progression ratios from [progression_ratios()].
+#' @param base Most recent observed enrollment: either a data frame with
+#'   columns `grade` and `enrollment` (optionally `year`), or a named numeric
+#'   vector (names are grades).
+#' @param ratios A data frame of progression ratios from
+#'   [progression_ratios()].
 #' @param horizon Number of years to project (a positive integer).
 #' @param entry Exogenous entry-grade enrollment for each projected year: a
-#'   numeric vector of length `horizon`, or a data frame with an `enrollment` or
-#'   `value` column. If `NULL`, the entry grade is held constant at its base
+#'   numeric vector of length `horizon`, or a data frame with an `enrollment`
+#'   or `value` column. If `NULL`, the entry grade is held constant at its base
 #'   value and a warning is issued.
 #' @param start_year Optional integer label for the base year; output years run
 #'   from `start_year + 1`. If `NULL`, it is derived from a `year` column in
@@ -916,12 +1018,14 @@ Expected: FAIL — `could not find function "project_enrollment"`.
 #' )
 #' ratios <- progression_ratios(history)
 #' base <- subset(history, year == 2023, c("grade", "enrollment"))
-#' project_enrollment(base, ratios, horizon = 3, entry = c(125, 130, 128),
-#'                    start_year = 2023)
+#' project_enrollment(base, ratios,
+#'   horizon = 3, entry = c(125, 130, 128),
+#'   start_year = 2023
+#' )
 project_enrollment <- function(base, ratios, horizon, entry = NULL,
                                start_year = NULL) {
   if (!is.numeric(horizon) || length(horizon) != 1 || is.na(horizon) ||
-      horizon < 1 || horizon != as.integer(horizon)) {
+    horizon < 1 || horizon != as.integer(horizon)) {
     stop("`horizon` must be a single positive integer.", call. = FALSE)
   }
   horizon <- as.integer(horizon)
@@ -935,9 +1039,13 @@ project_enrollment <- function(base, ratios, horizon, entry = NULL,
   if (is.null(start_year)) start_year <- base_info$year
 
   if (is.null(entry)) {
-    warning(sprintf(
-      "`entry` not supplied; holding entry grade '%s' constant at %g.",
-      entry_grade, n[[entry_grade]]), call. = FALSE)
+    warning(
+      sprintf(
+        "`entry` not supplied; holding entry grade '%s' constant at %g.",
+        entry_grade, n[[entry_grade]]
+      ),
+      call. = FALSE
+    )
     entry_vals <- rep(n[[entry_grade]], horizon)
   } else {
     entry_vals <- as_entry_vector(entry, horizon)
@@ -968,13 +1076,52 @@ project_enrollment <- function(base, ratios, horizon, entry = NULL,
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `R -q -e 'devtools::load_all("."); testthat::test_file("tests/testthat/test-project-enrollment.R")'`
+Run: `Rscript -e "devtools::test(filter = 'project-enrollment')"`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+### Phase B — error/warning snapshot tests
+
+- [ ] **Step 5: Append snapshot tests to `tests/testthat/test-project-enrollment.R`**
+
+```r
+test_that("omitting entry warns", {
+  expect_snapshot(
+    invisible(project_enrollment(proj_base(), proj_ratios(), horizon = 2))
+  )
+})
+
+test_that("entry length must equal horizon", {
+  expect_snapshot(
+    project_enrollment(
+      proj_base(), proj_ratios(),
+      horizon = 3, entry = c(130, 140)
+    ),
+    error = TRUE
+  )
+})
+
+test_that("horizon must be a positive integer", {
+  expect_snapshot(
+    project_enrollment(proj_base(), proj_ratios(), horizon = 0, entry = 1),
+    error = TRUE
+  )
+  expect_snapshot(
+    project_enrollment(proj_base(), proj_ratios(), horizon = 1.5, entry = 1),
+    error = TRUE
+  )
+})
+```
+
+- [ ] **Step 6: Record and review snapshots**
+
+Run: `Rscript -e "devtools::test(filter = 'project-enrollment')"`
+Expected: PASS with new snapshots added. Read `tests/testthat/_snaps/project-enrollment.md`: the warning should name entry grade `K` held at `120`; the error snapshots should report the entry/horizon mismatch and the positive-integer requirement. Re-run once more; expect PASS with no changes.
+
+- [ ] **Step 7: Format and commit**
 
 ```bash
-git add R/project-enrollment.R tests/testthat/test-project-enrollment.R
+air format .
+git add R/project-enrollment.R tests/testthat/test-project-enrollment.R tests/testthat/_snaps/project-enrollment.md
 git commit -m "Add project_enrollment()"
 ```
 
@@ -987,12 +1134,12 @@ git commit -m "Add project_enrollment()"
 
 - [ ] **Step 1: Regenerate docs and NAMESPACE**
 
-Run: `R -q -e 'roxygen2::roxygenise()'`
+Run: `Rscript -e "devtools::document()"`
 Expected: writes `man/progression_ratios.Rd`, `man/leslie_matrix.Rd`, `man/project_enrollment.Rd`, and a `NAMESPACE` exporting all three functions. No errors.
 
 - [ ] **Step 2: Verify NAMESPACE exports the three functions**
 
-Run: `R -q -e 'cat(readLines("NAMESPACE"), sep = "\n")'`
+Run: `Rscript -e 'cat(readLines("NAMESPACE"), sep = "\n")'`
 Expected output includes:
 ```
 export(leslie_matrix)
@@ -1002,24 +1149,40 @@ export(project_enrollment)
 
 - [ ] **Step 3: Run the full test suite**
 
-Run: `R -q -e 'devtools::test()'`
-Expected: all tests PASS, 0 failures.
+Run: `Rscript -e "devtools::test()"`
+Expected: all tests PASS, 0 failures, 0 warnings.
 
 - [ ] **Step 4: Commit**
 
 ```bash
+air format .
 git add NAMESPACE man/
 git commit -m "Generate documentation and NAMESPACE"
 ```
 
 ---
 
-## Task 7: README and vignette
+## Task 7: README, NEWS, and vignette
 
 **Files:**
-- Create: `README.md`, `vignettes/gpr.Rmd`
+- Create: `README.md`, `NEWS.md`, `vignettes/gpr.Rmd`
 
-- [ ] **Step 1: Write `README.md`**
+- [ ] **Step 1: Write `NEWS.md`**
+
+```markdown
+# gpr (development version)
+
+* Initial development version.
+* `progression_ratios()` computes grade progression ratios from historical
+  grade-level enrollment, with configurable averaging (`mean`, `geometric`,
+  `median`, `last`, `weighted`).
+* `leslie_matrix()` assembles the Leslie projection matrix from progression
+  ratios.
+* `project_enrollment()` projects enrollment forward an arbitrary horizon,
+  taking the entry grade exogenously.
+```
+
+- [ ] **Step 2: Write `README.md`**
 
 ````markdown
 # gpr
@@ -1087,7 +1250,7 @@ projections <- lapply(split(history, history$school), function(df) {
 ```
 ````
 
-- [ ] **Step 2: Write `vignettes/gpr.Rmd`**
+- [ ] **Step 3: Write `vignettes/gpr.Rmd`**
 
 ````markdown
 ---
@@ -1173,16 +1336,20 @@ head(combined)
 ```
 ````
 
-- [ ] **Step 3: Verify the vignette builds**
+- [ ] **Step 4: Verify the vignette builds**
 
-Run: `R -q -e 'devtools::build_vignettes()'`
+Run: `Rscript -e 'devtools::build_vignettes()'`
 Expected: builds `gpr.html` with no errors.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Format and commit**
+
+Note: `devtools::build_vignettes()` may create a `doc/` directory and add it to
+`.gitignore`; do not commit built vignette output, only the source.
 
 ```bash
-git add README.md vignettes/ .gitignore
-git commit -m "Add README and getting-started vignette"
+air format .
+git add README.md NEWS.md vignettes/gpr.Rmd .gitignore
+git commit -m "Add README, NEWS, and getting-started vignette"
 ```
 
 ---
@@ -1191,15 +1358,17 @@ git commit -m "Add README and getting-started vignette"
 
 - [ ] **Step 1: Run R CMD check**
 
-Run: `R -q -e 'devtools::check()'`
-Expected: `0 errors | 0 warnings | 0 notes` (a NOTE about the new-submission/version is acceptable; investigate any others).
+Run: `Rscript -e "devtools::check()"`
+Expected: `0 errors | 0 warnings | 0 notes` (a NOTE about new submission / non-standard files is acceptable; investigate any others).
 
 - [ ] **Step 2: Fix any check findings**
 
 Address any errors/warnings surfaced (e.g. undocumented arguments, missing
-imports in `NAMESPACE`/`DESCRIPTION`). Re-run until clean. Commit fixes:
+imports, example failures). Re-run `Rscript -e "devtools::check()"` until clean.
+Format and commit fixes:
 
 ```bash
+air format .
 git add -A
 git commit -m "Resolve R CMD check findings"
 ```
@@ -1208,6 +1377,7 @@ git commit -m "Resolve R CMD check findings"
 
 ## Self-Review Notes
 
-- **Spec coverage:** `progression_ratios()` (Task 3) covers ratio calculation + all `method`s + `n_years` + `weights` + column overrides; `leslie_matrix()` (Task 4) covers the engine; `project_enrollment()` (Task 5) covers projection, exogenous + held-constant entry, `start_year`, vector/df base. Grade-ordering rules, error handling, dependencies (base + stats + utils), naming, license, README, and vignette are all covered (Tasks 1–8).
+- **Spec coverage:** `progression_ratios()` (Task 3) covers ratio calculation + all `method`s + `n_years` + `weights` + column overrides; `leslie_matrix()` (Task 4) covers the engine; `project_enrollment()` (Task 5) covers projection, exogenous + held-constant entry, `start_year`, vector/df base. Grade-ordering rules, error handling, dependencies (base + stats + utils), naming, license, README, NEWS, and vignette are all covered (Tasks 1–8).
 - **Resolved decisions honoured:** weights aligned most-recent→oldest with length validation (Task 2/3); `start_year` derived from `base` year when unambiguous else `1..horizon` (Task 5); output excludes base year, with `rbind` shown in README/vignette (Task 7).
+- **Conventions honoured:** errors/warnings tested via `expect_snapshot()` recorded after green and reviewed; `air format .` before each commit; `devtools::test(filter=)` runner; base-R only in `Imports`.
 - **Type consistency:** ratio frames use `grade_from`/`grade_to`/`ratio` everywhere; projection output uses `year`/`grade`/`enrollment`; Leslie matrices carry grade dimnames in resolved low→high order throughout.
