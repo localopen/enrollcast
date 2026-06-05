@@ -104,3 +104,27 @@ test_that("horizon must be a positive integer", {
 		error = TRUE
 	)
 })
+
+test_that("entry accepts a data frame", {
+	p <- project_enrollment(
+		proj_base(),
+		proj_ratios(),
+		horizon = 2,
+		entry = data.frame(enrollment = c(130, 140)),
+		start_year = 2023
+	)
+	expect_equal(p$enrollment[p$year == 2024 & p$grade == "K"], 130)
+	expect_equal(p$enrollment[p$year == 2025 & p$grade == "K"], 140)
+})
+
+test_that("projection carries state across three years", {
+	p <- project_enrollment(
+		proj_base(),
+		proj_ratios(),
+		horizon = 3,
+		entry = c(130, 140, 150),
+		start_year = 2023
+	)
+	expect_equal(unique(p$year), c(2024, 2025, 2026))
+	expect_equal(p$enrollment[p$year == 2026 & p$grade == "1"], 0.925 * 140)
+})

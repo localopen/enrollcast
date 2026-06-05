@@ -150,7 +150,19 @@ as_base_vector <- function(base, go) {
 			call. = FALSE
 		)
 	}
-	list(vector = v[go], year = year)
+	extra <- setdiff(names(v), go)
+	if (length(extra)) {
+		warning(
+			"`base` contains grade(s) not in `ratios` that will be ignored: ",
+			paste(extra, collapse = ", "),
+			call. = FALSE
+		)
+	}
+	vv <- v[go]
+	if (any(!is.na(vv) & vv < 0)) {
+		stop("`base` enrollment must be non-negative.", call. = FALSE)
+	}
+	list(vector = vv, year = year)
 }
 
 # Coerce `entry` to a numeric vector of length `horizon`.
@@ -181,6 +193,9 @@ as_entry_vector <- function(entry, horizon) {
 			),
 			call. = FALSE
 		)
+	}
+	if (any(!is.na(vals) & vals < 0)) {
+		stop("`entry` values must be non-negative.", call. = FALSE)
 	}
 	vals
 }

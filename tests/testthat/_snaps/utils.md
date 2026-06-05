@@ -72,3 +72,27 @@
       Error:
       ! `entry` length (2) must equal `horizon` (3).
 
+# as_base_vector warns on extra grades
+
+    Code
+      res <- as_base_vector(v, c("K", "1", "2"))
+    Condition
+      Warning:
+      `base` contains grade(s) not in `ratios` that will be ignored: 3
+
+# as_base_vector errors on negative enrollment
+
+    Code
+      as_base_vector(c(K = -1, `1` = 99, `2` = 91), c("K", "1", "2"))
+    Condition
+      Error:
+      ! `base` enrollment must be non-negative.
+
+# as_entry_vector errors on negative values
+
+    Code
+      as_entry_vector(c(130, -5), 2)
+    Condition
+      Error:
+      ! `entry` values must be non-negative.
+

@@ -113,3 +113,19 @@ test_that("as_base_vector errors on missing grade", {
 test_that("as_entry_vector errors on length mismatch", {
 	expect_snapshot(as_entry_vector(c(130, 140), 3), error = TRUE)
 })
+
+test_that("as_base_vector warns on extra grades", {
+	v <- c(K = 120, `1` = 99, `2` = 91, `3` = 50)
+	expect_snapshot(res <- as_base_vector(v, c("K", "1", "2")))
+})
+
+test_that("as_base_vector errors on negative enrollment", {
+	expect_snapshot(
+		as_base_vector(c(K = -1, `1` = 99, `2` = 91), c("K", "1", "2")),
+		error = TRUE
+	)
+})
+
+test_that("as_entry_vector errors on negative values", {
+	expect_snapshot(as_entry_vector(c(130, -5), 2), error = TRUE)
+})
