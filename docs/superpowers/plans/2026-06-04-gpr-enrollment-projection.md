@@ -150,6 +150,7 @@ SOFTWARE.
 *.tar.gz
 ..Rcheck/
 inst/doc
+.claude/
 ```
 
 - [ ] **Step 5: Write `.Rbuildignore`**
