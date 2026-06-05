@@ -30,3 +30,27 @@
       Error:
       ! Duplicate (grade, year) rows in `data`.
 
+# negative enrollment is rejected
+
+    Code
+      progression_ratios(fx)
+    Condition
+      Error:
+      ! `enrollment` must be non-negative.
+
+# fewer than two grades is rejected
+
+    Code
+      progression_ratios(fx)
+    Condition
+      Error:
+      ! Need at least 2 grades to compute progression ratios.
+
+# non-numeric year is rejected
+
+    Code
+      progression_ratios(fx)
+    Condition
+      Error:
+      ! `year` must be numeric or coercible to numeric.
+

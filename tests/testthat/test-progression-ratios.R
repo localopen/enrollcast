@@ -52,3 +52,22 @@ test_that("duplicate grade-year rows are rejected", {
 	fx <- rbind(gpr_fixture(), gpr_fixture()[1, ])
 	expect_snapshot(progression_ratios(fx), error = TRUE)
 })
+
+test_that("negative enrollment is rejected", {
+	fx <- gpr_fixture()
+	fx$enrollment[1] <- -5
+	expect_snapshot(progression_ratios(fx), error = TRUE)
+})
+
+test_that("fewer than two grades is rejected", {
+	fx <- gpr_fixture()
+	fx <- fx[fx$grade == "K", ]
+	expect_snapshot(progression_ratios(fx), error = TRUE)
+})
+
+test_that("non-numeric year is rejected", {
+	fx <- gpr_fixture()
+	fx$year <- as.character(fx$year)
+	fx$year[1] <- "spring"
+	expect_snapshot(progression_ratios(fx), error = TRUE)
+})
