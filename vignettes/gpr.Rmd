@@ -1,0 +1,81 @@
+---
+title: "Projecting enrollment with gpr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Projecting enrollment with gpr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(gpr)
+```
+
+## The grade progression ratio method
+
+The cohort survival / grade progression ratio method projects enrollment by
+asking: of the students in grade *g* this year, how many appear in grade *g+1*
+next year? That ratio captures net retention, migration, and repetition. `gpr`
+estimates these ratios from history and applies them forward with a Leslie
+matrix.
+
+## A small district
+
+```{r}
+history <- data.frame(
+  year = rep(2021:2023, each = 3),
+  grade = factor(rep(c("K", "1", "2"), 3), levels = c("K", "1", "2")),
+  enrollment = c(100, 90, 80, 110, 95, 88, 120, 99, 91)
+)
+history
+```
+
+## Step 1: progression ratios
+
+```{r}
+ratios <- progression_ratios(history, method = "mean")
+ratios
+```
+
+The ratios sit on the sub-diagonal of the Leslie matrix; the entry-grade row is
+zero because entry is supplied exogenously.
+
+```{r}
+leslie_matrix(ratios)
+```
+
+## Step 2: project forward
+
+The entry grade (kindergarten here) has no feeder grade, so you supply its
+future values — for example from a birth-cohort or housing model.
+
+```{r}
+base <- subset(history, year == 2023, c("grade", "enrollment"))
+projection <- project_enrollment(
+  base       = base,
+  ratios     = ratios,
+  horizon    = 3,
+  entry      = c(125, 130, 128),
+  start_year = 2023
+)
+projection
+```
+
+## Stitching history and projection
+
+`project_enrollment()` returns projected years only. Combine with history for
+plotting:
+
+```{r}
+observed <- data.frame(
+  year = history$year,
+  grade = as.character(history$grade),
+  enrollment = history$enrollment
+)
+combined <- rbind(observed, projection)
+head(combined)
+```

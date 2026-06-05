@@ -7,3 +7,5 @@
 ..Rcheck/
 inst/doc
 .claude/
+/doc/
+/Meta/
