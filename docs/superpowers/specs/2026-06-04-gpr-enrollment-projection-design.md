@@ -150,7 +150,7 @@ include:
 
 - **Name:** `gpr`
 - **License:** MIT
-- **Author:** Rory Lawless <rory@mensahlawless.com>
+- **Author:** Rory Lawless <rory@rorylawless.com>
 - **Docs:** roxygen2; README with a quick example; one vignette projecting a
   small K–5 district end to end.
 - **Tests:** testthat 3e, test-driven. Tiny hand-computable fixtures so expected
@@ -189,15 +189,16 @@ proj <- project_enrollment(
 )
 ```
 
-## Open Questions (resolve during implementation)
+## Resolved Decisions
 
-1. **`weights` semantics** for `method = "weighted"`: ordered most-recent-first,
-   or matched to transition years by name? Lean: a plain numeric vector aligned
-   most-recent → oldest, recycled/validated against the number of transition
-   years used.
-2. **`start_year` defaulting** when `base` is a df that happens to carry a `year`
-   column: derive from it, or require `start_year` explicitly? Lean: derive if
-   unambiguous, else label `1..horizon`.
-3. Whether to include the base year as a row in `project_enrollment()` output
-   (for easy plotting of history + projection). Lean: no by default; document the
-   simple `rbind` if wanted.
+These were initially open; resolved to the leans below. We can iterate later.
+
+1. **`weights` semantics** for `method = "weighted"`: a plain numeric vector
+   aligned most-recent → oldest, validated against the number of transition years
+   used (error on length mismatch).
+2. **`start_year` defaulting**: if `base` is a df carrying an unambiguous single
+   `year` value, derive `start_year` from it; otherwise label output years
+   `1..horizon`. An explicit `start_year` always wins.
+3. **Base year in output**: `project_enrollment()` returns projected years only
+   by default. The README/vignette will show the simple `rbind` to stitch
+   history + projection for plotting.
