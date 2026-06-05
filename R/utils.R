@@ -1,0 +1,167 @@
+# Internal helpers. Not exported.
+
+check_columns <- function(data, cols, arg = "data") {
+	missing <- setdiff(cols, names(data))
+	if (length(missing)) {
+		stop(
+			sprintf(
+				"`%s` is missing required column(s): %s",
+				arg,
+				paste(missing, collapse = ", ")
+			),
+			call. = FALSE
+		)
+	}
+	invisible(data)
+}
+
+# Resolve grades to a low -> high character ordering.
+resolve_grade_order <- function(grade, grade_order = NULL) {
+	u <- unique(as.character(grade))
+	if (!is.null(grade_order)) {
+		grade_order <- as.character(grade_order)
+		missing <- setdiff(u, grade_order)
+		if (length(missing)) {
+			stop(
+				"`grade_order` is missing grade(s): ",
+				paste(missing, collapse = ", "),
+				call. = FALSE
+			)
+		}
+		return(grade_order[grade_order %in% u])
+	}
+	if (is.factor(grade)) {
+		lev <- levels(grade)
+		return(lev[lev %in% u])
+	}
+	num <- suppressWarnings(as.numeric(u))
+	if (!any(is.na(num))) {
+		return(u[order(num)])
+	}
+	warning(
+		"Grade order guessed by sorting labels alphabetically; ",
+		"pass `grade_order` or a factor `grade` to set it explicitly.",
+		call. = FALSE
+	)
+	sort(u)
+}
+
+# Reconstruct grade order from from/to transition pairs (linear chain).
+chain_order <- function(from, to) {
+	from <- as.character(from)
+	to <- as.character(to)
+	entry <- setdiff(from, to)
+	if (length(entry) != 1) {
+		stop(
+			"Could not determine a unique entry grade from `ratios`; ",
+			"pass `grade_order` explicitly.",
+			call. = FALSE
+		)
+	}
+	nxt <- stats::setNames(to, from)
+	order <- entry
+	cur <- entry
+	while (cur %in% names(nxt)) {
+		cur <- nxt[[cur]]
+		order <- c(order, cur)
+	}
+	order
+}
+
+# Collapse a (grades x transition-years) ratio matrix to one ratio per grade.
+summarise_ratios <- function(R, method, weights = NULL) {
+	apply(R, 1, function(x) {
+		switch(
+			method,
+			mean = mean(x, na.rm = TRUE),
+			median = stats::median(x, na.rm = TRUE),
+			geometric = exp(mean(log(x), na.rm = TRUE)),
+			last = x[length(x)],
+			weighted = {
+				if (is.null(weights)) {
+					stop("`weights` is required for method = 'weighted'.", call. = FALSE)
+				}
+				if (length(weights) != length(x)) {
+					stop(
+						sprintf(
+							paste0(
+								"`weights` length (%d) must equal number of transition ",
+								"years used (%d)."
+							),
+							length(weights),
+							length(x)
+						),
+						call. = FALSE
+					)
+				}
+				# weights are aligned most-recent -> oldest; x runs oldest -> newest.
+				stats::weighted.mean(x, w = rev(weights), na.rm = TRUE)
+			}
+		)
+	})
+}
+
+# Coerce `base` to a named numeric vector ordered by `go`; derive year if present.
+as_base_vector <- function(base, go) {
+	year <- NULL
+	if (is.data.frame(base)) {
+		check_columns(base, c("grade", "enrollment"), "base")
+		if ("year" %in% names(base)) {
+			uy <- unique(base$year)
+			if (length(uy) == 1) {
+				y <- suppressWarnings(as.numeric(as.character(uy)))
+				if (!is.na(y)) year <- y
+			}
+		}
+		v <- stats::setNames(as.numeric(base$enrollment), as.character(base$grade))
+	} else if (is.numeric(base) && !is.null(names(base))) {
+		v <- base
+	} else {
+		stop(
+			"`base` must be a data frame (grade, enrollment) or a named ",
+			"numeric vector.",
+			call. = FALSE
+		)
+	}
+	missing <- setdiff(go, names(v))
+	if (length(missing)) {
+		stop(
+			"`base` is missing enrollment for grade(s): ",
+			paste(missing, collapse = ", "),
+			call. = FALSE
+		)
+	}
+	list(vector = v[go], year = year)
+}
+
+# Coerce `entry` to a numeric vector of length `horizon`.
+as_entry_vector <- function(entry, horizon) {
+	if (is.data.frame(entry)) {
+		valcol <- intersect(c("enrollment", "value"), names(entry))
+		if (length(valcol) == 0) {
+			stop(
+				"`entry` data frame must have an 'enrollment' or 'value' column.",
+				call. = FALSE
+			)
+		}
+		vals <- as.numeric(entry[[valcol[1]]])
+	} else if (is.numeric(entry)) {
+		vals <- entry
+	} else {
+		stop(
+			"`entry` must be a numeric vector or a data frame with a value column.",
+			call. = FALSE
+		)
+	}
+	if (length(vals) != horizon) {
+		stop(
+			sprintf(
+				"`entry` length (%d) must equal `horizon` (%d).",
+				length(vals),
+				horizon
+			),
+			call. = FALSE
+		)
+	}
+	vals
+}
