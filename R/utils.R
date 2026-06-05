@@ -38,6 +38,7 @@ resolve_grade_order <- function(grade, grade_order = NULL) {
 	if (!any(is.na(num))) {
 		return(u[order(num)])
 	}
+	# Mixed alpha/numeric labels (e.g. "K", "1", "2") always reach this path.
 	warning(
 		"Grade order guessed by sorting labels alphabetically; ",
 		"pass `grade_order` or a factor `grade` to set it explicitly.",
@@ -50,6 +51,13 @@ resolve_grade_order <- function(grade, grade_order = NULL) {
 chain_order <- function(from, to) {
 	from <- as.character(from)
 	to <- as.character(to)
+	if (anyDuplicated(from)) {
+		stop(
+			"A grade feeds more than one grade in `ratios` (branching ",
+			"transitions); pass `grade_order` explicitly.",
+			call. = FALSE
+		)
+	}
 	entry <- setdiff(from, to)
 	if (length(entry) != 1) {
 		stop(
@@ -61,7 +69,16 @@ chain_order <- function(from, to) {
 	nxt <- stats::setNames(to, from)
 	order <- entry
 	cur <- entry
+	visited <- character(0)
 	while (cur %in% names(nxt)) {
+		if (cur %in% visited) {
+			stop(
+				"Cycle detected in grade transitions in `ratios`; ",
+				"pass `grade_order` explicitly.",
+				call. = FALSE
+			)
+		}
+		visited <- c(visited, cur)
 		cur <- nxt[[cur]]
 		order <- c(order, cur)
 	}
@@ -70,6 +87,24 @@ chain_order <- function(from, to) {
 
 # Collapse a (grades x transition-years) ratio matrix to one ratio per grade.
 summarise_ratios <- function(R, method, weights = NULL) {
+	if (method == "weighted") {
+		if (is.null(weights)) {
+			stop("`weights` is required for method = 'weighted'.", call. = FALSE)
+		}
+		if (length(weights) != ncol(R)) {
+			stop(
+				sprintf(
+					paste0(
+						"`weights` length (%d) must equal number of transition ",
+						"years used (%d)."
+					),
+					length(weights),
+					ncol(R)
+				),
+				call. = FALSE
+			)
+		}
+	}
 	apply(R, 1, function(x) {
 		switch(
 			method,
@@ -77,26 +112,7 @@ summarise_ratios <- function(R, method, weights = NULL) {
 			median = stats::median(x, na.rm = TRUE),
 			geometric = exp(mean(log(x), na.rm = TRUE)),
 			last = x[length(x)],
-			weighted = {
-				if (is.null(weights)) {
-					stop("`weights` is required for method = 'weighted'.", call. = FALSE)
-				}
-				if (length(weights) != length(x)) {
-					stop(
-						sprintf(
-							paste0(
-								"`weights` length (%d) must equal number of transition ",
-								"years used (%d)."
-							),
-							length(weights),
-							length(x)
-						),
-						call. = FALSE
-					)
-				}
-				# weights are aligned most-recent -> oldest; x runs oldest -> newest.
-				stats::weighted.mean(x, w = rev(weights), na.rm = TRUE)
-			}
+			weighted = stats::weighted.mean(x, w = rev(weights), na.rm = TRUE)
 		)
 	})
 }

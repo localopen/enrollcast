@@ -32,6 +32,22 @@
       Error:
       ! Could not determine a unique entry grade from `ratios`; pass `grade_order` explicitly.
 
+# chain_order errors on branching transitions
+
+    Code
+      chain_order(c("K", "K", "1"), c("1", "2", "2"))
+    Condition
+      Error:
+      ! A grade feeds more than one grade in `ratios` (branching transitions); pass `grade_order` explicitly.
+
+# chain_order errors on a cycle
+
+    Code
+      chain_order(c("Z", "a", "b"), c("a", "b", "a"))
+    Condition
+      Error:
+      ! Cycle detected in grade transitions in `ratios`; pass `grade_order` explicitly.
+
 # summarise_ratios weighted errors on length mismatch
 
     Code

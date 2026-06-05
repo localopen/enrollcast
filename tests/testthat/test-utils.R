@@ -52,6 +52,21 @@ test_that("as_entry_vector returns a validated numeric vector", {
 	expect_equal(as_entry_vector(c(130, 140), 2), c(130, 140))
 })
 
+test_that("as_entry_vector accepts a data frame value column", {
+	expect_equal(
+		as_entry_vector(data.frame(enrollment = c(130, 140)), 2),
+		c(130, 140)
+	)
+	expect_equal(
+		as_entry_vector(data.frame(value = c(130, 140)), 2),
+		c(130, 140)
+	)
+})
+
+test_that("chain_order handles a single transition pair", {
+	expect_equal(chain_order("K", "1"), c("K", "1"))
+})
+
 test_that("check_columns errors on missing columns", {
 	df <- data.frame(a = 1, b = 2)
 	expect_snapshot(check_columns(df, c("a", "c"), "df"), error = TRUE)
@@ -70,6 +85,14 @@ test_that("resolve_grade_order warns when guessing character order", {
 
 test_that("chain_order errors on ambiguous entry grade", {
 	expect_snapshot(chain_order(c("K", "9"), c("1", "2")), error = TRUE)
+})
+
+test_that("chain_order errors on branching transitions", {
+	expect_snapshot(chain_order(c("K", "K", "1"), c("1", "2", "2")), error = TRUE)
+})
+
+test_that("chain_order errors on a cycle", {
+	expect_snapshot(chain_order(c("Z", "a", "b"), c("a", "b", "a")), error = TRUE)
 })
 
 test_that("summarise_ratios weighted errors on length mismatch", {
