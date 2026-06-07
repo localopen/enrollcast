@@ -8,22 +8,22 @@ ratios_fixture <- function() {
 
 test_that("leslie_matrix builds the correct shape and sub-diagonal", {
 	M <- leslie_matrix(ratios_fixture())
-	expect_equal(dim(M), c(3, 3))
-	expect_equal(rownames(M), c("K", "1", "2"))
-	expect_equal(colnames(M), c("K", "1", "2"))
+	expect_identical(dim(M), c(3L, 3L))
+	expect_identical(rownames(M), c("K", "1", "2"))
+	expect_identical(colnames(M), c("K", "1", "2"))
 	expect_equal(M["1", "K"], 0.925)
 	expect_equal(M["2", "1"], 0.96783626)
 })
 
 test_that("leslie_matrix zeroes the entry row and all non-feeder cells", {
 	M <- leslie_matrix(ratios_fixture())
-	expect_equal(unname(M["K", ]), c(0, 0, 0))
-	expect_equal(sum(M != 0), 2)
+	expect_identical(unname(M["K", ]), c(0, 0, 0))
+	expect_identical(sum(M != 0), 2L)
 })
 
 test_that("leslie_matrix honours an explicit grade_order", {
 	M <- leslie_matrix(ratios_fixture(), grade_order = c("K", "1", "2"))
-	expect_equal(rownames(M), c("K", "1", "2"))
+	expect_identical(rownames(M), c("K", "1", "2"))
 })
 
 test_that("a ratio of zero is kept, not treated as missing", {

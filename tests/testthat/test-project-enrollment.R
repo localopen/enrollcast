@@ -14,7 +14,7 @@ test_that("project_enrollment reproduces a hand-computed projection", {
 		entry = c(130, 140),
 		start_year = 2023
 	)
-	expect_equal(nrow(p), 6)
+	expect_identical(nrow(p), 6L)
 	expect_equal(unique(p$year), c(2024, 2025))
 
 	y24 <- p[p$year == 2024, ]

@@ -1,7 +1,7 @@
 test_that("mean is the default method", {
 	r <- progression_ratios(gpr_fixture())
-	expect_equal(r$grade_from, c("K", "1"))
-	expect_equal(r$grade_to, c("1", "2"))
+	expect_identical(r$grade_from, c("K", "1"))
+	expect_identical(r$grade_to, c("1", "2"))
 	expect_equal(r$ratio, c(0.925, (88 / 90 + 91 / 95) / 2))
 })
 
@@ -76,7 +76,7 @@ test_that("grade_order overrides factor levels", {
 	fx <- gpr_fixture()
 	fx$grade <- as.character(fx$grade)
 	r <- progression_ratios(fx, grade_order = c("K", "1", "2"))
-	expect_equal(r$grade_from, c("K", "1"))
+	expect_identical(r$grade_from, c("K", "1"))
 	expect_equal(r$ratio[1], 0.925)
 })
 

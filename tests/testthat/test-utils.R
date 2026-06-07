@@ -1,21 +1,21 @@
 test_that("resolve_grade_order uses factor levels", {
 	g <- factor(c("1", "K", "2"), levels = c("K", "1", "2"))
-	expect_equal(resolve_grade_order(g), c("K", "1", "2"))
+	expect_identical(resolve_grade_order(g), c("K", "1", "2"))
 })
 
 test_that("resolve_grade_order sorts numeric grades numerically", {
-	expect_equal(resolve_grade_order(c(10, 2, 1)), c("1", "2", "10"))
+	expect_identical(resolve_grade_order(c(10, 2, 1)), c("1", "2", "10"))
 })
 
 test_that("resolve_grade_order honours explicit grade_order", {
-	expect_equal(
+	expect_identical(
 		resolve_grade_order(c("1", "K", "2"), grade_order = c("K", "1", "2")),
 		c("K", "1", "2")
 	)
 })
 
 test_that("chain_order reconstructs the grade sequence", {
-	expect_equal(chain_order(c("K", "1"), c("1", "2")), c("K", "1", "2"))
+	expect_identical(chain_order(c("K", "1"), c("1", "2")), c("K", "1", "2"))
 })
 
 test_that("summarise_ratios computes each method", {
@@ -37,34 +37,34 @@ test_that("as_base_vector aligns df to grade order and derives year", {
 		enrollment = c(91, 120, 99)
 	)
 	res <- as_base_vector(df, c("K", "1", "2"))
-	expect_equal(res$vector, c(K = 120, `1` = 99, `2` = 91))
-	expect_equal(res$year, 2023)
+	expect_identical(res$vector, c(K = 120, `1` = 99, `2` = 91))
+	expect_identical(res$year, 2023)
 })
 
 test_that("as_base_vector accepts a named numeric vector", {
 	v <- c(K = 120, `1` = 99, `2` = 91)
 	res <- as_base_vector(v, c("K", "1", "2"))
-	expect_equal(res$vector, v)
+	expect_identical(res$vector, v)
 	expect_null(res$year)
 })
 
 test_that("as_entry_vector returns a validated numeric vector", {
-	expect_equal(as_entry_vector(c(130, 140), 2), c(130, 140))
+	expect_identical(as_entry_vector(c(130, 140), 2), c(130, 140))
 })
 
 test_that("as_entry_vector accepts a data frame value column", {
-	expect_equal(
+	expect_identical(
 		as_entry_vector(data.frame(enrollment = c(130, 140)), 2),
 		c(130, 140)
 	)
-	expect_equal(
+	expect_identical(
 		as_entry_vector(data.frame(value = c(130, 140)), 2),
 		c(130, 140)
 	)
 })
 
 test_that("chain_order handles a single transition pair", {
-	expect_equal(chain_order("K", "1"), c("K", "1"))
+	expect_identical(chain_order("K", "1"), c("K", "1"))
 })
 
 test_that("check_columns errors on missing columns", {
