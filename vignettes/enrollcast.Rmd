@@ -27,9 +27,9 @@ a Leslie matrix.
 
 ```{r}
 history <- data.frame(
-  year = rep(2021:2023, each = 3),
-  grade = factor(rep(c("K", "1", "2"), 3), levels = c("K", "1", "2")),
-  enrollment = c(100, 90, 80, 110, 95, 88, 120, 99, 91)
+	year = rep(2021:2023, each = 3),
+	grade = factor(rep(c("K", "1", "2"), 3), levels = c("K", "1", "2")),
+	enrollment = c(100, 90, 80, 110, 95, 88, 120, 99, 91)
 )
 history
 ```
@@ -54,13 +54,13 @@ The entry grade (kindergarten here) has no feeder grade, so you supply its
 future values — for example from a birth-cohort or housing model.
 
 ```{r}
-base <- subset(history, year == 2023, c("grade", "enrollment"))
+base <- history[history$year == 2023, c("grade", "enrollment")]
 projection <- project_enrollment(
-  base       = base,
-  ratios     = ratios,
-  horizon    = 3,
-  entry      = c(125, 130, 128),
-  start_year = 2023
+	base = base,
+	ratios = ratios,
+	horizon = 3,
+	entry = c(125, 130, 128),
+	start_year = 2023
 )
 projection
 ```
@@ -72,9 +72,9 @@ plotting:
 
 ```{r}
 observed <- data.frame(
-  year = history$year,
-  grade = as.character(history$grade),
-  enrollment = history$enrollment
+	year = history$year,
+	grade = as.character(history$grade),
+	enrollment = history$enrollment
 )
 combined <- rbind(observed, projection)
 head(combined)
