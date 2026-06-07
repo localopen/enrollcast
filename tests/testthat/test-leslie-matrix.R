@@ -2,8 +2,7 @@ ratios_fixture <- function() {
 	data.frame(
 		grade_from = c("K", "1"),
 		grade_to = c("1", "2"),
-		ratio = c(0.925, 0.96783626),
-		stringsAsFactors = FALSE
+		ratio = c(0.925, 0.96783626)
 	)
 }
 
@@ -53,8 +52,7 @@ test_that("leslie_matrix errors on ambiguous entry grade", {
 	r <- data.frame(
 		grade_from = c("K", "9"),
 		grade_to = c("1", "2"),
-		ratio = c(0.9, 0.9),
-		stringsAsFactors = FALSE
+		ratio = c(0.9, 0.9)
 	)
 	expect_snapshot(leslie_matrix(r), error = TRUE)
 })
@@ -63,8 +61,7 @@ test_that("leslie_matrix errors on duplicate feeding ratios", {
 	r <- data.frame(
 		grade_from = c("K", "K", "1"),
 		grade_to = c("1", "1", "2"),
-		ratio = c(0.9, 0.5, 0.95),
-		stringsAsFactors = FALSE
+		ratio = c(0.9, 0.5, 0.95)
 	)
 	expect_snapshot(
 		leslie_matrix(r, grade_order = c("K", "1", "2")),

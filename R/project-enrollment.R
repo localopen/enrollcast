@@ -93,7 +93,6 @@ project_enrollment <- function(
 			year = out_years[h],
 			grade = go,
 			enrollment = unname(n),
-			stringsAsFactors = FALSE,
 			row.names = NULL
 		)
 	}

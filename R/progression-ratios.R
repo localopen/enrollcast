@@ -137,7 +137,6 @@ progression_ratios <- function(
 		grade_from = go[-G],
 		grade_to = go[-1],
 		ratio = unname(ratio),
-		stringsAsFactors = FALSE,
 		row.names = NULL
 	)
 }
