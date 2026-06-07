@@ -1,5 +1,10 @@
 # Internal helpers. Not exported.
 
+# TRUE if `x` is a single, non-missing, positive integer value.
+is_count <- function(x) {
+	is.numeric(x) && length(x) == 1 && !is.na(x) && x >= 1 && x == floor(x)
+}
+
 check_columns <- function(data, cols, arg = "data") {
 	missing <- setdiff(cols, names(data))
 	if (length(missing)) {
