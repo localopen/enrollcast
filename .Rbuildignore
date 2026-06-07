@@ -1,5 +1,6 @@
 ^docs$
 ^LICENSE\.md$
+^\.git$
 ^\.gitignore$
 ^.*\.Rproj$
 ^\.Rproj\.user$
