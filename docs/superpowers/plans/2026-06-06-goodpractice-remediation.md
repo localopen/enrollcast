@@ -38,7 +38,7 @@ Findings 7 and 8 are addressed by one refactor each. Tier 3 is notes only (Appen
 
 **Files:** Modify `DESCRIPTION`
 
-- [ ] **Step 1: Add `Depends`, `URL`, and `BugReports`**
+- [x] **Step 1: Add `Depends`, `URL`, and `BugReports`**
 
 Insert a `Depends` field before `Imports`, and add `URL`/`BugReports` (e.g. after `License`). Target DESCRIPTION fields:
 
@@ -52,12 +52,12 @@ URL: https://gitlab.com/rorylawless/gpr
 BugReports: https://gitlab.com/rorylawless/gpr/-/issues
 ```
 
-- [ ] **Step 2: Verify DESCRIPTION parses and package loads**
+- [x] **Step 2: Verify DESCRIPTION parses and package loads**
 
 Run: `Rscript -e 'desc <- read.dcf("DESCRIPTION"); stopifnot(all(c("URL","BugReports","Depends") %in% colnames(desc))); devtools::load_all("."); cat("OK\n")'`
 Expected: `OK`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add DESCRIPTION
@@ -70,7 +70,7 @@ git commit -m "Add URL, BugReports, and R (>= 4.0) dependency"
 
 **Files:** Modify `R/utils.R`, `R/progression-ratios.R`, `R/leslie-matrix.R`
 
-- [ ] **Step 1: Replace `any(is.na(x))` with `anyNA(x)`**
+- [x] **Step 1: Replace `any(is.na(x))` with `anyNA(x)`**
 
 Make exactly these replacements (do NOT touch the `any(is.infinite(R)) || any(is.nan(R))` check in `progression-ratios.R` — that is not `is.na`):
 
@@ -79,7 +79,7 @@ Make exactly these replacements (do NOT touch the `any(is.infinite(R)) || any(is
 - `R/progression-ratios.R`: `if (any(is.na(ri))) {` → `if (anyNA(ri)) {`
 - `R/leslie-matrix.R`: `if (any(is.na(ii)) || any(is.na(jj))) {` → `if (anyNA(ii) || anyNA(jj)) {`
 
-- [ ] **Step 2: Replace `paste(x, collapse = ", ")` with `toString(x)`**
+- [x] **Step 2: Replace `paste(x, collapse = ", ")` with `toString(x)`**
 
 `toString(x)` is exactly `paste(x, collapse = ", ")`. Replace at:
 
@@ -89,7 +89,7 @@ Make exactly these replacements (do NOT touch the `any(is.infinite(R)) || any(is
 - `R/utils.R` (`as_base_vector` missing): `paste(missing, collapse = ", ")` → `toString(missing)`
 - `R/utils.R` (`as_base_vector` extra): `paste(extra, collapse = ", ")` → `toString(extra)`
 
-- [ ] **Step 3: Wrap the long comment at `R/utils.R:123`**
+- [x] **Step 3: Wrap the long comment at `R/utils.R:123`**
 
 Replace the 82-char comment line:
 
@@ -104,12 +104,12 @@ with:
 # when present.
 ```
 
-- [ ] **Step 4: Verify behavior unchanged**
+- [x] **Step 4: Verify behavior unchanged**
 
 Run: `Rscript -e "devtools::test()"`
 Expected: `FAIL 0`. (Snapshots that quote the error messages are unaffected — `toString` produces identical text and `anyNA` is logically identical here.)
 
-- [ ] **Step 5: Format and commit**
+- [x] **Step 5: Format and commit**
 
 ```bash
 air format .
@@ -125,7 +125,7 @@ Safe because Task 1 declared `R (>= 4.0)` (default `stringsAsFactors = FALSE`).
 
 **Files:** Modify `R/progression-ratios.R`, `R/project-enrollment.R`, `tests/testthat/test-project-enrollment.R`, `tests/testthat/test-leslie-matrix.R`
 
-- [ ] **Step 1: Remove the argument at all 6 sites**
+- [x] **Step 1: Remove the argument at all 6 sites**
 
 Delete the `stringsAsFactors = FALSE` argument (and fix the trailing comma on the preceding argument line so the `data.frame()` call stays valid) at:
 
@@ -148,13 +148,13 @@ data.frame(
 )
 ```
 
-- [ ] **Step 2: Verify all data.frame columns keep their types**
+- [x] **Step 2: Verify all data.frame columns keep their types**
 
 Run: `Rscript -e 'devtools::load_all("."); r <- progression_ratios(within(data.frame(year=rep(2021:2023,each=3), grade=factor(rep(c("K","1","2"),3),levels=c("K","1","2")), enrollment=c(100,90,80,110,95,88,120,99,91)),{}) ); stopifnot(is.character(r$grade_from)); cat("char OK\n")'`
 Then: `Rscript -e "devtools::test()"`
 Expected: `char OK`; `FAIL 0` (grade columns remain character under R >= 4.0).
 
-- [ ] **Step 3: Format and commit**
+- [x] **Step 3: Format and commit**
 
 ```bash
 air format .
@@ -170,7 +170,7 @@ The 17 uncovered lines are all unexercised error/edge branches. Add tests that h
 
 **Files:** Modify `tests/testthat/test-leslie-matrix.R`, `tests/testthat/test-utils.R`, `tests/testthat/test-progression-ratios.R`
 
-- [ ] **Step 1: `leslie_matrix` guards (lines 37, 43)**
+- [x] **Step 1: `leslie_matrix` guards (lines 37, 43)**
 
 Append to `tests/testthat/test-leslie-matrix.R`:
 
@@ -187,7 +187,7 @@ test_that("leslie_matrix errors when ratios reference an unknown grade", {
 })
 ```
 
-- [ ] **Step 2: `summarise_ratios` all-NA `last`, `as_base_vector`/`as_entry_vector` errors (utils.R 92, 139-143, 173-176, 182-185)**
+- [x] **Step 2: `summarise_ratios` all-NA `last`, `as_base_vector`/`as_entry_vector` errors (utils.R 92, 139-143, 173-176, 182-185)**
 
 Append to `tests/testthat/test-utils.R`:
 
@@ -210,7 +210,7 @@ test_that("as_entry_vector errors on an unsupported entry type", {
 })
 ```
 
-- [ ] **Step 3: `progression_ratios` unmatched-grade guard (line 89)**
+- [x] **Step 3: `progression_ratios` unmatched-grade guard (line 89)**
 
 Append to `tests/testthat/test-progression-ratios.R`:
 
@@ -225,13 +225,13 @@ test_that("progression_ratios errors on an unmatched (NA) grade", {
 
 Note: this input also triggers the alphabetical-order warning from `resolve_grade_order()`; the snapshot will record both the warning and the error — review it to confirm the final error is "Some grades are not in the resolved grade order."
 
-- [ ] **Step 4: Record snapshots, then confirm 100% coverage**
+- [x] **Step 4: Record snapshots, then confirm 100% coverage**
 
 Run: `Rscript -e "devtools::test()"` (records new snapshots; review the new `_snaps/*.md` entries). Re-run once for stability.
 Then: `Rscript -e 'cat(round(covr::percent_coverage(covr::package_coverage(".")), 2), "%\n")'`
 Expected: `100 %` (or confirm `covr::zero_coverage()` is empty).
 
-- [ ] **Step 5: Format and commit**
+- [x] **Step 5: Format and commit**
 
 ```bash
 air format .
@@ -247,7 +247,7 @@ Extract cohesive steps into internal helpers (no roxygen; snake_case names to sa
 
 **Files:** Modify `R/progression-ratios.R`
 
-- [ ] **Step 1: Add internal helpers above `progression_ratios()`**
+- [x] **Step 1: Add internal helpers above `progression_ratios()`**
 
 ```r
 # Validate inputs and return cleaned pieces (grades, enrollment, order, years).
@@ -323,7 +323,7 @@ check_n_years <- function(n_years) {
 }
 ```
 
-- [ ] **Step 2: Replace the body of `progression_ratios()` (keep the roxygen block unchanged)**
+- [x] **Step 2: Replace the body of `progression_ratios()` (keep the roxygen block unchanged)**
 
 ```r
 progression_ratios <- function(data,
@@ -363,13 +363,13 @@ progression_ratios <- function(data,
 }
 ```
 
-- [ ] **Step 3: Verify tests, coverage, and complexity**
+- [x] **Step 3: Verify tests, coverage, and complexity**
 
 Run: `Rscript -e "devtools::test()"` → `FAIL 0` (all existing behavior and snapshots preserved).
 Run: `Rscript -e 'devtools::load_all("."); cat("progression_ratios:", cyclocomp::cyclocomp(progression_ratios), "\n")'`
 Expected: complexity < 15. Re-check coverage is still 100%.
 
-- [ ] **Step 4: Format and commit**
+- [x] **Step 4: Format and commit**
 
 ```bash
 air format .
@@ -383,7 +383,7 @@ git commit -m "Refactor progression_ratios into focused helpers"
 
 **Files:** Modify `R/project-enrollment.R`
 
-- [ ] **Step 1: Add internal helpers above `project_enrollment()`**
+- [x] **Step 1: Add internal helpers above `project_enrollment()`**
 
 ```r
 # Validate horizon and return it as an integer.
@@ -430,7 +430,7 @@ run_projection <- function(m, base_vec, entry_grade, entry_vals, out_years) {
 }
 ```
 
-- [ ] **Step 2: Replace the body of `project_enrollment()` (keep the roxygen block unchanged)**
+- [x] **Step 2: Replace the body of `project_enrollment()` (keep the roxygen block unchanged)**
 
 ```r
 project_enrollment <- function(base, ratios, horizon, entry = NULL,
@@ -452,13 +452,13 @@ project_enrollment <- function(base, ratios, horizon, entry = NULL,
 }
 ```
 
-- [ ] **Step 3: Verify tests and complexity**
+- [x] **Step 3: Verify tests and complexity**
 
 Run: `Rscript -e "devtools::test()"` → `FAIL 0`.
 Run: `Rscript -e 'devtools::load_all("."); cat("project_enrollment:", cyclocomp::cyclocomp(project_enrollment), "\n")'`
 Expected: complexity < 15. Coverage still 100%.
 
-- [ ] **Step 4: Format and commit**
+- [x] **Step 4: Format and commit**
 
 ```bash
 air format .
@@ -474,7 +474,7 @@ git commit -m "Refactor project_enrollment into focused helpers"
 
 **Files:** Modify the four `tests/testthat/test-*.R` files.
 
-- [ ] **Step 1: Convert exact comparisons to `expect_identical()`**
+- [x] **Step 1: Convert exact comparisons to `expect_identical()`**
 
 Rule: if the expected value is an **integer count, logical, character vector, or structural value**, convert to `expect_identical()` and match the type exactly (use integer literals like `3L`). Examples:
 
@@ -490,7 +490,7 @@ expect_identical(nrow(p), 6L)
 expect_identical(unique(p$year), c(2024, 2025))      # numeric-but-exact year labels
 ```
 
-- [ ] **Step 2: Leave floating-point comparisons as `expect_equal()`**
+- [x] **Step 2: Leave floating-point comparisons as `expect_equal()`**
 
 Keep (and, where missing, add `tolerance = 1e-8`) for all ratio/enrollment value assertions, e.g.:
 
@@ -501,7 +501,7 @@ expect_equal(r$ratio, c(0.925, (88 / 90 + 91 / 95) / 2))
 expect_equal(y24$enrollment[y24$grade == "2"], 0.96783626 * 99, tolerance = 1e-6)
 ```
 
-- [ ] **Step 3: Verify and commit**
+- [x] **Step 3: Verify and commit**
 
 Run: `Rscript -e "devtools::test()"` → `FAIL 0` (if an `expect_identical` fails, that comparison was not actually exact — revert it to `expect_equal`).
 
@@ -515,17 +515,17 @@ git commit -m "Use expect_identical() for exact test comparisons"
 
 ## Task 8: Re-run goodpractice and final check
 
-- [ ] **Step 1: Re-run `gp()`**
+- [x] **Step 1: Re-run `gp()`**
 
 Run: `export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64; Rscript -e 'print(goodpractice::gp("."))'`
 Expected resolved: URL, BugReports, line length, anyNA, toString, coverage (100%), function length, cyclomatic complexity, stringsAsFactors. Expected **residual**: the LaTeX/PDF WARNING (environmental, see Appendix) and any `expect_identical` flags on the floating-point comparisons (intentional).
 
-- [ ] **Step 2: Confirm `R CMD check` still clean**
+- [x] **Step 2: Confirm `R CMD check` still clean**
 
 Run: `export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64; Rscript -e 'devtools::check(error_on = "never")' 2>&1 | tail -5`
 Expected: `0 errors | 0 warnings | 0 notes`.
 
-- [ ] **Step 3: Commit any final formatting**
+- [x] **Step 3: Commit any final formatting**
 
 ```bash
 air format .
@@ -550,3 +550,53 @@ git commit -m "Finalize goodpractice remediation" || echo "nothing to commit"
 - **Ordering/dependencies:** Task 1 (R >= 4.0) precedes Task 3 (stringsAsFactors removal). Coverage (Task 4) precedes the refactors (5–6), which preserve the defensive branches, so coverage stays 100%. The refactored function bodies already use `anyNA`/`toString` and omit `stringsAsFactors`, consistent with Tasks 2–3.
 - **Type consistency:** new internal helpers use snake_case; matrices keep grade dimnames; output frames keep `grade_from`/`grade_to`/`ratio` and `year`/`grade`/`enrollment`.
 - **Honest residuals:** the LaTeX warning (environmental) and float `expect_identical` flags are documented as expected to remain.
+
+---
+
+## Completion (2026-06-07)
+
+All tasks executed. Tasks 1–4 and 7 landed in earlier commits; Tasks 5–6 and 8
+completed in the final pass. `R CMD check` is clean:
+
+```
+0 errors | 0 warnings | 0 notes
+```
+
+(via `devtools::check(cran = TRUE)`).
+
+**Refactors (Tasks 5–6).** Cyclomatic complexity, measured package-wide with
+`cyclocomp::cyclocomp_package_dir()`: `progression_ratios` 31 → 5,
+`project_enrollment` 21 → 3. The plan's extracted validators (`check_n_years`,
+`check_horizon`) were themselves over the limit (18 and 16) because of their
+`||` chains, which would have *relocated* finding #8 rather than resolved it.
+Fixed by extracting a shared `is_count()` predicate into `R/utils.R`; **no
+function in the package now exceeds 15**. Tests stay `FAIL 0` (95 passing),
+coverage 100%.
+
+**Build NOTE fix (Task 8).** `R CMD check` flagged a hidden `.git` entry because
+the build ran inside a git *worktree* (where `.git` is a pointer file the
+automatic VCS exclusion misses). Added `^\.git$` to `.Rbuildignore`, taking the
+check to 0/0/0.
+
+**Residual `gp()` flags (all reviewed, none are package defects):**
+
+1. **`strings_as_factors_linter` — accepted false positive.** Despite
+   goodpractice's "remove `stringsAsFactors`" wording, the underlying lintr
+   linter flags `data.frame()` calls (6 sites in tests) that *lack* an explicit
+   `stringsAsFactors`, so the code behaves identically before and after R 4.0.
+   The package `Depends: R (>= 4.0)`, so that cross-version concern does not
+   apply. Re-adding the argument would reverse Task 3 and re-introduce the
+   redundancy it removed. **Decision (maintainer, 2026-06-07): keep removed;
+   accept the lint.** (This supersedes the plan's earlier assumption that
+   removal would *resolve* finding #9 — it does not, but removal is still
+   correct for an R ≥ 4.0 package.)
+2. **`expect_identical` over `expect_equal` (21×) — intentional.** All residual
+   sites are floating-point comparisons (ratios, `sqrt`, divisions, computed
+   enrollments) that must use `expect_equal()` with tolerance.
+3. **LaTeX/PDF WARNING — environmental.** Only appears under `gp()`'s
+   `rcmdcheck`, which builds the PDF manual; no `pdflatex` here.
+   `devtools::check()` is clean. See Finding 11.
+4. **Broken URL in DESCRIPTION (403) — maintainer action.** The GitLab repo
+   `gitlab.com/localopen/enrollcast` is private, so `urlchecker` (under `gp()`)
+   sees a 403. `R CMD check --as-cran` does not flag it. Make the repo public
+   before any CRAN submission.
