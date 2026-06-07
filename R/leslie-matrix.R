@@ -39,7 +39,7 @@ leslie_matrix <- function(ratios, grade_order = NULL) {
 
 	ii <- match(to, grade_order)
 	jj <- match(from, grade_order)
-	if (any(is.na(ii)) || any(is.na(jj))) {
+	if (anyNA(ii) || anyNA(jj)) {
 		stop("`ratios` references a grade not in `grade_order`.", call. = FALSE)
 	}
 
@@ -63,7 +63,7 @@ leslie_matrix <- function(ratios, grade_order = NULL) {
 	if (length(missing_in)) {
 		stop(
 			"Missing progression ratio(s) feeding grade(s): ",
-			paste(missing_in, collapse = ", "),
+			toString(missing_in),
 			call. = FALSE
 		)
 	}

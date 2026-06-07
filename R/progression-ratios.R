@@ -78,14 +78,14 @@ progression_ratios <- function(
 	}
 
 	yr_num <- suppressWarnings(as.numeric(as.character(data[[year]])))
-	if (any(is.na(yr_num))) {
+	if (anyNA(yr_num)) {
 		stop("`year` must be numeric or coercible to numeric.", call. = FALSE)
 	}
 
 	years <- sort(unique(yr_num))
 	ri <- match(gr, go)
 	ci <- match(yr_num, years)
-	if (any(is.na(ri))) {
+	if (anyNA(ri)) {
 		stop("Some grades are not in the resolved grade order.", call. = FALSE)
 	}
 	if (anyDuplicated(cbind(ri, ci))) {

@@ -7,7 +7,7 @@ check_columns <- function(data, cols, arg = "data") {
 			sprintf(
 				"`%s` is missing required column(s): %s",
 				arg,
-				paste(missing, collapse = ", ")
+				toString(missing)
 			),
 			call. = FALSE
 		)
@@ -24,7 +24,7 @@ resolve_grade_order <- function(grade, grade_order = NULL) {
 		if (length(missing)) {
 			stop(
 				"`grade_order` is missing grade(s): ",
-				paste(missing, collapse = ", "),
+				toString(missing),
 				call. = FALSE
 			)
 		}
@@ -35,7 +35,7 @@ resolve_grade_order <- function(grade, grade_order = NULL) {
 		return(lev[lev %in% u])
 	}
 	num <- suppressWarnings(as.numeric(u))
-	if (!any(is.na(num))) {
+	if (!anyNA(num)) {
 		return(u[order(num)])
 	}
 	# Mixed alpha/numeric labels (e.g. "K", "1", "2") always reach this path.
@@ -120,7 +120,8 @@ summarise_ratios <- function(R, method, weights = NULL) {
 	})
 }
 
-# Coerce `base` to a named numeric vector ordered by `go`; derive year if present.
+# Coerce `base` to a named numeric vector ordered by `go`; derive the year
+# when present.
 as_base_vector <- function(base, go) {
 	year <- NULL
 	if (is.data.frame(base)) {
@@ -146,7 +147,7 @@ as_base_vector <- function(base, go) {
 	if (length(missing)) {
 		stop(
 			"`base` is missing enrollment for grade(s): ",
-			paste(missing, collapse = ", "),
+			toString(missing),
 			call. = FALSE
 		)
 	}
@@ -154,7 +155,7 @@ as_base_vector <- function(base, go) {
 	if (length(extra)) {
 		warning(
 			"`base` contains grade(s) not in `ratios` that will be ignored: ",
-			paste(extra, collapse = ", "),
+			toString(extra),
 			call. = FALSE
 		)
 	}
