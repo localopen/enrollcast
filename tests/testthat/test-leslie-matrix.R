@@ -48,6 +48,20 @@ test_that("leslie_matrix errors on a missing feeding ratio", {
 	)
 })
 
+test_that("leslie_matrix errors with fewer than two grades", {
+	expect_snapshot(
+		leslie_matrix(ratios_fixture(), grade_order = "K"),
+		error = TRUE
+	)
+})
+
+test_that("leslie_matrix errors when ratios reference an unknown grade", {
+	expect_snapshot(
+		leslie_matrix(ratios_fixture(), grade_order = c("K", "1")),
+		error = TRUE
+	)
+})
+
 test_that("leslie_matrix errors on ambiguous entry grade", {
 	r <- data.frame(
 		grade_from = c("K", "9"),

@@ -6,6 +6,22 @@
       Error:
       ! Missing progression ratio(s) feeding grade(s): 2
 
+# leslie_matrix errors with fewer than two grades
+
+    Code
+      leslie_matrix(ratios_fixture(), grade_order = "K")
+    Condition
+      Error:
+      ! Need at least 2 grades to build a Leslie matrix.
+
+# leslie_matrix errors when ratios reference an unknown grade
+
+    Code
+      leslie_matrix(ratios_fixture(), grade_order = c("K", "1"))
+    Condition
+      Error:
+      ! `ratios` references a grade not in `grade_order`.
+
 # leslie_matrix errors on ambiguous entry grade
 
     Code

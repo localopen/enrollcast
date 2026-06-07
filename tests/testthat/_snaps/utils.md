@@ -96,3 +96,35 @@
       Error:
       ! `entry` values must be non-negative.
 
+# summarise_ratios weighted errors when weights are missing
+
+    Code
+      summarise_ratios(R, "weighted")
+    Condition
+      Error:
+      ! `weights` is required for method = 'weighted'.
+
+# as_base_vector errors on an invalid base type
+
+    Code
+      as_base_vector(c(1, 2, 3), c("K", "1", "2"))
+    Condition
+      Error:
+      ! `base` must be a data frame (grade, enrollment) or a named numeric vector.
+
+# as_entry_vector errors on a data frame without a value column
+
+    Code
+      as_entry_vector(data.frame(x = 1:2), 2)
+    Condition
+      Error:
+      ! `entry` data frame must have an 'enrollment' or 'value' column.
+
+# as_entry_vector errors on an unsupported entry type
+
+    Code
+      as_entry_vector("oops", 2)
+    Condition
+      Error:
+      ! `entry` must be a numeric vector or a data frame with a value column.
+

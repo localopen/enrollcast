@@ -129,3 +129,25 @@ test_that("as_base_vector errors on negative enrollment", {
 test_that("as_entry_vector errors on negative values", {
 	expect_snapshot(as_entry_vector(c(130, -5), 2), error = TRUE)
 })
+
+test_that("summarise_ratios last returns NA when all transitions are NA", {
+	R <- matrix(NA_real_, nrow = 1, dimnames = list("1", "2023"))
+	expect_identical(summarise_ratios(R, "last"), c("1" = NA_real_))
+})
+
+test_that("summarise_ratios weighted errors when weights are missing", {
+	R <- matrix(c(0.95, 0.9), nrow = 1, dimnames = list("1", c("2022", "2023")))
+	expect_snapshot(summarise_ratios(R, "weighted"), error = TRUE)
+})
+
+test_that("as_base_vector errors on an invalid base type", {
+	expect_snapshot(as_base_vector(c(1, 2, 3), c("K", "1", "2")), error = TRUE)
+})
+
+test_that("as_entry_vector errors on a data frame without a value column", {
+	expect_snapshot(as_entry_vector(data.frame(x = 1:2), 2), error = TRUE)
+})
+
+test_that("as_entry_vector errors on an unsupported entry type", {
+	expect_snapshot(as_entry_vector("oops", 2), error = TRUE)
+})

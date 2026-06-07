@@ -105,3 +105,10 @@ test_that("zero feeder enrollment warns about non-finite ratios", {
 	fx$enrollment[fx$grade == "K" & fx$year == 2022] <- 0
 	expect_snapshot(progression_ratios(fx))
 })
+
+test_that("progression_ratios errors on an unmatched (NA) grade", {
+	fx <- gpr_fixture()
+	fx$grade <- as.character(fx$grade)
+	fx$grade[1] <- NA
+	expect_snapshot(progression_ratios(fx), error = TRUE)
+})
