@@ -1,8 +1,8 @@
 ---
-title: "Projecting enrollment with gpr"
+title: "Projecting enrollment with enrollcast"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Projecting enrollment with gpr}
+  %\VignetteIndexEntry{Projecting enrollment with enrollcast}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,16 +12,16 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ```{r setup}
-library(gpr)
+library(enrollcast)
 ```
 
 ## The grade progression ratio method
 
 The cohort survival / grade progression ratio method projects enrollment by
 asking: of the students in grade *g* this year, how many appear in grade *g+1*
-next year? That ratio captures net retention, migration, and repetition. `gpr`
-estimates these ratios from history and applies them forward with a Leslie
-matrix.
+next year? That ratio captures net retention, migration, and repetition.
+`enrollcast` estimates these ratios from history and applies them forward with
+a Leslie matrix.
 
 ## A small district
 

@@ -1,9 +1,9 @@
-# gpr
+# enrollcast
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-`gpr` projects school enrollment using the cohort survival / grade
+`enrollcast` projects school enrollment using the cohort survival / grade
 progression ratio method, implemented with a Leslie matrix. It works at any
 level of aggregation (school, district, LEA, city-wide) and any number of
 grades, because it operates on a single grade-by-year enrollment series.
@@ -12,13 +12,13 @@ grades, because it operates on a single grade-by-year enrollment series.
 
 ```r
 # install.packages("pak")
-pak::pak("rorylawless/gpr")
+pak::pak("gitlab::rorylawless/enrollcast")
 ```
 
 ## Usage
 
 ```r
-library(gpr)
+library(enrollcast)
 
 # Historical grade-level enrollment (long format).
 history <- data.frame(
@@ -51,7 +51,7 @@ leslie_matrix(ratios)
 
 ### Multiple aggregation units
 
-`gpr` projects one series per call. To project many schools or LEAs, split and
+`enrollcast` projects one series per call. To project many schools or LEAs, split and
 map:
 
 ```r

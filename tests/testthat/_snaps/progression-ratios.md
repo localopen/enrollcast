@@ -57,7 +57,7 @@
 # n_years must be a positive integer
 
     Code
-      progression_ratios(gpr_fixture(), n_years = 0)
+      progression_ratios(enrollcast_fixture(), n_years = 0)
     Condition
       Error:
       ! `n_years` must be a positive integer.

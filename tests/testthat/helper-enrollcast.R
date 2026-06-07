@@ -1,6 +1,6 @@
 # Canonical K-2, 2021-2023 fixture used across tests. Grade is a factor so
 # ordering is unambiguous.
-gpr_fixture <- function() {
+enrollcast_fixture <- function() {
 	data.frame(
 		year = rep(c(2021, 2022, 2023), each = 3),
 		grade = factor(

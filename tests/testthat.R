@@ -1,4 +1,4 @@
 library(testthat)
-library(gpr)
+library(enrollcast)
 
-test_check("gpr")
+test_check("enrollcast")

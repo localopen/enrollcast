@@ -1,4 +1,4 @@
-proj_ratios <- function() progression_ratios(gpr_fixture())
+proj_ratios <- function() progression_ratios(enrollcast_fixture())
 proj_base <- function() {
 	data.frame(
 		grade = c("K", "1", "2"),
