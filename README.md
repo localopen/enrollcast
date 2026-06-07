@@ -12,7 +12,7 @@ grades, because it operates on a single grade-by-year enrollment series.
 
 ```r
 # install.packages("pak")
-pak::pak("gitlab::rorylawless/enrollcast")
+pak::pak("gitlab::localopen/enrollcast")
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ ratios <- progression_ratios(history, method = "mean")
 ratios
 
 # 2. Project forward. The entry grade (K) is supplied exogenously.
-base <- subset(history, year == 2023, c("grade", "enrollment"))
+base <- history[history$year == 2023, c("grade", "enrollment")]
 projection <- project_enrollment(
   base       = base,
   ratios     = ratios,
@@ -57,7 +57,7 @@ map:
 ```r
 projections <- lapply(split(history, history$school), function(df) {
   ratios <- progression_ratios(df)
-  base <- subset(df, year == max(df$year), c("grade", "enrollment"))
+  base <- df[df$year == max(df$year), c("grade", "enrollment")]
   project_enrollment(base, ratios, horizon = 3, entry = rep(100, 3))
 })
 ```
