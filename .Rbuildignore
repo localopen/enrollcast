@@ -7,5 +7,6 @@
 ^doc$
 ^Meta$
 ^\.claude$
+^CLAUDE\.md$
 ^data-raw$
 ^\.gitlab-ci\.yml$
