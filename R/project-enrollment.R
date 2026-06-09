@@ -26,19 +26,17 @@ entry_values <- function(entry, horizon, base_vec, entry_grade) {
 run_projection <- function(m, base_vec, entry_grade, entry_vals, out_years) {
   go <- rownames(m)
   n <- base_vec
-  result <- vector("list", length(out_years))
+  out <- matrix(NA_real_, nrow = length(go), ncol = length(out_years))
   for (h in seq_along(out_years)) {
-    n <- as.vector(m %*% n)
-    names(n) <- go
+    n <- drop(m %*% n)
     n[entry_grade] <- entry_vals[h]
-    result[[h]] <- data.frame(
-      year = out_years[h],
-      grade = go,
-      enrollment = unname(n),
-      row.names = NULL
-    )
+    out[, h] <- n
   }
-  do.call(rbind, result)
+  data.frame(
+    year = rep(out_years, each = length(go)),
+    grade = rep(go, times = length(out_years)),
+    enrollment = as.vector(out)
+  )
 }
 
 #' Project enrollment forward
