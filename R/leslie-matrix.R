@@ -23,49 +23,49 @@
 #' )
 #' leslie_matrix(ratios)
 leslie_matrix <- function(ratios, grade_order = NULL) {
-	check_columns(ratios, c("grade_from", "grade_to", "ratio"), "ratios")
-	from <- as.character(ratios$grade_from)
-	to <- as.character(ratios$grade_to)
+  check_columns(ratios, c("grade_from", "grade_to", "ratio"), "ratios")
+  from <- as.character(ratios$grade_from)
+  to <- as.character(ratios$grade_to)
 
-	if (is.null(grade_order)) {
-		grade_order <- chain_order(from, to)
-	} else {
-		grade_order <- as.character(grade_order)
-	}
-	G <- length(grade_order)
-	if (G < 2) {
-		stop("Need at least 2 grades to build a Leslie matrix.", call. = FALSE)
-	}
+  if (is.null(grade_order)) {
+    grade_order <- chain_order(from, to)
+  } else {
+    grade_order <- as.character(grade_order)
+  }
+  G <- length(grade_order)
+  if (G < 2) {
+    stop("Need at least 2 grades to build a Leslie matrix.", call. = FALSE)
+  }
 
-	ii <- match(to, grade_order)
-	jj <- match(from, grade_order)
-	if (anyNA(ii) || anyNA(jj)) {
-		stop("`ratios` references a grade not in `grade_order`.", call. = FALSE)
-	}
+  ii <- match(to, grade_order)
+  jj <- match(from, grade_order)
+  if (anyNA(ii) || anyNA(jj)) {
+    stop("`ratios` references a grade not in `grade_order`.", call. = FALSE)
+  }
 
-	if (anyDuplicated(to)) {
-		stop(
-			"`ratios` has more than one ratio feeding the same grade; ",
-			"each grade may be fed only once.",
-			call. = FALSE
-		)
-	}
+  if (anyDuplicated(to)) {
+    stop(
+      "`ratios` has more than one ratio feeding the same grade; ",
+      "each grade may be fed only once.",
+      call. = FALSE
+    )
+  }
 
-	M <- matrix(
-		0,
-		nrow = G,
-		ncol = G,
-		dimnames = list(grade_order, grade_order)
-	)
-	M[cbind(ii, jj)] <- ratios$ratio
+  M <- matrix(
+    0,
+    nrow = G,
+    ncol = G,
+    dimnames = list(grade_order, grade_order)
+  )
+  M[cbind(ii, jj)] <- ratios$ratio
 
-	missing_in <- grade_order[-1][!grade_order[-1] %in% to]
-	if (length(missing_in)) {
-		stop(
-			"Missing progression ratio(s) feeding grade(s): ",
-			toString(missing_in),
-			call. = FALSE
-		)
-	}
-	M
+  missing_in <- grade_order[-1][!grade_order[-1] %in% to]
+  if (length(missing_in)) {
+    stop(
+      "Missing progression ratio(s) feeding grade(s): ",
+      toString(missing_in),
+      call. = FALSE
+    )
+  }
+  M
 }

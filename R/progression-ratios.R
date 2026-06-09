@@ -1,71 +1,71 @@
 # Validate inputs and return cleaned pieces (grades, enrollment, order, years).
 prepare_enrollment <- function(data, year, grade, enrollment, grade_order) {
-	check_columns(data, c(year, grade, enrollment), "data")
-	gr_raw <- data[[grade]]
-	en <- data[[enrollment]]
-	if (!is.numeric(en)) {
-		stop("`enrollment` column must be numeric.", call. = FALSE)
-	}
-	if (any(en < 0, na.rm = TRUE)) {
-		stop("`enrollment` must be non-negative.", call. = FALSE)
-	}
-	go <- resolve_grade_order(gr_raw, grade_order)
-	if (length(go) < 2) {
-		stop("Need at least 2 grades to compute progression ratios.", call. = FALSE)
-	}
-	yr_num <- suppressWarnings(as.numeric(as.character(data[[year]])))
-	if (anyNA(yr_num)) {
-		stop("`year` must be numeric or coercible to numeric.", call. = FALSE)
-	}
-	list(grade = as.character(gr_raw), enrollment = en, go = go, year = yr_num)
+  check_columns(data, c(year, grade, enrollment), "data")
+  gr_raw <- data[[grade]]
+  en <- data[[enrollment]]
+  if (!is.numeric(en)) {
+    stop("`enrollment` column must be numeric.", call. = FALSE)
+  }
+  if (any(en < 0, na.rm = TRUE)) {
+    stop("`enrollment` must be non-negative.", call. = FALSE)
+  }
+  go <- resolve_grade_order(gr_raw, grade_order)
+  if (length(go) < 2) {
+    stop("Need at least 2 grades to compute progression ratios.", call. = FALSE)
+  }
+  yr_num <- suppressWarnings(as.numeric(as.character(data[[year]])))
+  if (anyNA(yr_num)) {
+    stop("`year` must be numeric or coercible to numeric.", call. = FALSE)
+  }
+  list(grade = as.character(gr_raw), enrollment = en, go = go, year = yr_num)
 }
 
 # Build a grade x year enrollment matrix from long records.
 enrollment_matrix <- function(grade, year, enrollment, go) {
-	years <- sort(unique(year))
-	ri <- match(grade, go)
-	ci <- match(year, years)
-	if (anyNA(ri)) {
-		stop("Some grades are not in the resolved grade order.", call. = FALSE)
-	}
-	if (anyDuplicated(cbind(ri, ci))) {
-		stop("Duplicate (grade, year) rows in `data`.", call. = FALSE)
-	}
-	w <- matrix(
-		NA_real_,
-		nrow = length(go),
-		ncol = length(years),
-		dimnames = list(go, as.character(years))
-	)
-	w[cbind(ri, ci)] <- enrollment
-	w
+  years <- sort(unique(year))
+  ri <- match(grade, go)
+  ci <- match(year, years)
+  if (anyNA(ri)) {
+    stop("Some grades are not in the resolved grade order.", call. = FALSE)
+  }
+  if (anyDuplicated(cbind(ri, ci))) {
+    stop("Duplicate (grade, year) rows in `data`.", call. = FALSE)
+  }
+  w <- matrix(
+    NA_real_,
+    nrow = length(go),
+    ncol = length(years),
+    dimnames = list(go, as.character(years))
+  )
+  w[cbind(ri, ci)] <- enrollment
+  w
 }
 
 # Per-transition ratios: destination grade at t+1 over feeder grade at t.
 transition_ratios <- function(w) {
-	years <- as.numeric(colnames(w))
-	trans <- which(diff(years) == 1)
-	if (length(trans) == 0) {
-		stop("No consecutive year pairs found to form transitions.", call. = FALSE)
-	}
-	n_grades <- nrow(w)
-	r <- matrix(
-		NA_real_,
-		nrow = n_grades - 1,
-		ncol = length(trans),
-		dimnames = list(rownames(w)[-1], as.character(years[trans + 1]))
-	)
-	for (j in seq_along(trans)) {
-		r[, j] <- w[2:n_grades, trans[j] + 1] / w[1:(n_grades - 1), trans[j]]
-	}
-	r
+  years <- as.numeric(colnames(w))
+  trans <- which(diff(years) == 1)
+  if (length(trans) == 0) {
+    stop("No consecutive year pairs found to form transitions.", call. = FALSE)
+  }
+  n_grades <- nrow(w)
+  r <- matrix(
+    NA_real_,
+    nrow = n_grades - 1,
+    ncol = length(trans),
+    dimnames = list(rownames(w)[-1], as.character(years[trans + 1]))
+  )
+  for (j in seq_along(trans)) {
+    r[, j] <- w[2:n_grades, trans[j] + 1] / w[1:(n_grades - 1), trans[j]]
+  }
+  r
 }
 
 # Validate the optional n_years argument.
 check_n_years <- function(n_years) {
-	if (!is.null(n_years) && !is_count(n_years)) {
-		stop("`n_years` must be a positive integer.", call. = FALSE)
-	}
+  if (!is.null(n_years) && !is_count(n_years)) {
+    stop("`n_years` must be a positive integer.", call. = FALSE)
+  }
 }
 
 #' Compute grade progression ratios
@@ -102,42 +102,42 @@ check_n_years <- function(n_years) {
 #' )
 #' progression_ratios(history)
 progression_ratios <- function(
-	data,
-	year = "year",
-	grade = "grade",
-	enrollment = "enrollment",
-	method = c(
-		"mean",
-		"geometric",
-		"median",
-		"last",
-		"weighted"
-	),
-	n_years = NULL,
-	weights = NULL,
-	grade_order = NULL
+  data,
+  year = "year",
+  grade = "grade",
+  enrollment = "enrollment",
+  method = c(
+    "mean",
+    "geometric",
+    "median",
+    "last",
+    "weighted"
+  ),
+  n_years = NULL,
+  weights = NULL,
+  grade_order = NULL
 ) {
-	method <- match.arg(method)
-	check_n_years(n_years)
-	clean <- prepare_enrollment(data, year, grade, enrollment, grade_order)
-	w <- enrollment_matrix(clean$grade, clean$year, clean$enrollment, clean$go)
-	r <- transition_ratios(w)
-	if (!is.null(n_years)) {
-		r <- r[, utils::tail(seq_len(ncol(r)), n_years), drop = FALSE]
-	}
-	if (any(is.infinite(r)) || any(is.nan(r))) {
-		warning(
-			"Some progression ratios are infinite or NaN because a feeder grade ",
-			"had zero enrollment in at least one transition.",
-			call. = FALSE
-		)
-	}
-	ratio <- summarise_ratios(r, method = method, weights = weights)
-	go <- clean$go
-	data.frame(
-		grade_from = go[-length(go)],
-		grade_to = go[-1],
-		ratio = unname(ratio),
-		row.names = NULL
-	)
+  method <- match.arg(method)
+  check_n_years(n_years)
+  clean <- prepare_enrollment(data, year, grade, enrollment, grade_order)
+  w <- enrollment_matrix(clean$grade, clean$year, clean$enrollment, clean$go)
+  r <- transition_ratios(w)
+  if (!is.null(n_years)) {
+    r <- r[, utils::tail(seq_len(ncol(r)), n_years), drop = FALSE]
+  }
+  if (any(is.infinite(r)) || any(is.nan(r))) {
+    warning(
+      "Some progression ratios are infinite or NaN because a feeder grade ",
+      "had zero enrollment in at least one transition.",
+      call. = FALSE
+    )
+  }
+  ratio <- summarise_ratios(r, method = method, weights = weights)
+  go <- clean$go
+  data.frame(
+    grade_from = go[-length(go)],
+    grade_to = go[-1],
+    ratio = unname(ratio),
+    row.names = NULL
+  )
 }

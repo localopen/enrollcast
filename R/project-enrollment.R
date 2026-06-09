@@ -1,44 +1,44 @@
 # Validate horizon and return it as an integer.
 check_horizon <- function(horizon) {
-	if (!is_count(horizon)) {
-		stop("`horizon` must be a single positive integer.", call. = FALSE)
-	}
-	as.integer(horizon)
+  if (!is_count(horizon)) {
+    stop("`horizon` must be a single positive integer.", call. = FALSE)
+  }
+  as.integer(horizon)
 }
 
 # Resolve exogenous entry-grade values for each projected year.
 entry_values <- function(entry, horizon, base_vec, entry_grade) {
-	if (is.null(entry)) {
-		warning(
-			sprintf(
-				"`entry` not supplied; holding entry grade '%s' constant at %g.",
-				entry_grade,
-				base_vec[[entry_grade]]
-			),
-			call. = FALSE
-		)
-		return(rep(base_vec[[entry_grade]], horizon))
-	}
-	as_entry_vector(entry, horizon)
+  if (is.null(entry)) {
+    warning(
+      sprintf(
+        "`entry` not supplied; holding entry grade '%s' constant at %g.",
+        entry_grade,
+        base_vec[[entry_grade]]
+      ),
+      call. = FALSE
+    )
+    return(rep(base_vec[[entry_grade]], horizon))
+  }
+  as_entry_vector(entry, horizon)
 }
 
 # Advance enrollment one year at a time, overwriting the entry grade.
 run_projection <- function(m, base_vec, entry_grade, entry_vals, out_years) {
-	go <- rownames(m)
-	n <- base_vec
-	result <- vector("list", length(out_years))
-	for (h in seq_along(out_years)) {
-		n <- as.vector(m %*% n)
-		names(n) <- go
-		n[entry_grade] <- entry_vals[h]
-		result[[h]] <- data.frame(
-			year = out_years[h],
-			grade = go,
-			enrollment = unname(n),
-			row.names = NULL
-		)
-	}
-	do.call(rbind, result)
+  go <- rownames(m)
+  n <- base_vec
+  result <- vector("list", length(out_years))
+  for (h in seq_along(out_years)) {
+    n <- as.vector(m %*% n)
+    names(n) <- go
+    n[entry_grade] <- entry_vals[h]
+    result[[h]] <- data.frame(
+      year = out_years[h],
+      grade = go,
+      enrollment = unname(n),
+      row.names = NULL
+    )
+  }
+  do.call(rbind, result)
 }
 
 #' Project enrollment forward
@@ -80,26 +80,26 @@ run_projection <- function(m, base_vec, entry_grade, entry_vals, out_years) {
 #'   start_year = 2023
 #' )
 project_enrollment <- function(
-	base,
-	ratios,
-	horizon,
-	entry = NULL,
-	start_year = NULL
+  base,
+  ratios,
+  horizon,
+  entry = NULL,
+  start_year = NULL
 ) {
-	horizon <- check_horizon(horizon)
-	m <- leslie_matrix(ratios)
-	go <- rownames(m)
-	entry_grade <- go[1]
-	base_info <- as_base_vector(base, go)
-	n <- base_info$vector
-	if (is.null(start_year)) {
-		start_year <- base_info$year
-	}
-	entry_vals <- entry_values(entry, horizon, n, entry_grade)
-	out_years <- if (is.null(start_year)) {
-		seq_len(horizon)
-	} else {
-		start_year + seq_len(horizon)
-	}
-	run_projection(m, n, entry_grade, entry_vals, out_years)
+  horizon <- check_horizon(horizon)
+  m <- leslie_matrix(ratios)
+  go <- rownames(m)
+  entry_grade <- go[1]
+  base_info <- as_base_vector(base, go)
+  n <- base_info$vector
+  if (is.null(start_year)) {
+    start_year <- base_info$year
+  }
+  entry_vals <- entry_values(entry, horizon, n, entry_grade)
+  out_years <- if (is.null(start_year)) {
+    seq_len(horizon)
+  } else {
+    start_year + seq_len(horizon)
+  }
+  run_projection(m, n, entry_grade, entry_vals, out_years)
 }
