@@ -48,17 +48,7 @@ transition_ratios <- function(w) {
   if (length(trans) == 0) {
     stop("No consecutive year pairs found to form transitions.", call. = FALSE)
   }
-  n_grades <- nrow(w)
-  r <- matrix(
-    NA_real_,
-    nrow = n_grades - 1,
-    ncol = length(trans),
-    dimnames = list(rownames(w)[-1], as.character(years[trans + 1]))
-  )
-  for (j in seq_along(trans)) {
-    r[, j] <- w[2:n_grades, trans[j] + 1] / w[1:(n_grades - 1), trans[j]]
-  }
-  r
+  w[-1, trans + 1, drop = FALSE] / w[-nrow(w), trans, drop = FALSE]
 }
 
 # Validate the optional n_years argument.
