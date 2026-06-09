@@ -2,7 +2,7 @@
 
 # TRUE if `x` is a single, non-missing, positive integer value.
 is_count <- function(x) {
-  rlang::is_scalar_integerish(x, finite = TRUE) && x >= 1
+  is.numeric(x) && length(x) == 1 && is.finite(x) && x %% 1 == 0 && x >= 1
 }
 
 check_columns <- function(data, cols, arg = "data") {

@@ -19,8 +19,7 @@ Depends:
     R (>= 4.0)
 Imports:
     stats,
-    utils,
-    rlang
+    utils
 Suggests:
     knitr,
     rmarkdown,
