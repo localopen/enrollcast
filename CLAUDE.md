@@ -77,19 +77,22 @@ old `gpr` name — don't treat them as current sources).
 
 ## Conventions
 
-- **Tab indentation, not spaces** — intentional and enforced by `air`. Do not
-  "fix" it to spaces. (A raw `lintr::lint_package()` flags ~968 tab lints; that
-  is expected and out of scope — `goodpractice` excludes those linters.)
-- **Base R only.** Imports are `stats` and `utils`; `Depends: R (>= 4.0)`. Do
-  not add tidyverse / new dependencies without maintainer sign-off.
+- **2-space indentation, enforced by `air`** with default settings (`air.toml`
+  is intentionally empty). Run `air format .` before every commit. (The code was
+  tab-indented through early development; commit `ce31a5c` reformatted everything
+  to Air defaults — don't reintroduce tabs, and ignore stale tab references in
+  `docs/superpowers/`.)
+- **Minimal dependencies.** Imports are `stats`, `utils`, and `rlang` (used only
+  for low-level predicates such as `is_scalar_integerish`); `Depends: R (>= 4.0)`.
+  No tidyverse. Don't add new dependencies without maintainer sign-off.
 - **roxygen2 with markdown** (`Roxygen: list(markdown = TRUE)`). Edit roxygen
   comments in `R/`, then `devtools::document()` — never edit `man/` or `NAMESPACE`.
 - Internal helpers are **not exported**, use **snake_case**, and carry a plain
   one-line comment (no roxygen). Exported functions are factored into small
   helpers to keep cyclomatic complexity < 15.
 - Error/validation messages use `stop(..., call. = FALSE)`. Reuse the shared
-  predicate `is_count()` for positive-integer checks rather than re-inlining the
-  `is.numeric && length == 1 && ...` chain.
+  predicate `is_count()` — a thin wrapper over `rlang::is_scalar_integerish(x,
+  finite = TRUE) && x >= 1` — for positive-integer checks rather than re-inlining it.
 
 ## Testing
 
