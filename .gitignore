@@ -6,6 +6,4 @@
 *.tar.gz
 ..Rcheck/
 inst/doc
-.claude/
-/doc/
 /Meta/
