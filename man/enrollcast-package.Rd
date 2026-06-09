@@ -6,13 +6,13 @@
 \alias{enrollcast-package}
 \title{enrollcast: Project School Enrollment with Grade Progression Ratios}
 \description{
-Projects school enrollment using the cohort survival / grade progression ratio method, implemented with a Leslie matrix. Works at any level of aggregation (school, district, local education agency, city-wide) and any number of grades. Provides functions to compute progression ratios from historical grade-level enrollment and to project future enrollment forward an arbitrary horizon.
+Projects school enrollment using the cohort survival / grade progression ratio method, implemented with a Leslie matrix. Works at any level of aggregation and any number of grades. Provides functions to compute progression ratios from historical grade-level enrollment and to project future enrollment forward an arbitrary horizon.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://gitlab.com/localopen/enrollcast}
-  \item Report bugs at \url{https://gitlab.com/localopen/enrollcast/-/issues}
+  \item Report bugs at \url{https://gitlab.com/localopen/enrollcast/-/work_items}
 }
 
 }

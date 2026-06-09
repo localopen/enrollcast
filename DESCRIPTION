@@ -4,15 +4,14 @@ Version: 0.0.0.9000
 Authors@R:
     person("Rory", "Lawless", email = "rory@rorylawless.com",
            role = c("aut", "cre"))
-Description: Projects school enrollment using the cohort survival / grade
-    progression ratio method, implemented with a Leslie matrix. Works at any
-    level of aggregation (school, district, local education agency, city-wide)
-    and any number of grades. Provides functions to compute progression ratios
-    from historical grade-level enrollment and to project future enrollment
-    forward an arbitrary horizon.
+Description: Projects school enrollment using the cohort survival / grade 
+    progression ratio method, implemented with a Leslie matrix. Works at any 
+    level of aggregation and any number of grades. Provides functions to 
+    compute progression ratios from historical grade-level enrollment and to 
+    project future enrollment forward an arbitrary horizon.
 License: MIT + file LICENSE
 URL: https://gitlab.com/localopen/enrollcast
-BugReports: https://gitlab.com/localopen/enrollcast/-/issues
+BugReports: https://gitlab.com/localopen/enrollcast/-/work_items
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0
