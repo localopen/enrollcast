@@ -59,7 +59,7 @@ leslie_matrix <- function(ratios, grade_order = NULL) {
   )
   M[cbind(ii, jj)] <- ratios$ratio
 
-  missing_in <- grade_order[-1][!grade_order[-1] %in% to]
+  missing_in <- setdiff(grade_order[-1], to)
   if (length(missing_in)) {
     stop(
       "Missing progression ratio(s) feeding grade(s): ",
