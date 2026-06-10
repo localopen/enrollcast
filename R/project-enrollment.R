@@ -88,10 +88,9 @@ project_enrollment <- function(
   m <- leslie_matrix(ratios)
   go <- rownames(m)
   entry_grade <- go[1]
-  base_info <- as_base_vector(base, go)
-  n <- base_info$vector
+  n <- as_base_vector(base, go)
   if (is.null(start_year)) {
-    start_year <- base_info$year
+    start_year <- base_year(base)
   }
   entry_vals <- entry_values(entry, horizon, n, entry_grade)
   out_years <- if (is.null(start_year)) {

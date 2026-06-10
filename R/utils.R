@@ -125,19 +125,10 @@ summarise_ratios <- function(R, method, weights = NULL) {
   })
 }
 
-# Coerce `base` to a named numeric vector ordered by `go`; derive the year
-# when present.
+# Coerce `base` to a named numeric vector ordered by `go`.
 as_base_vector <- function(base, go) {
-  year <- NULL
   if (is.data.frame(base)) {
     check_columns(base, c("grade", "enrollment"), "base")
-    if ("year" %in% names(base)) {
-      uy <- unique(base$year)
-      if (length(uy) == 1) {
-        y <- suppressWarnings(as.numeric(as.character(uy)))
-        if (!is.na(y)) year <- y
-      }
-    }
     v <- stats::setNames(as.numeric(base$enrollment), as.character(base$grade))
   } else if (is.numeric(base) && !is.null(names(base))) {
     v <- base
@@ -168,7 +159,21 @@ as_base_vector <- function(base, go) {
   if (any(!is.na(vv) & vv < 0)) {
     stop("`base` enrollment must be non-negative.", call. = FALSE)
   }
-  list(vector = vv, year = year)
+  vv
+}
+
+# Year label derived from `base`: the single numeric-coercible value of a
+# `year` column when `base` is a data frame, else NULL.
+base_year <- function(base) {
+  if (!is.data.frame(base) || !"year" %in% names(base)) {
+    return(NULL)
+  }
+  uy <- unique(base$year)
+  if (length(uy) != 1) {
+    return(NULL)
+  }
+  y <- suppressWarnings(as.numeric(as.character(uy)))
+  if (is.na(y)) NULL else y
 }
 
 # Coerce `entry` to a numeric vector of length `horizon`.

@@ -30,22 +30,37 @@ test_that("summarise_ratios computes each method", {
   )
 })
 
-test_that("as_base_vector aligns df to grade order and derives year", {
+test_that("as_base_vector aligns a data frame to the grade order", {
   df <- data.frame(
     year = 2023,
     grade = c("2", "K", "1"),
     enrollment = c(91, 120, 99)
   )
-  res <- as_base_vector(df, c("K", "1", "2"))
-  expect_identical(res$vector, c(K = 120, `1` = 99, `2` = 91))
-  expect_identical(res$year, 2023)
+  expect_identical(
+    as_base_vector(df, c("K", "1", "2")),
+    c(K = 120, `1` = 99, `2` = 91)
+  )
 })
 
 test_that("as_base_vector accepts a named numeric vector", {
   v <- c(K = 120, `1` = 99, `2` = 91)
-  res <- as_base_vector(v, c("K", "1", "2"))
-  expect_identical(res$vector, v)
-  expect_null(res$year)
+  expect_identical(as_base_vector(v, c("K", "1", "2")), v)
+})
+
+test_that("base_year derives the year from a single-year base data frame", {
+  df <- data.frame(year = 2023, grade = "K", enrollment = 120)
+  expect_identical(base_year(df), 2023)
+})
+
+test_that("base_year returns NULL when no year can be derived", {
+  expect_null(base_year(c(K = 120))) # not a data frame
+  expect_null(base_year(data.frame(grade = "K", enrollment = 120))) # no column
+  expect_null(base_year(
+    data.frame(year = c(2022, 2023), grade = c("K", "1"), enrollment = c(1, 2))
+  )) # ambiguous
+  expect_null(base_year(
+    data.frame(year = "spring", grade = "K", enrollment = 120)
+  )) # not numeric-coercible
 })
 
 test_that("as_entry_vector returns a validated numeric vector", {
