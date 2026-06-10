@@ -41,7 +41,7 @@ All R commands assume the package root. Tests and the vignette need pandoc —
 ```bash
 export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64
 
-Rscript -e "devtools::test()"                          # run tests (currently 95, FAIL 0)
+Rscript -e "devtools::test()"                          # run tests (currently 98, FAIL 0)
 Rscript -e 'devtools::check(cran = TRUE)'              # full R CMD check; expect 0/0/0
 Rscript -e 'covr::package_coverage(".")'              # coverage — target is 100%
 Rscript -e 'print(goodpractice::gp("."))'             # package quality gate
@@ -82,8 +82,8 @@ old `gpr` name — don't treat them as current sources).
   tab-indented through early development; commit `ce31a5c` reformatted everything
   to Air defaults — don't reintroduce tabs, and ignore stale tab references in
   `docs/superpowers/`.)
-- **Minimal dependencies.** Imports are `stats`, `utils`, and `rlang` (used only
-  for low-level predicates such as `is_scalar_integerish`); `Depends: R (>= 4.0)`.
+- **Minimal dependencies.** Imports are `stats` and `utils` only (both ship
+  with R — zero third-party dependencies); `Depends: R (>= 4.0)`.
   No tidyverse. Don't add new dependencies without maintainer sign-off.
 - **roxygen2 with markdown** (`Roxygen: list(markdown = TRUE)`). Edit roxygen
   comments in `R/`, then `devtools::document()` — never edit `man/` or `NAMESPACE`.
@@ -91,8 +91,8 @@ old `gpr` name — don't treat them as current sources).
   one-line comment (no roxygen). Exported functions are factored into small
   helpers to keep cyclomatic complexity < 15.
 - Error/validation messages use `stop(..., call. = FALSE)`. Reuse the shared
-  predicate `is_count()` — a thin wrapper over `rlang::is_scalar_integerish(x,
-  finite = TRUE) && x >= 1` — for positive-integer checks rather than re-inlining it.
+  predicate `is_count()` (base-R one-liner in `R/utils.R`) for positive-integer
+  checks rather than re-inlining it.
 
 ## Testing
 
