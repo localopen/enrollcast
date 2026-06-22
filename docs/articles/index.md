@@ -2,4 +2,5 @@
 
 ### All vignettes
 
-- [Projecting enrollment with enrollcast](enrollcast.md):
+- [Projecting enrollment with
+  enrollcast](https://gitlab.com/localopen/enrollcast/articles/enrollcast.md):

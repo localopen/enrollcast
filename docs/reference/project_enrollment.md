@@ -30,8 +30,8 @@ project_enrollment(
 - ratios:
 
   A data frame of progression ratios from
-  [`progression_ratios()`](progression_ratios.md). Optional when a
-  `schedule` is supplied.
+  [`progression_ratios()`](https://gitlab.com/localopen/enrollcast/reference/progression_ratios.md).
+  Optional when a `schedule` is supplied.
 
 - horizon:
 
@@ -48,10 +48,11 @@ project_enrollment(
 
   Optional prebuilt projection schedule: a list of per-year steps, each
   `list(matrix = <square projection matrix>, entry = <NULL or a single number>)`,
-  as produced by [`swing_schedule()`](swing_schedule.md). When supplied,
-  `ratios` and `entry` must be `NULL` and `horizon` defaults to the
-  schedule length. Step matrices must share identical grade dimnames,
-  which determine the grade order `base` is aligned to.
+  as produced by
+  [`swing_schedule()`](https://gitlab.com/localopen/enrollcast/reference/swing_schedule.md).
+  When supplied, `ratios` and `entry` must be `NULL` and `horizon`
+  defaults to the schedule length. Step matrices must share identical
+  grade dimnames, which determine the grade order `base` is aligned to.
 
 - start_year:
 

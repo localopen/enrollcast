@@ -4,7 +4,7 @@
 * `progression_ratios()` computes grade progression ratios from historical
   grade-level enrollment, with configurable averaging (`mean`, `geometric`,
   `median`, `last`, `weighted`).
-* `projection_matrix()` (renamed) assembles the projection matrix from
+* `projection_matrix()` assembles the projection matrix from
   progression ratios.
 * `project_enrollment()` projects enrollment forward an arbitrary horizon,
   taking the entry grade exogenously.
