@@ -1,0 +1,7 @@
+[lint]
+select = ["DPLYR", "CORR", "SUSP", "PERF", "READ", "TESTTHAT"]
+fixable = ["DPLYR", "CORR", "SUSP", "PERF", "READ", "TESTTHAT"]
+default-exclude = true
+
+[lint.assignment]
+operator = "<-"
