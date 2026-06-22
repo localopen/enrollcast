@@ -30,3 +30,27 @@
       Error:
       ! `horizon` must be a single positive integer.
 
+# schedule and ratios are mutually exclusive
+
+    Code
+      project_enrollment(proj_base(), ratios = proj_ratios(), schedule = sched)
+    Condition
+      Error:
+      ! Supply either `ratios`/`entry` or `schedule`, not both.
+
+# project_enrollment needs ratios or a schedule
+
+    Code
+      project_enrollment(proj_base(), horizon = 2)
+    Condition
+      Error:
+      ! Supply `ratios` (or a `schedule`).
+
+# horizon must match schedule length when both are given
+
+    Code
+      project_enrollment(proj_base(), schedule = sched, horizon = 2)
+    Condition
+      Error:
+      ! `horizon` must equal the schedule length when `schedule` is supplied.
+

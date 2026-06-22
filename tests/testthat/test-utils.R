@@ -166,3 +166,41 @@ test_that("as_entry_vector errors on a data frame without a value column", {
 test_that("as_entry_vector errors on an unsupported entry type", {
   expect_snapshot(as_entry_vector("oops", 2), error = TRUE)
 })
+
+test_that("check_schedule accepts a valid schedule and returns grade order", {
+  m <- projection_matrix(
+    data.frame(grade_from = "K", grade_to = "1", ratio = 0.9)
+  )
+  expect_identical(
+    check_schedule(list(
+      list(matrix = m, entry = 1),
+      list(matrix = m, entry = NULL)
+    )),
+    c("K", "1")
+  )
+})
+
+test_that("check_schedule rejects malformed schedules", {
+  m <- projection_matrix(
+    data.frame(grade_from = "K", grade_to = "1", ratio = 0.9)
+  )
+  expect_snapshot(check_schedule(list()), error = TRUE)
+  expect_snapshot(check_schedule(list(list(entry = 1))), error = TRUE)
+  expect_snapshot(
+    check_schedule(list(list(matrix = m[, 1, drop = FALSE]))),
+    error = TRUE
+  )
+  bad <- m
+  colnames(bad) <- c("X", "Y")
+  expect_snapshot(check_schedule(list(list(matrix = bad))), error = TRUE)
+  m2 <- m
+  dimnames(m2) <- list(c("1", "K"), c("1", "K"))
+  expect_snapshot(
+    check_schedule(list(list(matrix = m), list(matrix = m2))),
+    error = TRUE
+  )
+  expect_snapshot(
+    check_schedule(list(list(matrix = m, entry = c(1, 2)))),
+    error = TRUE
+  )
+})

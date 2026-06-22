@@ -4,7 +4,14 @@
 \alias{project_enrollment}
 \title{Project enrollment forward}
 \usage{
-project_enrollment(base, ratios, horizon, entry = NULL, start_year = NULL)
+project_enrollment(
+  base,
+  ratios = NULL,
+  horizon = NULL,
+  entry = NULL,
+  schedule = NULL,
+  start_year = NULL
+)
 }
 \arguments{
 \item{base}{Most recent observed enrollment: either a data frame with
@@ -12,7 +19,7 @@ columns \code{grade} and \code{enrollment} (optionally \code{year}), or a named 
 vector (names are grades).}
 
 \item{ratios}{A data frame of progression ratios from
-\code{\link[=progression_ratios]{progression_ratios()}}.}
+\code{\link[=progression_ratios]{progression_ratios()}}. Optional when a \code{schedule} is supplied.}
 
 \item{horizon}{Number of years to project (a positive integer).}
 
@@ -20,6 +27,12 @@ vector (names are grades).}
 numeric vector of length \code{horizon}, or a data frame with an \code{enrollment}
 or \code{value} column. If \code{NULL}, the entry grade is held constant at its base
 value and a warning is issued.}
+
+\item{schedule}{Optional prebuilt projection schedule: a list of per-year
+steps, each \verb{list(matrix = <square projection matrix>, entry = <NULL or a single number>)}, as produced by \code{\link[=swing_schedule]{swing_schedule()}}. When supplied,
+\code{ratios} and \code{entry} must be \code{NULL} and \code{horizon} defaults to the schedule
+length. Step matrices must share identical grade dimnames, which determine
+the grade order \code{base} is aligned to.}
 
 \item{start_year}{Optional integer label for the base year; output years run
 from \code{start_year + 1}. If \code{NULL}, it is derived from a \code{year} column in

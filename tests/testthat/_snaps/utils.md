@@ -128,3 +128,51 @@
       Error:
       ! `entry` must be a numeric vector or a data frame with a value column.
 
+# check_schedule rejects malformed schedules
+
+    Code
+      check_schedule(list())
+    Condition
+      Error:
+      ! `schedule` must be a non-empty list of projection steps.
+
+---
+
+    Code
+      check_schedule(list(list(entry = 1)))
+    Condition
+      Error:
+      ! Each `schedule` step must be a list with a `matrix` element.
+
+---
+
+    Code
+      check_schedule(list(list(matrix = m[, 1, drop = FALSE])))
+    Condition
+      Error:
+      ! Each `schedule` step `matrix` must be square.
+
+---
+
+    Code
+      check_schedule(list(list(matrix = bad)))
+    Condition
+      Error:
+      ! Each `schedule` step `matrix` must have identical row and column dimnames.
+
+---
+
+    Code
+      check_schedule(list(list(matrix = m), list(matrix = m2)))
+    Condition
+      Error:
+      ! All `schedule` step matrices must share the same grade dimnames in the same order.
+
+---
+
+    Code
+      check_schedule(list(list(matrix = m, entry = c(1, 2))))
+    Condition
+      Error:
+      ! Each `schedule` step `entry` must be NULL or a single number.
+

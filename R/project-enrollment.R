@@ -22,6 +22,54 @@ entry_values <- function(entry, horizon, base_vec, entry_grade) {
   as_entry_vector(entry, horizon)
 }
 
+# Validate one projection step; return its grade order.
+check_step <- function(step) {
+  if (!is.list(step) || is.null(step$matrix)) {
+    stop(
+      "Each `schedule` step must be a list with a `matrix` element.",
+      call. = FALSE
+    )
+  }
+  m <- step$matrix
+  if (!is.matrix(m) || nrow(m) != ncol(m)) {
+    stop("Each `schedule` step `matrix` must be square.", call. = FALSE)
+  }
+  if (is.null(rownames(m)) || !identical(rownames(m), colnames(m))) {
+    stop(
+      "Each `schedule` step `matrix` must have identical row and column dimnames.",
+      call. = FALSE
+    )
+  }
+  if (
+    !is.null(step$entry) && !(is.numeric(step$entry) && length(step$entry) == 1)
+  ) {
+    stop(
+      "Each `schedule` step `entry` must be NULL or a single number.",
+      call. = FALSE
+    )
+  }
+  rownames(m)
+}
+
+# Validate a user-supplied projection schedule; return its grade order.
+check_schedule <- function(schedule) {
+  if (!is.list(schedule) || length(schedule) == 0) {
+    stop(
+      "`schedule` must be a non-empty list of projection steps.",
+      call. = FALSE
+    )
+  }
+  orders <- lapply(schedule, check_step)
+  go <- orders[[1]]
+  if (!all(vapply(orders, identical, logical(1), go))) {
+    stop(
+      "All `schedule` step matrices must share the same grade dimnames in the same order.",
+      call. = FALSE
+    )
+  }
+  go
+}
+
 # Advance enrollment through a per-year sequence of projection steps.
 run_projection <- function(steps, base_vec, out_years) {
   go <- names(base_vec)
@@ -54,12 +102,18 @@ run_projection <- function(steps, base_vec, out_years) {
 #'   columns `grade` and `enrollment` (optionally `year`), or a named numeric
 #'   vector (names are grades).
 #' @param ratios A data frame of progression ratios from
-#'   [progression_ratios()].
+#'   [progression_ratios()]. Optional when a `schedule` is supplied.
 #' @param horizon Number of years to project (a positive integer).
 #' @param entry Exogenous entry-grade enrollment for each projected year: a
 #'   numeric vector of length `horizon`, or a data frame with an `enrollment`
 #'   or `value` column. If `NULL`, the entry grade is held constant at its base
 #'   value and a warning is issued.
+#' @param schedule Optional prebuilt projection schedule: a list of per-year
+#'   steps, each `list(matrix = <square projection matrix>, entry = <NULL or a
+#'   single number>)`, as produced by [swing_schedule()]. When supplied,
+#'   `ratios` and `entry` must be `NULL` and `horizon` defaults to the schedule
+#'   length. Step matrices must share identical grade dimnames, which determine
+#'   the grade order `base` is aligned to.
 #' @param start_year Optional integer label for the base year; output years run
 #'   from `start_year + 1`. If `NULL`, it is derived from a `year` column in
 #'   `base` when present, otherwise output years are `1..horizon`.
@@ -82,23 +136,46 @@ run_projection <- function(steps, base_vec, out_years) {
 #' )
 project_enrollment <- function(
   base,
-  ratios,
-  horizon,
+  ratios = NULL,
+  horizon = NULL,
   entry = NULL,
+  schedule = NULL,
   start_year = NULL
 ) {
-  horizon <- check_horizon(horizon)
-  m <- projection_matrix(ratios)
-  go <- rownames(m)
-  entry_grade <- go[1]
-  n <- as_base_vector(base, go)
+  if (!is.null(schedule)) {
+    if (!is.null(ratios) || !is.null(entry)) {
+      stop(
+        "Supply either `ratios`/`entry` or `schedule`, not both.",
+        call. = FALSE
+      )
+    }
+    go <- check_schedule(schedule)
+    if (is.null(horizon)) {
+      horizon <- length(schedule)
+    } else if (horizon != length(schedule)) {
+      stop(
+        "`horizon` must equal the schedule length when `schedule` is supplied.",
+        call. = FALSE
+      )
+    }
+    n <- as_base_vector(base, go)
+    steps <- schedule
+  } else {
+    if (is.null(ratios)) {
+      stop("Supply `ratios` (or a `schedule`).", call. = FALSE)
+    }
+    horizon <- check_horizon(horizon)
+    m <- projection_matrix(ratios)
+    go <- rownames(m)
+    n <- as_base_vector(base, go)
+    entry_vals <- entry_values(entry, horizon, n, go[1])
+    steps <- lapply(seq_len(horizon), function(h) {
+      list(matrix = m, entry = entry_vals[[h]])
+    })
+  }
   if (is.null(start_year)) {
     start_year <- base_year(base)
   }
-  entry_vals <- entry_values(entry, horizon, n, entry_grade)
-  steps <- lapply(seq_len(horizon), function(h) {
-    list(matrix = m, entry = entry_vals[[h]])
-  })
   out_years <- if (is.null(start_year)) {
     seq_len(horizon)
   } else {

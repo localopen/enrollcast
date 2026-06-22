@@ -133,3 +133,68 @@ test_that("entry grade is overwritten even when base carries NA", {
   p <- project_enrollment(v, proj_ratios(), horizon = 1, entry = 130)
   expect_equal(p$enrollment[p$grade == "K"], 130)
 })
+
+test_that("a constant schedule reproduces the ratios path", {
+  r <- proj_ratios()
+  m <- projection_matrix(r)
+  entry <- c(130, 140)
+  sched <- lapply(entry, function(e) list(matrix = m, entry = e))
+  p_sched <- project_enrollment(
+    proj_base(),
+    schedule = sched,
+    start_year = 2023
+  )
+  p_ratio <- project_enrollment(
+    proj_base(),
+    r,
+    horizon = 2,
+    entry = entry,
+    start_year = 2023
+  )
+  expect_equal(p_sched, p_ratio)
+})
+
+test_that("schedule path realigns a reordered base", {
+  m <- projection_matrix(proj_ratios())
+  sched <- list(list(matrix = m, entry = 130))
+  reordered <- c(`2` = 91, K = 120, `1` = 99)
+  p <- project_enrollment(reordered, schedule = sched, start_year = 2023)
+  expect_equal(p$enrollment[p$grade == "1"], 111) # 0.925 * 120, correctly aligned
+})
+
+test_that("hand-built identity+diag schedule runs", {
+  m <- projection_matrix(proj_ratios())
+  ident <- diag(3)
+  dimnames(ident) <- dimnames(m)
+  scale <- diag(rep(1.1, 3))
+  dimnames(scale) <- dimnames(m)
+  sched <- list(
+    list(matrix = ident, entry = NULL),
+    list(matrix = scale, entry = NULL)
+  )
+  p <- project_enrollment(c(K = 80, `1` = 66, `2` = 60), schedule = sched)
+  expect_equal(p$enrollment[p$year == 1 & p$grade == "K"], 80)
+  expect_equal(p$enrollment[p$year == 2 & p$grade == "K"], 88)
+})
+
+test_that("schedule and ratios are mutually exclusive", {
+  m <- projection_matrix(proj_ratios())
+  sched <- list(list(matrix = m, entry = 130))
+  expect_snapshot(
+    project_enrollment(proj_base(), ratios = proj_ratios(), schedule = sched),
+    error = TRUE
+  )
+})
+
+test_that("project_enrollment needs ratios or a schedule", {
+  expect_snapshot(project_enrollment(proj_base(), horizon = 2), error = TRUE)
+})
+
+test_that("horizon must match schedule length when both are given", {
+  m <- projection_matrix(proj_ratios())
+  sched <- list(list(matrix = m, entry = 130))
+  expect_snapshot(
+    project_enrollment(proj_base(), schedule = sched, horizon = 2),
+    error = TRUE
+  )
+})
