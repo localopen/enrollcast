@@ -12,7 +12,7 @@ the package, vignette, and tests are all `enrollcast`.
 
 ## The method (what the code computes)
 
-The three exported functions form a pipeline:
+The exported functions form a pipeline:
 
 1. **`progression_ratios(data, ...)`** — from long historical enrollment (one
    row per grade per year), compute one ratio per non-entry grade. A transition
@@ -24,10 +24,17 @@ The three exported functions form a pipeline:
    Ratios sit on the **sub-diagonal** (each non-entry grade is fed by the grade
    below). The **entry-grade (lowest) row is left at zero** because entry
    enrollment is supplied exogenously, not projected.
-3. **`project_enrollment(base, ratios, horizon, entry, ...)`** — advance one
-   year at a time (one matrix-vector product per year), **overwriting the entry
-   grade each year** with the supplied exogenous `entry` value. Returns a long
-   data frame: `year`, `grade`, `enrollment`, for projected years only.
+3. **`project_enrollment(base, ratios, horizon, entry, schedule, ...)`** —
+   advance one year at a time (one matrix-vector product per year),
+   **overwriting the entry grade each year** with the supplied exogenous `entry`
+   value. Returns a long data frame: `year`, `grade`, `enrollment`, for projected
+   years only. Instead of `ratios`/`horizon`/`entry` you may pass a `schedule`: a
+   list of per-year steps (`list(matrix, entry)`, `entry` `NULL` = don't
+   overwrite), which lets each year use a different matrix and entry value.
+4. **`swing_schedule(ratios, horizon, swing_years, recovery, entry, ...)`** —
+   build a `schedule` for a modernization swing: enrollment is held flat during
+   the swing, scaled by `recovery` multipliers for a few years, then projected
+   normally. Returns a list of `horizon` projection steps for `project_enrollment()`.
 
 Key idea to keep in mind: the lowest grade (e.g. K or PK3) is never projected
 from a feeder — the caller must supply it via `entry`. One call projects one
@@ -41,7 +48,7 @@ All R commands assume the package root. Tests and the vignette need pandoc —
 ```bash
 export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64
 
-Rscript -e "devtools::test()"                          # run tests (currently 98, FAIL 0)
+Rscript -e "devtools::test()"                          # run tests (currently 130, FAIL 0)
 Rscript -e 'devtools::check(cran = TRUE)'              # full R CMD check; expect 0/0/0
 Rscript -e 'covr::package_coverage(".")'              # coverage — target is 100%
 Rscript -e 'print(goodpractice::gp("."))'             # package quality gate
@@ -61,6 +68,7 @@ R/
   progression-ratios.R     # progression_ratios() + its internal helpers
   projection-matrix.R      # projection_matrix()
   project-enrollment.R     # project_enrollment() + its internal helpers
+  swing-schedule.R         # swing_schedule() + its internal helpers
   utils.R                  # shared internals: is_count, check_columns,
                            #   resolve_grade_order, chain_order, summarise_ratios,
                            #   as_base_vector, as_entry_vector

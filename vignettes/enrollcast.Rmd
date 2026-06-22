@@ -79,3 +79,19 @@ observed <- data.frame(
 combined <- rbind(observed, projection)
 head(combined)
 ```
+
+## Modeling a school modernization swing
+
+A school temporarily relocated during modernization typically sees depressed
+enrollment that recovers after it returns. `swing_schedule()` builds a per-year
+projection schedule: enrollment is held flat during the swing, scaled by
+recovery multipliers for a few years, then projected normally.
+
+```{r}
+depressed <- c(K = 80, `1` = 66, `2` = 60)
+schedule <- swing_schedule(ratios,
+  horizon = 6, swing_years = 2,
+  recovery = c(1.10, 1.10, 1.05), entry = 130
+)
+project_enrollment(depressed, schedule = schedule, start_year = 2023)
+```
