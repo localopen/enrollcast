@@ -42,7 +42,7 @@ run_projection <- function(m, base_vec, entry_grade, entry_vals, out_years) {
 #' Project enrollment forward
 #'
 #' Projects grade-level enrollment forward an arbitrary horizon using the grade
-#' progression ratio method. Internally builds a Leslie matrix from `ratios`
+#' progression ratio method. Internally builds a projection matrix from `ratios`
 #' and advances enrollment one year at a time (one matrix-vector product per
 #' projected year), overwriting the entry grade with the supplied exogenous
 #' value each year.
@@ -85,7 +85,7 @@ project_enrollment <- function(
   start_year = NULL
 ) {
   horizon <- check_horizon(horizon)
-  m <- leslie_matrix(ratios)
+  m <- projection_matrix(ratios)
   go <- rownames(m)
   entry_grade <- go[1]
   n <- as_base_vector(base, go)

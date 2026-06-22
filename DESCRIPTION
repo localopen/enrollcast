@@ -5,7 +5,7 @@ Authors@R:
     person("Rory", "Lawless", email = "rory@rorylawless.com",
            role = c("aut", "cre"))
 Description: Projects school enrollment using the cohort survival / grade 
-    progression ratio method, implemented with a Leslie matrix. Works at any 
+    progression ratio method, implemented as a matrix projection. Works at any
     level of aggregation and any number of grades. Provides functions to 
     compute progression ratios from historical grade-level enrollment and to 
     project future enrollment forward an arbitrary horizon.

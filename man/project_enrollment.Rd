@@ -31,7 +31,7 @@ covering the projected years only.
 }
 \description{
 Projects grade-level enrollment forward an arbitrary horizon using the grade
-progression ratio method. Internally builds a Leslie matrix from \code{ratios}
+progression ratio method. Internally builds a projection matrix from \code{ratios}
 and advances enrollment one year at a time (one matrix-vector product per
 projected year), overwriting the entry grade with the supplied exogenous
 value each year.

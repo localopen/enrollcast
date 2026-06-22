@@ -4,7 +4,7 @@
 <!-- badges: end -->
 
 `enrollcast` projects school enrollment using the cohort survival / grade
-progression ratio method, implemented with a Leslie matrix. It works at any
+progression ratio method, implemented as a matrix projection. It works at any
 level of aggregation (school, district, LEA, city-wide) and any number of
 grades, because it operates on a single grade-by-year enrollment series.
 
@@ -43,10 +43,10 @@ projection <- project_enrollment(
 projection
 ```
 
-Inspect the underlying Leslie matrix at any time:
+Inspect the underlying projection matrix at any time:
 
 ```r
-leslie_matrix(ratios)
+projection_matrix(ratios)
 ```
 
 ### Multiple aggregation units

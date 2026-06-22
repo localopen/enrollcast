@@ -6,7 +6,7 @@
 \alias{enrollcast-package}
 \title{enrollcast: Project School Enrollment with Grade Progression Ratios}
 \description{
-Projects school enrollment using the cohort survival / grade progression ratio method, implemented with a Leslie matrix. Works at any level of aggregation and any number of grades. Provides functions to compute progression ratios from historical grade-level enrollment and to project future enrollment forward an arbitrary horizon.
+Projects school enrollment using the cohort survival / grade progression ratio method, implemented as a matrix projection. Works at any level of aggregation and any number of grades. Provides functions to compute progression ratios from historical grade-level enrollment and to project future enrollment forward an arbitrary horizon.
 }
 \seealso{
 Useful links:

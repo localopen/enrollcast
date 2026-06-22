@@ -1,7 +1,7 @@
 # enrollcast
 
 R package that projects school enrollment with the cohort survival / grade
-progression ratio (GPR) method, implemented as a Leslie matrix. Works at any
+progression ratio (GPR) method, implemented as a matrix projection. Works at any
 aggregation level (school, district, LEA, city-wide) and any number of grades,
 because it operates on a single grade-by-year enrollment series.
 
@@ -20,7 +20,7 @@ The three exported functions form a pipeline:
    t*, summarised across year-to-year transitions (`method`: `mean` (default),
    `geometric`, `median`, `last`, `weighted`). Returns a data frame:
    `grade_from`, `grade_to`, `ratio`.
-2. **`leslie_matrix(ratios, ...)`** — assemble the square projection matrix.
+2. **`projection_matrix(ratios, ...)`** — assemble the square projection matrix.
    Ratios sit on the **sub-diagonal** (each non-entry grade is fed by the grade
    below). The **entry-grade (lowest) row is left at zero** because entry
    enrollment is supplied exogenously, not projected.
@@ -59,7 +59,7 @@ Rscript -e 'source("data-raw/synthetic_enrollment.R")' # rebuild inst/extdata CS
 R/
   enrollcast-package.R     # "_PACKAGE" doc stub
   progression-ratios.R     # progression_ratios() + its internal helpers
-  leslie-matrix.R          # leslie_matrix()
+  projection-matrix.R      # projection_matrix()
   project-enrollment.R     # project_enrollment() + its internal helpers
   utils.R                  # shared internals: is_count, check_columns,
                            #   resolve_grade_order, chain_order, summarise_ratios,

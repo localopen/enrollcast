@@ -1,6 +1,6 @@
-#' Build the Leslie projection matrix
+#' Build the projection matrix
 #'
-#' Assembles the Leslie matrix used to project enrollment. Progression ratios
+#' Assembles the projection matrix used to advance enrollment. Progression ratios
 #' are placed on the sub-diagonal (each non-entry grade is fed by the grade
 #' below); the entry-grade row is left at zero because entry enrollment is
 #' supplied exogenously to [project_enrollment()].
@@ -21,8 +21,8 @@
 #'   grade_to = c("1", "2"),
 #'   ratio = c(0.92, 0.97)
 #' )
-#' leslie_matrix(ratios)
-leslie_matrix <- function(ratios, grade_order = NULL) {
+#' projection_matrix(ratios)
+projection_matrix <- function(ratios, grade_order = NULL) {
   check_columns(ratios, c("grade_from", "grade_to", "ratio"), "ratios")
   from <- as.character(ratios$grade_from)
   to <- as.character(ratios$grade_to)
@@ -34,7 +34,7 @@ leslie_matrix <- function(ratios, grade_order = NULL) {
   }
   G <- length(grade_order)
   if (G < 2) {
-    stop("Need at least 2 grades to build a Leslie matrix.", call. = FALSE)
+    stop("Need at least 2 grades to build a projection matrix.", call. = FALSE)
   }
 
   ii <- match(to, grade_order)

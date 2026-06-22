@@ -21,7 +21,7 @@ The cohort survival / grade progression ratio method projects enrollment by
 asking: of the students in grade *g* this year, how many appear in grade *g+1*
 next year? That ratio captures net retention, migration, and repetition.
 `enrollcast` estimates these ratios from history and applies them forward with
-a Leslie matrix.
+a matrix projection.
 
 ## A small district
 
@@ -41,11 +41,11 @@ ratios <- progression_ratios(history, method = "mean")
 ratios
 ```
 
-The ratios sit on the sub-diagonal of the Leslie matrix; the entry-grade row is
-zero because entry is supplied exogenously.
+The ratios sit on the sub-diagonal of the projection matrix; the entry-grade row
+is zero because entry is supplied exogenously.
 
 ```{r}
-leslie_matrix(ratios)
+projection_matrix(ratios)
 ```
 
 ## Step 2: project forward
