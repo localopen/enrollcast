@@ -3,3 +3,4 @@
 export(progression_ratios)
 export(project_enrollment)
 export(projection_matrix)
+export(swing_schedule)
