@@ -127,3 +127,9 @@ test_that("projection carries state across three years", {
   expect_equal(unique(p$year), c(2024, 2025, 2026))
   expect_equal(p$enrollment[p$year == 2026 & p$grade == "1"], 0.925 * 140)
 })
+
+test_that("entry grade is overwritten even when base carries NA", {
+  v <- c(K = NA_real_, `1` = 99, `2` = 91)
+  p <- project_enrollment(v, proj_ratios(), horizon = 1, entry = 130)
+  expect_equal(p$enrollment[p$grade == "K"], 130)
+})

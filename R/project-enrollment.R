@@ -22,14 +22,17 @@ entry_values <- function(entry, horizon, base_vec, entry_grade) {
   as_entry_vector(entry, horizon)
 }
 
-# Advance enrollment one year at a time, overwriting the entry grade.
-run_projection <- function(m, base_vec, entry_grade, entry_vals, out_years) {
-  go <- rownames(m)
+# Advance enrollment through a per-year sequence of projection steps.
+run_projection <- function(steps, base_vec, out_years) {
+  go <- names(base_vec)
+  entry_grade <- go[1]
   n <- base_vec
   out <- matrix(NA_real_, nrow = length(go), ncol = length(out_years))
   for (h in seq_along(out_years)) {
-    n <- drop(m %*% n)
-    n[entry_grade] <- entry_vals[h]
+    n <- drop(steps[[h]]$matrix %*% n)
+    if (!is.null(steps[[h]]$entry)) {
+      n[entry_grade] <- steps[[h]]$entry
+    }
     out[, h] <- n
   }
   data.frame(
@@ -93,10 +96,13 @@ project_enrollment <- function(
     start_year <- base_year(base)
   }
   entry_vals <- entry_values(entry, horizon, n, entry_grade)
+  steps <- lapply(seq_len(horizon), function(h) {
+    list(matrix = m, entry = entry_vals[[h]])
+  })
   out_years <- if (is.null(start_year)) {
     seq_len(horizon)
   } else {
     start_year + seq_len(horizon)
   }
-  run_projection(m, n, entry_grade, entry_vals, out_years)
+  run_projection(steps, n, out_years)
 }
