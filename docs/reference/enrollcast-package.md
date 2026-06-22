@@ -1,7 +1,7 @@
 # enrollcast: Project School Enrollment with Grade Progression Ratios
 
 Projects school enrollment using the cohort survival / grade progression
-ratio method, implemented with a Leslie matrix. Works at any level of
+ratio method, implemented as a matrix projection. Works at any level of
 aggregation and any number of grades. Provides functions to compute
 progression ratios from historical grade-level enrollment and to project
 future enrollment forward an arbitrary horizon.

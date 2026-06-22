@@ -11,7 +11,7 @@ The cohort survival / grade progression ratio method projects enrollment
 by asking: of the students in grade *g* this year, how many appear in
 grade *g+1* next year? That ratio captures net retention, migration, and
 repetition. `enrollcast` estimates these ratios from history and applies
-them forward with a Leslie matrix.
+them forward with a matrix projection.
 
 ## A small district
 
@@ -46,12 +46,12 @@ ratios
 #> 2          1        2 0.9678363
 ```
 
-The ratios sit on the sub-diagonal of the Leslie matrix; the entry-grade
-row is zero because entry is supplied exogenously.
+The ratios sit on the sub-diagonal of the projection matrix; the
+entry-grade row is zero because entry is supplied exogenously.
 
 ``` r
 
-leslie_matrix(ratios)
+projection_matrix(ratios)
 #>       K         1 2
 #> K 0.000 0.0000000 0
 #> 1 0.925 0.0000000 0
@@ -107,4 +107,41 @@ head(combined)
 #> 4 2022     K        110
 #> 5 2022     1         95
 #> 6 2022     2         88
+```
+
+## Modeling a school modernization swing
+
+A school temporarily relocated during modernization typically sees
+depressed enrollment that recovers after it returns.
+[`swing_schedule()`](../reference/swing_schedule.md) builds a per-year
+projection schedule: enrollment is held flat during the swing, scaled by
+recovery multipliers for a few years, then projected normally.
+
+``` r
+
+depressed <- c(K = 80, `1` = 66, `2` = 60)
+schedule <- swing_schedule(ratios,
+  horizon = 6, swing_years = 2,
+  recovery = c(1.10, 1.10, 1.05), entry = 130
+)
+project_enrollment(depressed, schedule = schedule, start_year = 2023)
+#>    year grade enrollment
+#> 1  2024     K   80.00000
+#> 2  2024     1   66.00000
+#> 3  2024     2   60.00000
+#> 4  2025     K   80.00000
+#> 5  2025     1   66.00000
+#> 6  2025     2   60.00000
+#> 7  2026     K   88.00000
+#> 8  2026     1   72.60000
+#> 9  2026     2   66.00000
+#> 10 2027     K   96.80000
+#> 11 2027     1   79.86000
+#> 12 2027     2   72.60000
+#> 13 2028     K  101.64000
+#> 14 2028     1   83.85300
+#> 15 2028     2   76.23000
+#> 16 2029     K  130.00000
+#> 17 2029     1   94.01700
+#> 18 2029     2   81.15597
 ```

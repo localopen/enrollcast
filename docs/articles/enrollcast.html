@@ -69,8 +69,8 @@
 enrollment by asking: of the students in grade <em>g</em> this year, how
 many appear in grade <em>g+1</em> next year? That ratio captures net
 retention, migration, and repetition. <code>enrollcast</code> estimates
-these ratios from history and applies them forward with a Leslie
-matrix.</p>
+these ratios from history and applies them forward with a matrix
+projection.</p>
 </div>
 <div class="section level2">
 <h2 id="a-small-district">A small district<a class="anchor" aria-label="anchor" href="#a-small-district"></a>
@@ -102,10 +102,10 @@ matrix.</p>
 <span><span class="co">#&gt;   grade_from grade_to     ratio</span></span>
 <span><span class="co">#&gt; 1          K        1 0.9250000</span></span>
 <span><span class="co">#&gt; 2          1        2 0.9678363</span></span></code></pre></div>
-<p>The ratios sit on the sub-diagonal of the Leslie matrix; the
+<p>The ratios sit on the sub-diagonal of the projection matrix; the
 entry-grade row is zero because entry is supplied exogenously.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/leslie_matrix.html">leslie_matrix</a></span><span class="op">(</span><span class="va">ratios</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/projection_matrix.html">projection_matrix</a></span><span class="op">(</span><span class="va">ratios</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       K         1 2</span></span>
 <span><span class="co">#&gt; K 0.000 0.0000000 0</span></span>
 <span><span class="co">#&gt; 1 0.925 0.0000000 0</span></span>
@@ -158,6 +158,41 @@ Combine with history for plotting:</p>
 <span><span class="co">#&gt; 4 2022     K        110</span></span>
 <span><span class="co">#&gt; 5 2022     1         95</span></span>
 <span><span class="co">#&gt; 6 2022     2         88</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="modeling-a-school-modernization-swing">Modeling a school modernization swing<a class="anchor" aria-label="anchor" href="#modeling-a-school-modernization-swing"></a>
+</h2>
+<p>A school temporarily relocated during modernization typically sees
+depressed enrollment that recovers after it returns.
+<code><a href="../reference/swing_schedule.html">swing_schedule()</a></code> builds a per-year projection schedule:
+enrollment is held flat during the swing, scaled by recovery multipliers
+for a few years, then projected normally.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">depressed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>K <span class="op">=</span> <span class="fl">80</span>, `1` <span class="op">=</span> <span class="fl">66</span>, `2` <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span>
+<span><span class="va">schedule</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/swing_schedule.html">swing_schedule</a></span><span class="op">(</span><span class="va">ratios</span>,</span>
+<span>  horizon <span class="op">=</span> <span class="fl">6</span>, swing_years <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  recovery <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.10</span>, <span class="fl">1.10</span>, <span class="fl">1.05</span><span class="op">)</span>, entry <span class="op">=</span> <span class="fl">130</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/project_enrollment.html">project_enrollment</a></span><span class="op">(</span><span class="va">depressed</span>, schedule <span class="op">=</span> <span class="va">schedule</span>, start_year <span class="op">=</span> <span class="fl">2023</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    year grade enrollment</span></span>
+<span><span class="co">#&gt; 1  2024     K   80.00000</span></span>
+<span><span class="co">#&gt; 2  2024     1   66.00000</span></span>
+<span><span class="co">#&gt; 3  2024     2   60.00000</span></span>
+<span><span class="co">#&gt; 4  2025     K   80.00000</span></span>
+<span><span class="co">#&gt; 5  2025     1   66.00000</span></span>
+<span><span class="co">#&gt; 6  2025     2   60.00000</span></span>
+<span><span class="co">#&gt; 7  2026     K   88.00000</span></span>
+<span><span class="co">#&gt; 8  2026     1   72.60000</span></span>
+<span><span class="co">#&gt; 9  2026     2   66.00000</span></span>
+<span><span class="co">#&gt; 10 2027     K   96.80000</span></span>
+<span><span class="co">#&gt; 11 2027     1   79.86000</span></span>
+<span><span class="co">#&gt; 12 2027     2   72.60000</span></span>
+<span><span class="co">#&gt; 13 2028     K  101.64000</span></span>
+<span><span class="co">#&gt; 14 2028     1   83.85300</span></span>
+<span><span class="co">#&gt; 15 2028     2   76.23000</span></span>
+<span><span class="co">#&gt; 16 2029     K  130.00000</span></span>
+<span><span class="co">#&gt; 17 2029     1   94.01700</span></span>
+<span><span class="co">#&gt; 18 2029     2   81.15597</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

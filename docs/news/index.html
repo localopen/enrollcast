@@ -39,9 +39,13 @@
 <li>
 <code><a href="../reference/progression_ratios.html">progression_ratios()</a></code> computes grade progression ratios from historical grade-level enrollment, with configurable averaging (<code>mean</code>, <code>geometric</code>, <code>median</code>, <code>last</code>, <code>weighted</code>).</li>
 <li>
-<code><a href="../reference/leslie_matrix.html">leslie_matrix()</a></code> assembles the Leslie projection matrix from progression ratios.</li>
+<code><a href="../reference/projection_matrix.html">projection_matrix()</a></code> (renamed) assembles the projection matrix from progression ratios.</li>
 <li>
 <code><a href="../reference/project_enrollment.html">project_enrollment()</a></code> projects enrollment forward an arbitrary horizon, taking the entry grade exogenously.</li>
+<li>
+<code><a href="../reference/project_enrollment.html">project_enrollment()</a></code> accepts a prebuilt per-year <code>schedule</code> of projection steps as an alternative to the <code>ratios</code>/<code>horizon</code>/<code>entry</code> arguments.</li>
+<li>
+<code><a href="../reference/swing_schedule.html">swing_schedule()</a></code> builds a swing/recovery projection schedule for a school passing through a temporary relocation.</li>
 </ul></div>
   </main></div>
 

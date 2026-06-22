@@ -7,7 +7,7 @@
 ^doc$
 ^Meta$
 ^\.claude$
-^CLAUDE\.md$
+CLAUDE.md
 ^data-raw$
 ^\.gitlab-ci\.yml$
 ^_pkgdown\.yml$

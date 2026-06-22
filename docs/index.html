@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Project School Enrollment with Grade Progression Ratios">
-<meta name="description" content="Projects school enrollment using the cohort survival / grade progression ratio method, implemented with a Leslie matrix. Works at any level of aggregation and any number of grades. Provides functions to compute progression ratios from historical grade-level enrollment and to project future enrollment forward an arbitrary horizon.">
-<meta property="og:description" content="Projects school enrollment using the cohort survival / grade progression ratio method, implemented with a Leslie matrix. Works at any level of aggregation and any number of grades. Provides functions to compute progression ratios from historical grade-level enrollment and to project future enrollment forward an arbitrary horizon.">
+<meta name="description" content="Projects school enrollment using the cohort survival / grade progression ratio method, implemented as a matrix projection. Works at any level of aggregation and any number of grades. Provides functions to compute progression ratios from historical grade-level enrollment and to project future enrollment forward an arbitrary horizon.">
+<meta property="og:description" content="Projects school enrollment using the cohort survival / grade progression ratio method, implemented as a matrix projection. Works at any level of aggregation and any number of grades. Provides functions to compute progression ratios from historical grade-level enrollment and to project future enrollment forward an arbitrary horizon.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -52,7 +52,7 @@
 </h1></div>
 <!-- badges: start -->
 <!-- badges: end -->
-<p><code>enrollcast</code> projects school enrollment using the cohort survival / grade progression ratio method, implemented with a Leslie matrix. It works at any level of aggregation (school, district, LEA, city-wide) and any number of grades, because it operates on a single grade-by-year enrollment series.</p>
+<p><code>enrollcast</code> projects school enrollment using the cohort survival / grade progression ratio method, implemented as a matrix projection. It works at any level of aggregation (school, district, LEA, city-wide) and any number of grades, because it operates on a single grade-by-year enrollment series.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -87,9 +87,9 @@
 <span>  start_year <span class="op">=</span> <span class="fl">2023</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">projection</span></span></code></pre></div>
-<p>Inspect the underlying Leslie matrix at any time:</p>
+<p>Inspect the underlying projection matrix at any time:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/leslie_matrix.html">leslie_matrix</a></span><span class="op">(</span><span class="va">ratios</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/projection_matrix.html">projection_matrix</a></span><span class="op">(</span><span class="va">ratios</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="multiple-aggregation-units">Multiple aggregation units<a class="anchor" aria-label="anchor" href="#multiple-aggregation-units"></a>
 </h3>
