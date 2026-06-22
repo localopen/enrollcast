@@ -72,6 +72,20 @@ test_that("all-swing schedule is valid", {
   expect_equal(diag(s[[2]]$matrix), c(K = 1, `1` = 1, `2` = 1))
 })
 
+test_that("zero swing years starts with the recovery diagonal", {
+  s <- swing_schedule(
+    ss_ratios(),
+    horizon = 2,
+    swing_years = 0,
+    recovery = c(1.1),
+    entry = 130
+  )
+  expect_length(s, 2)
+  expect_equal(diag(s[[1]]$matrix), c(K = 1.1, `1` = 1.1, `2` = 1.1))
+  expect_null(s[[1]]$entry)
+  expect_equal(s[[2]]$entry, 130)
+})
+
 test_that("swing_schedule rejects an over-long swing+recovery", {
   expect_snapshot(
     swing_schedule(
@@ -118,6 +132,45 @@ test_that("swing_years must be a non-negative integer", {
       horizon = 3,
       swing_years = -1,
       recovery = c(1.1),
+      entry = 130
+    ),
+    error = TRUE
+  )
+})
+
+test_that("recovery matrix must have one row per grade", {
+  expect_snapshot(
+    swing_schedule(
+      ss_ratios(),
+      horizon = 2,
+      swing_years = 1,
+      recovery = matrix(c(1.1, 1.2), nrow = 2),
+      entry = NULL
+    ),
+    error = TRUE
+  )
+})
+
+test_that("recovery must be numeric or a matrix", {
+  expect_snapshot(
+    swing_schedule(
+      ss_ratios(),
+      horizon = 3,
+      swing_years = 1,
+      recovery = "oops",
+      entry = 130
+    ),
+    error = TRUE
+  )
+})
+
+test_that("entry must be empty when there are no normal years", {
+  expect_snapshot(
+    swing_schedule(
+      ss_ratios(),
+      horizon = 3,
+      swing_years = 1,
+      recovery = c(1.1, 1.05),
       entry = 130
     ),
     error = TRUE
