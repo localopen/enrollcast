@@ -1,3 +1,4 @@
 url: https://gitlab.com/localopen/enrollcast
 template:
   bootstrap: 5
+  bootswatch: minty
