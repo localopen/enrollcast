@@ -82,7 +82,8 @@ Rscript -e "devtools::test()"
 The `projection-matrix.md` snapshot will mismatch because the echoed `Code` lines now read `projection_matrix(...)` and one message changed. Review then accept:
 
 ```bash
-Rscript -e 'testthat::snapshot_review()'   # inspect: only Code echoes + the "projection matrix" 2-grade message changed
+# Inspect NON-INTERACTIVELY: read tests/testthat/_snaps/projection-matrix.new.md (or git diff the _snaps dir)
+# to confirm only Code echoes + the one 2-grade message changed. Do NOT run testthat::snapshot_review() (interactive, hangs headless).
 Rscript -e 'testthat::snapshot_accept()'
 Rscript -e "devtools::test()"              # expect FAIL 0
 ```
@@ -407,7 +408,8 @@ project_enrollment <- function(
 ```bash
 export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64
 Rscript -e "devtools::test()"
-Rscript -e 'testthat::snapshot_review()'   # confirm new check_schedule / dual-mode messages
+# Inspect NON-INTERACTIVELY: read tests/testthat/_snaps/*.new.md (or git diff the _snaps dir) to confirm the
+# new check_schedule / dual-mode messages. Do NOT run testthat::snapshot_review() (interactive, hangs headless).
 Rscript -e 'testthat::snapshot_accept()'
 Rscript -e "devtools::test()"              # FAIL 0
 Rscript -e 'cyclocomp::cyclocomp_package_dir(".")'  # every fn < 15
@@ -688,7 +690,8 @@ swing_schedule <- function(
 ```bash
 export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64
 Rscript -e "devtools::test(filter = 'swing-schedule')"
-Rscript -e 'testthat::snapshot_review()'
+# Inspect NON-INTERACTIVELY: read tests/testthat/_snaps/swing-schedule.new.md (or git diff the _snaps dir) to
+# confirm the new error snapshots. Do NOT run testthat::snapshot_review() (interactive, hangs headless).
 Rscript -e 'testthat::snapshot_accept()'
 Rscript -e 'devtools::document()'           # exports swing_schedule, regenerates man/ + NAMESPACE
 Rscript -e "devtools::test()"               # FAIL 0
