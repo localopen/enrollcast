@@ -22,6 +22,16 @@ entry_values <- function(entry, horizon, base_vec, entry_grade) {
   as_entry_vector(entry, horizon)
 }
 
+# Validate one projection step's entry value (NULL or a single number).
+check_step_entry <- function(entry) {
+  if (!is.null(entry) && !(is.numeric(entry) && length(entry) == 1)) {
+    stop(
+      "Each `schedule` step `entry` must be NULL or a single number.",
+      call. = FALSE
+    )
+  }
+}
+
 # Validate one projection step; return its grade order.
 check_step <- function(step) {
   if (!is.list(step) || is.null(step$matrix)) {
@@ -40,14 +50,7 @@ check_step <- function(step) {
       call. = FALSE
     )
   }
-  if (
-    !is.null(step$entry) && !(is.numeric(step$entry) && length(step$entry) == 1)
-  ) {
-    stop(
-      "Each `schedule` step `entry` must be NULL or a single number.",
-      call. = FALSE
-    )
-  }
+  check_step_entry(step$entry)
   rownames(m)
 }
 
