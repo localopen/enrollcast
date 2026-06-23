@@ -15,3 +15,6 @@ CLAUDE.md
 ^_pkgdown\.yml$
 ^pkgdown$
 air.toml
+jarl.toml
+CITATION.cff
+^CITATION\.cff$

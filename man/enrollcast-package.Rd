@@ -11,17 +11,18 @@ Projects school enrollment using the cohort survival / grade progression ratio m
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://https://rorylawless.r-universe.dev/enrollcast}
   \item \url{https://gitlab.com/localopen/enrollcast}
-  \item Report bugs at \url{https://gitlab.com/localopen/enrollcast/-/work_items}
+  \item Report bugs at \url{https://gitlab.com/localopen/enrollcast/-/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Rory Lawless \email{rory@rorylawless.com}
+\strong{Maintainer}: Rory Lawless \email{rory@rorylawless.com} (\href{https://orcid.org/0009-0003-7688-309X}{ORCID})
 
 Authors:
 \itemize{
-  \item Rory Lawless \email{rory@rorylawless.com}
+  \item Rory Lawless \email{rory@rorylawless.com} (\href{https://orcid.org/0009-0003-7688-309X}{ORCID})
 }
 
 }

@@ -10,14 +10,18 @@ future enrollment forward an arbitrary horizon.
 
 Useful links:
 
+- <https://https://rorylawless.r-universe.dev/enrollcast>
+
 - <https://gitlab.com/localopen/enrollcast>
 
-- Report bugs at <https://gitlab.com/localopen/enrollcast/-/work_items>
+- Report bugs at <https://gitlab.com/localopen/enrollcast/-/issues>
 
 ## Author
 
 **Maintainer**: Rory Lawless <rory@rorylawless.com>
+([ORCID](https://orcid.org/0009-0003-7688-309X))
 
 Authors:
 
 - Rory Lawless <rory@rorylawless.com>
+  ([ORCID](https://orcid.org/0009-0003-7688-309X))
