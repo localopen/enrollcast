@@ -1,23 +1,28 @@
 # Validate inputs and return cleaned pieces (grades, enrollment, order, years).
 prepare_enrollment <- function(data, year, grade, enrollment, grade_order) {
   check_columns(data, c(year, grade, enrollment), "data")
-  gr_raw <- data[[grade]]
-  en <- data[[enrollment]]
-  if (!is.numeric(en)) {
+  if (!is.numeric(data[[enrollment]])) {
     stop("`enrollment` column must be numeric.", call. = FALSE)
   }
-  if (any(en < 0, na.rm = TRUE)) {
+
+  if (any(data[[enrollment]] < 0, na.rm = TRUE)) {
     stop("`enrollment` must be non-negative.", call. = FALSE)
   }
-  go <- resolve_grade_order(gr_raw, grade_order)
-  if (length(go) < 2) {
+
+  if (length(unique(as.character(data[[grade]]))) < 2) {
     stop("Need at least 2 grades to compute progression ratios.", call. = FALSE)
   }
-  yr_num <- suppressWarnings(as.numeric(as.character(data[[year]])))
-  if (anyNA(yr_num)) {
+
+  if (anyNA(suppressWarnings(as.numeric(as.character(data[[year]]))))) {
     stop("`year` must be numeric or coercible to numeric.", call. = FALSE)
   }
-  list(grade = as.character(gr_raw), enrollment = en, go = go, year = yr_num)
+
+  if (!is.ordered(data[[grade]])) {
+    go <- resolve_grade_order(data[[grade]], grade_order)
+    data[[grade]] <- factor(data[[grade]], levels = go, ordered = TRUE)
+  }
+
+  data
 }
 
 # Build a grade x year enrollment matrix from long records.

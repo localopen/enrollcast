@@ -23,22 +23,33 @@ check_columns <- function(data, cols, arg = "data") {
 # Resolve grades to a low -> high character ordering.
 resolve_grade_order <- function(grade, grade_order = NULL) {
   u <- unique(as.character(grade))
+  grade_order <- as.character(grade_order)
   if (!is.null(grade_order)) {
-    grade_order <- as.character(grade_order)
-    missing <- setdiff(u, grade_order)
-    if (length(missing)) {
+    missing_g <- setdiff(u, grade_order)
+    if (length(missing_g)) {
       stop(
         "`grade_order` is missing grade(s): ",
-        toString(missing),
+        toString(missing_g),
+        call. = FALSE
+      )
+    }
+
+    missing_go <- setdiff(grade_order, u)
+    if (length(missing_go)) {
+      warning(
+        "`grade_order` contains grade(s) that are missing from data: ",
+        toString(missing_go),
         call. = FALSE
       )
     }
     return(grade_order[grade_order %in% u])
   }
+
   if (is.factor(grade)) {
     lev <- levels(grade)
     return(lev[lev %in% u])
   }
+
   num <- suppressWarnings(as.numeric(u))
   if (!anyNA(num)) {
     return(u[order(num)])
