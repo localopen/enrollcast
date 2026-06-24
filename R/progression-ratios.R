@@ -26,23 +26,22 @@ prepare_enrollment <- function(data, year, grade, enrollment, grade_order) {
 }
 
 # Build a grade x year enrollment matrix from long records.
-enrollment_matrix <- function(grade, year, enrollment, go) {
-  years <- sort(unique(year))
-  ri <- match(grade, go)
-  ci <- match(year, years)
-  if (anyNA(ri)) {
-    stop("Some grades are not in the resolved grade order.", call. = FALSE)
-  }
-  if (anyDuplicated(cbind(ri, ci))) {
+enrollment_matrix <- function(data, year, grade, enrollment) {
+  go <- levels(data[[grade]])
+  years <- sort(unique(data[[year]]))
+
+  if (anyDuplicated(data[, c(grade, year)]) > 0) {
     stop("Duplicate (grade, year) rows in `data`.", call. = FALSE)
   }
+
+  data <- data[order(data[[year]], data[[grade]]), ]
+
   w <- matrix(
-    NA_real_,
+    data[[enrollment]],
     nrow = length(go),
     ncol = length(years),
     dimnames = list(go, as.character(years))
   )
-  w[cbind(ri, ci)] <- enrollment
   w
 }
 
@@ -115,10 +114,10 @@ progression_ratios <- function(
   method <- match.arg(method)
   check_n_years(n_years)
   clean <- prepare_enrollment(data, year, grade, enrollment, grade_order)
-  w <- enrollment_matrix(clean$grade, clean$year, clean$enrollment, clean$go)
+  w <- enrollment_matrix(clean, year, grade, enrollment)
   r <- transition_ratios(w)
   if (!is.null(n_years)) {
-    r <- r[, utils::tail(seq_len(ncol(r)), n_years), drop = FALSE]
+    r <- r[, tail(seq_len(ncol(r)), n_years), drop = FALSE]
   }
   if (any(is.infinite(r)) || any(is.nan(r))) {
     warning(
