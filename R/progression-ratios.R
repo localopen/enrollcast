@@ -52,6 +52,7 @@ transition_ratios <- function(w) {
   if (length(trans) == 0) {
     stop("No consecutive year pairs found to form transitions.", call. = FALSE)
   }
+
   w[-1, trans + 1, drop = FALSE] / w[-nrow(w), trans, drop = FALSE]
 }
 
@@ -127,7 +128,7 @@ progression_ratios <- function(
     )
   }
   ratio <- summarise_ratios(r, method = method, weights = weights)
-  go <- clean$go
+  go <- levels(clean$grade)
   data.frame(
     grade_from = go[-length(go)],
     grade_to = go[-1],
