@@ -23,8 +23,8 @@ check_columns <- function(data, cols, arg = "data") {
 # Resolve grades to a low -> high character ordering.
 resolve_grade_order <- function(grade, grade_order = NULL) {
   u <- unique(as.character(grade))
-  grade_order <- as.character(grade_order)
   if (!is.null(grade_order)) {
+    grade_order <- as.character(grade_order)
     missing_g <- setdiff(u, grade_order)
     if (length(missing_g)) {
       stop(

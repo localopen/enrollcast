@@ -79,8 +79,6 @@
     Code
       progression_ratios(fx)
     Condition
-      Warning:
-      Grade order guessed by sorting labels alphabetically; pass `grade_order` or a factor `grade` to set it explicitly.
       Error:
-      ! Some grades are not in the resolved grade order.
+      ! `grade` contains NA values.
 

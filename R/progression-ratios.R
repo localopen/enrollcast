@@ -17,6 +17,10 @@ prepare_enrollment <- function(data, year, grade, enrollment, grade_order) {
     stop("`year` must be numeric or coercible to numeric.", call. = FALSE)
   }
 
+  if (anyNA(data[[grade]])) {
+    stop("`grade` contains NA values.", call. = FALSE)
+  }
+
   if (!is.ordered(data[[grade]])) {
     go <- resolve_grade_order(data[[grade]], grade_order)
     data[[grade]] <- factor(data[[grade]], levels = go, ordered = TRUE)
@@ -33,6 +37,18 @@ enrollment_matrix <- function(data, year, grade, enrollment) {
   if (anyDuplicated(data[, c(grade, year)]) > 0) {
     stop("Duplicate (grade, year) rows in `data`.", call. = FALSE)
   }
+
+  # TODO test this check thoroughly
+  if (nrow(data) %% length(go) > 0) {
+    warning("Not all grades are present for all years.", call. = FALSE)
+  }
+
+  # Fill in missing (grade, year) combinations with NA
+  expand <- expand.grid(
+    setNames(list(years, go), c(year, grade))
+  )
+
+  data <- merge(expand, data, by = c(year, grade), all.x = TRUE)
 
   data <- data[order(data[[year]], data[[grade]]), ]
 
@@ -128,7 +144,7 @@ progression_ratios <- function(
     )
   }
   ratio <- summarise_ratios(r, method = method, weights = weights)
-  go <- levels(clean$grade)
+  go <- levels(clean[[grade]])
   data.frame(
     grade_from = go[-length(go)],
     grade_to = go[-1],
