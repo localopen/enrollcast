@@ -13,17 +13,27 @@ prepare_enrollment <- function(data, year, grade, enrollment, grade_order) {
     stop("Need at least 2 grades to compute progression ratios.", call. = FALSE)
   }
 
-  if (anyNA(suppressWarnings(as.numeric(as.character(data[[year]]))))) {
+  yr <- suppressWarnings(as.numeric(as.character(data[[year]])))
+  if (anyNA(yr)) {
     stop("`year` must be numeric or coercible to numeric.", call. = FALSE)
   }
+  data[[year]] <- yr
 
   if (anyNA(data[[grade]])) {
     stop("`grade` contains NA values.", call. = FALSE)
   }
 
-  if (!is.ordered(data[[grade]])) {
+  # Honour an explicit grade_order even for an already-ordered factor; otherwise
+  # trust the ordered factor's levels (dropping any that are unused).
+  if (!is.ordered(data[[grade]]) || !is.null(grade_order)) {
     go <- resolve_grade_order(data[[grade]], grade_order)
-    data[[grade]] <- factor(data[[grade]], levels = go, ordered = TRUE)
+    data[[grade]] <- factor(
+      as.character(data[[grade]]),
+      levels = go,
+      ordered = TRUE
+    )
+  } else {
+    data[[grade]] <- droplevels(data[[grade]])
   }
 
   data
@@ -38,14 +48,9 @@ enrollment_matrix <- function(data, year, grade, enrollment) {
     stop("Duplicate (grade, year) rows in `data`.", call. = FALSE)
   }
 
-  # TODO test this check thoroughly
-  if (nrow(data) %% length(go) > 0) {
-    warning("Not all grades are present for all years.", call. = FALSE)
-  }
-
   # Fill in missing (grade, year) combinations with NA
   expand <- expand.grid(
-    setNames(list(years, go), c(year, grade))
+    stats::setNames(list(years, go), c(year, grade))
   )
 
   data <- merge(expand, data, by = c(year, grade), all.x = TRUE)
@@ -134,7 +139,7 @@ progression_ratios <- function(
   w <- enrollment_matrix(clean, year, grade, enrollment)
   r <- transition_ratios(w)
   if (!is.null(n_years)) {
-    r <- r[, tail(seq_len(ncol(r)), n_years), drop = FALSE]
+    r <- r[, utils::tail(seq_len(ncol(r)), n_years), drop = FALSE]
   }
   if (any(is.infinite(r)) || any(is.nan(r))) {
     warning(

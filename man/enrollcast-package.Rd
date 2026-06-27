@@ -11,7 +11,7 @@ Projects school enrollment using the cohort survival / grade progression ratio m
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://https://rorylawless.r-universe.dev/enrollcast}
+  \item \url{https://rorylawless.r-universe.dev/enrollcast}
   \item \url{https://gitlab.com/localopen/enrollcast}
   \item Report bugs at \url{https://gitlab.com/localopen/enrollcast/-/issues}
 }

@@ -119,3 +119,53 @@ test_that("progression_ratios errors on an unmatched (NA) grade", {
   fx$grade[1] <- NA
   expect_snapshot(progression_ratios(fx), error = TRUE)
 })
+
+test_that("year is ordered numerically, not lexically, for character/factor years", {
+  ref <- progression_ratios(enrollcast_fixture())$ratio
+  # Relabel years so lexical order ("10", "11", "9") differs from numeric order.
+  remap <- c("2021" = "9", "2022" = "10", "2023" = "11")
+
+  fx_chr <- enrollcast_fixture()
+  fx_chr$year <- unname(remap[as.character(fx_chr$year)])
+  expect_equal(progression_ratios(fx_chr)$ratio, ref)
+
+  fx_fac <- enrollcast_fixture()
+  fx_fac$year <- factor(
+    unname(remap[as.character(fx_fac$year)]),
+    levels = c("11", "9", "10")
+  )
+  expect_equal(progression_ratios(fx_fac)$ratio, ref)
+})
+
+test_that("an ordered grade factor is honoured without re-resolving order", {
+  fx <- enrollcast_fixture()
+  fx$grade <- ordered(as.character(fx$grade), levels = c("K", "1", "2"))
+  expect_no_warning(r <- progression_ratios(fx))
+  expect_identical(r$grade_from, c("K", "1"))
+  expect_equal(r$ratio[1], 0.925)
+})
+
+test_that("grade_order overrides ordered factor levels", {
+  fx <- enrollcast_fixture()
+  fx$grade <- ordered(as.character(fx$grade), levels = c("K", "1", "2"))
+  r <- progression_ratios(fx, grade_order = c("2", "1", "K"))
+  expect_identical(r$grade_from, c("2", "1"))
+  expect_identical(r$grade_to, c("1", "K"))
+})
+
+test_that("unused levels in an ordered grade factor are dropped", {
+  fx <- enrollcast_fixture()
+  fx$grade <- ordered(
+    as.character(fx$grade),
+    levels = c("K", "1", "2", "3", "4")
+  )
+  expect_no_warning(r <- progression_ratios(fx))
+  expect_identical(r$grade_from, c("K", "1"))
+  expect_identical(r$grade_to, c("1", "2"))
+})
+
+test_that("sparse history does not warn about missing grade-year cells", {
+  fx <- enrollcast_fixture()
+  fx <- fx[!(fx$grade == "1" & fx$year == 2022), ]
+  expect_no_warning(progression_ratios(fx))
+})

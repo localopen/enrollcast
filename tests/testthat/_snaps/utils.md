@@ -24,6 +24,14 @@
     Output
       [1] "1" "2" "K"
 
+# resolve_grade_order warns when grade_order has grades absent from data
+
+    Code
+      res <- resolve_grade_order(c("K", "1", "2"), grade_order = c("K", "1", "2", "3"))
+    Condition
+      Warning:
+      `grade_order` contains grade(s) that are missing from data: 3
+
 # chain_order errors on ambiguous entry grade
 
     Code

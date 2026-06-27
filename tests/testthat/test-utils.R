@@ -98,6 +98,16 @@ test_that("resolve_grade_order warns when guessing character order", {
   expect_snapshot(resolve_grade_order(c("K", "1", "2")))
 })
 
+test_that("resolve_grade_order warns when grade_order has grades absent from data", {
+  expect_snapshot(
+    res <- resolve_grade_order(
+      c("K", "1", "2"),
+      grade_order = c("K", "1", "2", "3")
+    )
+  )
+  expect_identical(res, c("K", "1", "2"))
+})
+
 test_that("chain_order errors on ambiguous entry grade", {
   expect_snapshot(chain_order(c("K", "9"), c("1", "2")), error = TRUE)
 })

@@ -18,3 +18,4 @@ air.toml
 jarl.toml
 CITATION.cff
 ^CITATION\.cff$
+^\.vscode$
