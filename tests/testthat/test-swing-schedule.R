@@ -97,6 +97,16 @@ test_that("swing_schedule rejects an over-long swing+recovery", {
     ),
     error = TRUE
   )
+  expect_error(
+    swing_schedule(
+      ss_ratios(),
+      horizon = 2,
+      swing_years = 2,
+      recovery = c(1.1),
+      entry = NULL
+    ),
+    class = "enrollcast_error_swing_too_long"
+  )
 })
 
 test_that("swing_schedule needs entry for normal years", {
@@ -109,6 +119,16 @@ test_that("swing_schedule needs entry for normal years", {
       entry = NULL
     ),
     error = TRUE
+  )
+  expect_error(
+    swing_schedule(
+      ss_ratios(),
+      horizon = 4,
+      swing_years = 1,
+      recovery = c(1.1, 1.05),
+      entry = NULL
+    ),
+    class = "enrollcast_error_entry_required"
   )
 })
 
@@ -123,6 +143,16 @@ test_that("entry length must match the number of normal years", {
     ),
     error = TRUE
   )
+  expect_error(
+    swing_schedule(
+      ss_ratios(),
+      horizon = 5,
+      swing_years = 1,
+      recovery = c(1.1),
+      entry = c(130, 140)
+    ),
+    class = "enrollcast_error_entry_length"
+  )
 })
 
 test_that("swing_years must be a non-negative integer", {
@@ -135,6 +165,16 @@ test_that("swing_years must be a non-negative integer", {
       entry = 130
     ),
     error = TRUE
+  )
+  expect_error(
+    swing_schedule(
+      ss_ratios(),
+      horizon = 3,
+      swing_years = -1,
+      recovery = c(1.1),
+      entry = 130
+    ),
+    class = "enrollcast_error_swing_years"
   )
 })
 
@@ -149,6 +189,16 @@ test_that("recovery matrix must have one row per grade", {
     ),
     error = TRUE
   )
+  expect_error(
+    swing_schedule(
+      ss_ratios(),
+      horizon = 2,
+      swing_years = 1,
+      recovery = matrix(c(1.1, 1.2), nrow = 2),
+      entry = NULL
+    ),
+    class = "enrollcast_error_recovery_dim"
+  )
 })
 
 test_that("recovery must be numeric or a matrix", {
@@ -162,6 +212,16 @@ test_that("recovery must be numeric or a matrix", {
     ),
     error = TRUE
   )
+  expect_error(
+    swing_schedule(
+      ss_ratios(),
+      horizon = 3,
+      swing_years = 1,
+      recovery = "oops",
+      entry = 130
+    ),
+    class = "enrollcast_error_recovery_type"
+  )
 })
 
 test_that("entry must be empty when there are no normal years", {
@@ -174,5 +234,15 @@ test_that("entry must be empty when there are no normal years", {
       entry = 130
     ),
     error = TRUE
+  )
+  expect_error(
+    swing_schedule(
+      ss_ratios(),
+      horizon = 3,
+      swing_years = 1,
+      recovery = c(1.1, 1.05),
+      entry = 130
+    ),
+    class = "enrollcast_error_entry_unexpected"
   )
 })

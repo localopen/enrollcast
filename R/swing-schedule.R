@@ -1,12 +1,16 @@
 # Normalize recovery multipliers (scalar-per-year vector or grade-by-year
 # matrix) to a per-year list of length-G diagonal vectors.
-recovery_diagonals <- function(recovery, go) {
+recovery_diagonals <- function(recovery, go, call = rlang::caller_env()) {
   G <- length(go)
   if (is.matrix(recovery)) {
     if (nrow(recovery) != G) {
-      stop(
-        sprintf("`recovery` matrix must have one row per grade (%d).", G),
-        call. = FALSE
+      cli::cli_abort(
+        c(
+          "{.arg recovery} matrix must have one row per grade.",
+          "x" = "Expected {G} row{?s} but got {nrow(recovery)}."
+        ),
+        class = "enrollcast_error_recovery_dim",
+        call = call
       )
     }
     return(lapply(seq_len(ncol(recovery)), function(j) {
@@ -14,55 +18,71 @@ recovery_diagonals <- function(recovery, go) {
     }))
   }
   if (!is.numeric(recovery)) {
-    stop(
-      "`recovery` must be a numeric vector or a grade-by-year matrix.",
-      call. = FALSE
+    cli::cli_abort(
+      c(
+        "{.arg recovery} must be a numeric vector or a grade-by-year matrix.",
+        "x" = "You supplied {.obj_type_friendly {recovery}}."
+      ),
+      class = "enrollcast_error_recovery_type",
+      call = call
     )
   }
   lapply(recovery, function(mult) stats::setNames(rep(mult, G), go))
 }
 
 # Number of normal (GPR) years; errors if swing + recovery exceed the horizon.
-check_swing <- function(swing_years, n_recovery, horizon) {
+check_swing <- function(
+  swing_years,
+  n_recovery,
+  horizon,
+  call = rlang::caller_env()
+) {
   if (
     length(swing_years) != 1 ||
       !is.numeric(swing_years) ||
       swing_years < 0 ||
       swing_years %% 1 != 0
   ) {
-    stop("`swing_years` must be a non-negative integer.", call. = FALSE)
+    cli::cli_abort(
+      "{.arg swing_years} must be a non-negative integer.",
+      class = "enrollcast_error_swing_years",
+      call = call
+    )
   }
   n_normal <- horizon - swing_years - n_recovery
   if (n_normal < 0) {
-    stop(
-      "`swing_years` plus recovery length must not exceed `horizon`.",
-      call. = FALSE
+    cli::cli_abort(
+      c(
+        "{.arg swing_years} plus recovery length must not exceed {.arg horizon}.",
+        "x" = "{swing_years} + {n_recovery} > {horizon}."
+      ),
+      class = "enrollcast_error_swing_too_long",
+      call = call
     )
   }
   n_normal
 }
 
 # Validate exogenous entry for the normal years; return it as a numeric vector.
-normal_entry <- function(entry, n_normal) {
+normal_entry <- function(entry, n_normal, call = rlang::caller_env()) {
   if (n_normal == 0) {
     if (length(entry) > 0) {
-      stop(
-        "`entry` must be empty when there are no normal (GPR) years.",
-        call. = FALSE
+      cli::cli_abort(
+        "{.arg entry} must be empty when there are no normal (GPR) years.",
+        class = "enrollcast_error_entry_unexpected",
+        call = call
       )
     }
     return(numeric(0))
   }
   if (is.null(entry)) {
-    stop(
-      sprintf(
-        "`entry` is required for the %d normal year(s) after recovery.",
-        n_normal
-      ),
-      call. = FALSE
+    cli::cli_abort(
+      "{.arg entry} is required for the {n_normal} normal year{?s} after recovery.",
+      class = "enrollcast_error_entry_required",
+      call = call
     )
   }
-  as_entry_vector(entry, n_normal)
+  as_entry_vector(entry, n_normal, call = call)
 }
 
 # A diagonal projection step with the given grade dimnames.
