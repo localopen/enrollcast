@@ -79,6 +79,10 @@ test_that("omitting entry warns", {
   expect_snapshot(
     invisible(project_enrollment(proj_base(), proj_ratios(), horizon = 2))
   )
+  expect_warning(
+    project_enrollment(proj_base(), proj_ratios(), horizon = 2),
+    class = "enrollcast_warning_entry_missing"
+  )
 })
 
 test_that("entry length must equal horizon", {
@@ -91,6 +95,15 @@ test_that("entry length must equal horizon", {
     ),
     error = TRUE
   )
+  expect_error(
+    project_enrollment(
+      proj_base(),
+      proj_ratios(),
+      horizon = 3,
+      entry = c(130, 140)
+    ),
+    class = "enrollcast_error_entry_length"
+  )
 })
 
 test_that("horizon must be a positive integer", {
@@ -98,9 +111,17 @@ test_that("horizon must be a positive integer", {
     project_enrollment(proj_base(), proj_ratios(), horizon = 0, entry = 1),
     error = TRUE
   )
+  expect_error(
+    project_enrollment(proj_base(), proj_ratios(), horizon = 0, entry = 1),
+    class = "enrollcast_error_horizon"
+  )
   expect_snapshot(
     project_enrollment(proj_base(), proj_ratios(), horizon = 1.5, entry = 1),
     error = TRUE
+  )
+  expect_error(
+    project_enrollment(proj_base(), proj_ratios(), horizon = 1.5, entry = 1),
+    class = "enrollcast_error_horizon"
   )
 })
 
@@ -184,10 +205,18 @@ test_that("schedule and ratios are mutually exclusive", {
     project_enrollment(proj_base(), ratios = proj_ratios(), schedule = sched),
     error = TRUE
   )
+  expect_error(
+    project_enrollment(proj_base(), ratios = proj_ratios(), schedule = sched),
+    class = "enrollcast_error_conflicting_args"
+  )
 })
 
 test_that("project_enrollment needs ratios or a schedule", {
   expect_snapshot(project_enrollment(proj_base(), horizon = 2), error = TRUE)
+  expect_error(
+    project_enrollment(proj_base(), horizon = 2),
+    class = "enrollcast_error_missing_input"
+  )
 })
 
 test_that("horizon must match schedule length when both are given", {
@@ -196,5 +225,94 @@ test_that("horizon must match schedule length when both are given", {
   expect_snapshot(
     project_enrollment(proj_base(), schedule = sched, horizon = 2),
     error = TRUE
+  )
+  expect_error(
+    project_enrollment(proj_base(), schedule = sched, horizon = 2),
+    class = "enrollcast_error_horizon_schedule_mismatch"
+  )
+})
+
+# --- Internal helper tests ---
+
+test_that("check_step rejects a non-list step", {
+  expect_snapshot(check_step("not a list"), error = TRUE)
+  expect_error(check_step("not a list"), class = "enrollcast_error_step_shape")
+})
+
+test_that("check_step rejects a non-square matrix", {
+  m <- projection_matrix(proj_ratios())
+  expect_snapshot(
+    check_step(list(matrix = m[, 1, drop = FALSE])),
+    error = TRUE
+  )
+  expect_error(
+    check_step(list(matrix = m[, 1, drop = FALSE])),
+    class = "enrollcast_error_step_not_square"
+  )
+})
+
+test_that("check_step rejects a matrix with no row names", {
+  m <- matrix(c(1, 0, 0.9, 0), nrow = 2, ncol = 2)
+  colnames(m) <- c("K", "1")
+  expect_snapshot(check_step(list(matrix = m)), error = TRUE)
+  expect_error(
+    check_step(list(matrix = m)),
+    class = "enrollcast_error_step_dimnames"
+  )
+})
+
+test_that("check_step rejects a matrix with mismatched row and col names", {
+  m <- matrix(c(1, 0, 0.9, 0), nrow = 2, ncol = 2)
+  rownames(m) <- c("K", "1")
+  colnames(m) <- c("K", "2")
+  expect_snapshot(check_step(list(matrix = m)), error = TRUE)
+  expect_error(
+    check_step(list(matrix = m)),
+    class = "enrollcast_error_step_dimnames"
+  )
+})
+
+test_that("check_step rejects an invalid step entry", {
+  m <- projection_matrix(proj_ratios())
+  expect_snapshot(
+    check_step(list(matrix = m, entry = c(1, 2))),
+    error = TRUE
+  )
+  expect_error(
+    check_step(list(matrix = m, entry = c(1, 2))),
+    class = "enrollcast_error_step_entry"
+  )
+})
+
+test_that("check_schedule rejects a non-list schedule", {
+  expect_snapshot(check_schedule(42), error = TRUE)
+  expect_error(check_schedule(42), class = "enrollcast_error_schedule_shape")
+})
+
+test_that("check_schedule rejects an empty list", {
+  expect_snapshot(check_schedule(list()), error = TRUE)
+  expect_error(
+    check_schedule(list()),
+    class = "enrollcast_error_schedule_shape"
+  )
+})
+
+test_that("check_schedule rejects inconsistent grade dimnames", {
+  m1 <- projection_matrix(proj_ratios())
+  m2 <- matrix(
+    c(0, 0, 0.9, 0, 0, 0.95, 0, 0, 0),
+    nrow = 3,
+    ncol = 3
+  )
+  rownames(m2) <- c("PK", "K", "1")
+  colnames(m2) <- c("PK", "K", "1")
+  sched <- list(
+    list(matrix = m1, entry = NULL),
+    list(matrix = m2, entry = NULL)
+  )
+  expect_snapshot(check_schedule(sched), error = TRUE)
+  expect_error(
+    check_schedule(sched),
+    class = "enrollcast_error_schedule_inconsistent"
   )
 })
