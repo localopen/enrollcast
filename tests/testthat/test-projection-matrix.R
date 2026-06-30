@@ -46,6 +46,10 @@ test_that("projection_matrix errors on a missing feeding ratio", {
     projection_matrix(r, grade_order = c("K", "1", "2")),
     error = TRUE
   )
+  expect_error(
+    projection_matrix(r, grade_order = c("K", "1", "2")),
+    class = "enrollcast_error_missing_ratio"
+  )
 })
 
 test_that("projection_matrix errors with fewer than two grades", {
@@ -53,12 +57,20 @@ test_that("projection_matrix errors with fewer than two grades", {
     projection_matrix(ratios_fixture(), grade_order = "K"),
     error = TRUE
   )
+  expect_error(
+    projection_matrix(ratios_fixture(), grade_order = "K"),
+    class = "enrollcast_error_too_few_grades"
+  )
 })
 
 test_that("projection_matrix errors when ratios reference an unknown grade", {
   expect_snapshot(
     projection_matrix(ratios_fixture(), grade_order = c("K", "1")),
     error = TRUE
+  )
+  expect_error(
+    projection_matrix(ratios_fixture(), grade_order = c("K", "1")),
+    class = "enrollcast_error_unknown_grade"
   )
 })
 
@@ -69,6 +81,7 @@ test_that("projection_matrix errors on ambiguous entry grade", {
     ratio = c(0.9, 0.9)
   )
   expect_snapshot(projection_matrix(r), error = TRUE)
+  expect_error(projection_matrix(r), class = "enrollcast_error_ambiguous_entry")
 })
 
 test_that("projection_matrix errors on duplicate feeding ratios", {
@@ -80,5 +93,9 @@ test_that("projection_matrix errors on duplicate feeding ratios", {
   expect_snapshot(
     projection_matrix(r, grade_order = c("K", "1", "2")),
     error = TRUE
+  )
+  expect_error(
+    projection_matrix(r, grade_order = c("K", "1", "2")),
+    class = "enrollcast_error_duplicate_feeder"
   )
 })

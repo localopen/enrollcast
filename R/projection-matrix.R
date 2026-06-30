@@ -34,20 +34,38 @@ projection_matrix <- function(ratios, grade_order = NULL) {
   }
   G <- length(grade_order)
   if (G < 2) {
-    stop("Need at least 2 grades to build a projection matrix.", call. = FALSE)
+    cli::cli_abort(
+      c(
+        "A projection matrix needs at least 2 grades.",
+        "x" = "Found {.val {G}} grade{?s}.",
+        "i" = "Supply a longer series via {.arg ratios} or {.arg grade_order}."
+      ),
+      class = "enrollcast_error_too_few_grades"
+    )
   }
 
   ii <- match(to, grade_order)
   jj <- match(from, grade_order)
   if (anyNA(ii) || anyNA(jj)) {
-    stop("`ratios` references a grade not in `grade_order`.", call. = FALSE)
+    unknown <- setdiff(unique(c(from, to)), grade_order)
+    cli::cli_abort(
+      c(
+        "{.arg ratios} references {cli::qty(unknown)} grade{?s} not in {.arg grade_order}.",
+        "x" = "Unknown grade{?s}: {.field {unknown}}.",
+        "i" = "Known grades: {.field {grade_order}}."
+      ),
+      class = "enrollcast_error_unknown_grade"
+    )
   }
 
   if (anyDuplicated(to)) {
-    stop(
-      "`ratios` has more than one ratio feeding the same grade; ",
-      "each grade may be fed only once.",
-      call. = FALSE
+    cli::cli_abort(
+      c(
+        "Each grade in {.arg ratios} may be fed by only one progression ratio.",
+        "x" = "Grade{?s} fed more than once: {.field {unique(to[duplicated(to)])}}.",
+        "i" = "Check {.field grade_to} in {.arg ratios} for duplicate rows."
+      ),
+      class = "enrollcast_error_duplicate_feeder"
     )
   }
 
@@ -61,10 +79,13 @@ projection_matrix <- function(ratios, grade_order = NULL) {
 
   missing_in <- setdiff(grade_order[-1], to)
   if (length(missing_in)) {
-    stop(
-      "Missing progression ratio(s) feeding grade(s): ",
-      toString(missing_in),
-      call. = FALSE
+    cli::cli_abort(
+      c(
+        "Every non-entry grade must be fed by a progression ratio.",
+        "x" = "Missing ratio{?s} feeding grade{?s}: {.field {missing_in}}.",
+        "i" = "{cli::qty(missing_in)}Add row{?s} to {.arg ratios} with {.field grade_to} set to {?this/these} grade{?s}."
+      ),
+      class = "enrollcast_error_missing_ratio"
     )
   }
   M
