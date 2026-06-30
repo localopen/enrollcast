@@ -16,6 +16,8 @@ RoxygenNote: 8.0.0
 Depends:
     R (>= 4.0)
 Imports:
+    cli (>= 3.4.0),
+    rlang (>= 1.0.0),
     stats,
     utils
 Suggests:
