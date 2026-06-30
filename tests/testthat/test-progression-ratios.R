@@ -40,33 +40,57 @@ test_that("non-numeric enrollment is rejected", {
   fx <- enrollcast_fixture()
   fx$enrollment <- as.character(fx$enrollment)
   expect_snapshot(progression_ratios(fx), error = TRUE)
+  expect_error(
+    progression_ratios(fx),
+    class = "enrollcast_error_enrollment_type"
+  )
 })
 
 test_that("missing columns are reported", {
   expect_snapshot(progression_ratios(data.frame(a = 1)), error = TRUE)
+  expect_error(
+    progression_ratios(data.frame(a = 1)),
+    class = "enrollcast_error_missing_columns"
+  )
 })
 
 test_that("non-consecutive years yield no transitions", {
   fx <- enrollcast_fixture()
   fx <- fx[fx$year != 2022, ]
   expect_snapshot(progression_ratios(fx), error = TRUE)
+  expect_error(
+    progression_ratios(fx),
+    class = "enrollcast_error_no_transitions"
+  )
 })
 
 test_that("duplicate grade-year rows are rejected", {
   fx <- rbind(enrollcast_fixture(), enrollcast_fixture()[1, ])
   expect_snapshot(progression_ratios(fx), error = TRUE)
+  expect_error(
+    progression_ratios(fx),
+    class = "enrollcast_error_duplicate_rows"
+  )
 })
 
 test_that("negative enrollment is rejected", {
   fx <- enrollcast_fixture()
   fx$enrollment[1] <- -5
   expect_snapshot(progression_ratios(fx), error = TRUE)
+  expect_error(
+    progression_ratios(fx),
+    class = "enrollcast_error_enrollment_negative"
+  )
 })
 
 test_that("fewer than two grades is rejected", {
   fx <- enrollcast_fixture()
   fx <- fx[fx$grade == "K", ]
   expect_snapshot(progression_ratios(fx), error = TRUE)
+  expect_error(
+    progression_ratios(fx),
+    class = "enrollcast_error_too_few_grades"
+  )
 })
 
 test_that("non-numeric year is rejected", {
@@ -74,6 +98,7 @@ test_that("non-numeric year is rejected", {
   fx$year <- as.character(fx$year)
   fx$year[1] <- "spring"
   expect_snapshot(progression_ratios(fx), error = TRUE)
+  expect_error(progression_ratios(fx), class = "enrollcast_error_year_type")
 })
 
 test_that("grade_order overrides factor levels", {
@@ -105,12 +130,20 @@ test_that("n_years must be a positive integer", {
     progression_ratios(enrollcast_fixture(), n_years = 0),
     error = TRUE
   )
+  expect_error(
+    progression_ratios(enrollcast_fixture(), n_years = 0),
+    class = "enrollcast_error_n_years"
+  )
 })
 
 test_that("zero feeder enrollment warns about non-finite ratios", {
   fx <- enrollcast_fixture()
   fx$enrollment[fx$grade == "K" & fx$year == 2022] <- 0
   expect_snapshot(progression_ratios(fx))
+  expect_warning(
+    progression_ratios(fx),
+    class = "enrollcast_warning_undefined_ratios"
+  )
 })
 
 test_that("progression_ratios errors on an unmatched (NA) grade", {
@@ -118,6 +151,7 @@ test_that("progression_ratios errors on an unmatched (NA) grade", {
   fx$grade <- as.character(fx$grade)
   fx$grade[1] <- NA
   expect_snapshot(progression_ratios(fx), error = TRUE)
+  expect_error(progression_ratios(fx), class = "enrollcast_error_grade_na")
 })
 
 test_that("year is ordered numerically, not lexically, for character/factor years", {
