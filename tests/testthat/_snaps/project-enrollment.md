@@ -132,5 +132,5 @@
       Error:
       ! All `schedule` step matrices must share the same grade dimnames in the same order.
       i Step 1 grades: "K", "1", and "2".
-      x Differing steps: 2.
+      x Differing step: 2.
 

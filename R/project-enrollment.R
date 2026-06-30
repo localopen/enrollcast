@@ -113,7 +113,7 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
       c(
         "All {.arg schedule} step matrices must share the same grade dimnames in the same order.",
         "i" = "Step 1 grades: {.val {go}}.",
-        "x" = "{cli::qty(differing)}Differing step{?s}: {.val {differing}}."
+        "x" = "{cli::qty(length(differing))}Differing step{?s}: {.val {differing}}."
       ),
       class = "enrollcast_error_schedule_inconsistent",
       call = call
