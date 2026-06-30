@@ -151,7 +151,8 @@
       check_schedule(list())
     Condition
       Error:
-      ! `schedule` must be a non-empty list of projection steps.
+      ! `schedule` must be a non-empty <list> of projection steps.
+      x You supplied an empty list.
 
 ---
 
@@ -159,7 +160,8 @@
       check_schedule(list(list(entry = 1)))
     Condition
       Error:
-      ! Each `schedule` step must be a list with a `matrix` element.
+      ! Each `schedule` step must be a <list> with a matrix element.
+      x Got a list.
 
 ---
 
@@ -167,7 +169,8 @@
       check_schedule(list(list(matrix = m[, 1, drop = FALSE])))
     Condition
       Error:
-      ! Each `schedule` step `matrix` must be square.
+      ! Each `schedule` step matrix must be square.
+      x This matrix is 2x1.
 
 ---
 
@@ -175,7 +178,8 @@
       check_schedule(list(list(matrix = bad)))
     Condition
       Error:
-      ! Each `schedule` step `matrix` must have identical row and column dimnames.
+      ! Each `schedule` step matrix must have identical row and column dimnames.
+      x Row names "K" and "1" do not match column names "X" and "Y".
 
 ---
 
@@ -184,6 +188,8 @@
     Condition
       Error:
       ! All `schedule` step matrices must share the same grade dimnames in the same order.
+      i Step 1 grades: "K" and "1".
+      x Differing steps: 2.
 
 ---
 
@@ -191,5 +197,6 @@
       check_schedule(list(list(matrix = m, entry = c(1, 2))))
     Condition
       Error:
-      ! Each `schedule` step `entry` must be NULL or a single number.
+      ! Each `schedule` step entry must be `NULL` or a single number.
+      x Got a double vector of length 2.
 

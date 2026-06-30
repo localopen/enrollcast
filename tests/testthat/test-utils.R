@@ -263,22 +263,46 @@ test_that("check_schedule rejects malformed schedules", {
     data.frame(grade_from = "K", grade_to = "1", ratio = 0.9)
   )
   expect_snapshot(check_schedule(list()), error = TRUE)
+  expect_error(
+    check_schedule(list()),
+    class = "enrollcast_error_schedule_shape"
+  )
   expect_snapshot(check_schedule(list(list(entry = 1))), error = TRUE)
+  expect_error(
+    check_schedule(list(list(entry = 1))),
+    class = "enrollcast_error_step_shape"
+  )
   expect_snapshot(
     check_schedule(list(list(matrix = m[, 1, drop = FALSE]))),
     error = TRUE
   )
+  expect_error(
+    check_schedule(list(list(matrix = m[, 1, drop = FALSE]))),
+    class = "enrollcast_error_step_not_square"
+  )
   bad <- m
   colnames(bad) <- c("X", "Y")
   expect_snapshot(check_schedule(list(list(matrix = bad))), error = TRUE)
+  expect_error(
+    check_schedule(list(list(matrix = bad))),
+    class = "enrollcast_error_step_dimnames"
+  )
   m2 <- m
   dimnames(m2) <- list(c("1", "K"), c("1", "K"))
   expect_snapshot(
     check_schedule(list(list(matrix = m), list(matrix = m2))),
     error = TRUE
   )
+  expect_error(
+    check_schedule(list(list(matrix = m), list(matrix = m2))),
+    class = "enrollcast_error_schedule_inconsistent"
+  )
   expect_snapshot(
     check_schedule(list(list(matrix = m, entry = c(1, 2)))),
     error = TRUE
+  )
+  expect_error(
+    check_schedule(list(list(matrix = m, entry = c(1, 2)))),
+    class = "enrollcast_error_step_entry"
   )
 })
