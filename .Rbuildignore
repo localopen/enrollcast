@@ -19,3 +19,4 @@ jarl.toml
 CITATION.cff
 ^CITATION\.cff$
 ^\.vscode$
+^README\.Rmd$

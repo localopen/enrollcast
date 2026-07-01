@@ -48,13 +48,14 @@ All R commands assume the package root. Tests and the vignette need pandoc —
 ```bash
 export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64
 
-Rscript -e "devtools::test()"                          # run tests (currently 130, FAIL 0)
+Rscript -e "devtools::test()"                          # run tests (currently 218, FAIL 0)
 Rscript -e 'devtools::check(cran = TRUE)'              # full R CMD check; expect 0/0/0
 Rscript -e 'covr::package_coverage(".")'              # coverage — target is 100%
 Rscript -e 'print(goodpractice::gp("."))'             # package quality gate
 Rscript -e 'cyclocomp::cyclocomp_package_dir(".")'    # complexity — keep every fn < 15
 air format .                                           # format (run before every commit)
 Rscript -e 'devtools::document()'                     # regenerate man/*.Rd + NAMESPACE
+Rscript -e 'devtools::build_readme()'                 # rebuild README.md from README.Rmd
 Rscript -e 'source("data-raw/synthetic_enrollment.R")' # rebuild inst/extdata CSV
 ```
 
@@ -90,23 +91,28 @@ old `gpr` name — don't treat them as current sources).
   tab-indented through early development; commit `ce31a5c` reformatted everything
   to Air defaults — don't reintroduce tabs, and ignore stale tab references in
   `docs/superpowers/`.)
-- **Minimal dependencies.** Imports are `stats` and `utils` only (both ship
-  with R — zero third-party dependencies); `Depends: R (>= 4.0)`.
-  No tidyverse. Don't add new dependencies without maintainer sign-off.
+- **Minimal dependencies.** Imports are `stats`, `utils` (both ship with R),
+  `cli` and `rlang` only; `Depends: R (>= 4.0)`. No tidyverse. Don't add new dependencies without maintainer sign-off.
 - **roxygen2 with markdown** (`Roxygen: list(markdown = TRUE)`). Edit roxygen
   comments in `R/`, then `devtools::document()` — never edit `man/` or `NAMESPACE`.
 - Internal helpers are **not exported**, use **snake_case**, and carry a plain
   one-line comment (no roxygen). Exported functions are factored into small
   helpers to keep cyclomatic complexity < 15.
-- Error/validation messages use `stop(..., call. = FALSE)`. Reuse the shared
-  predicate `is_count()` (base-R one-liner in `R/utils.R`) for positive-integer
-  checks rather than re-inlining it.
+- User-facing conditions use **cli** — `cli_abort()`/`cli_warn()`/`cli_inform()`,
+  never base `stop()`/`warning()`/`message()`. Every signalled condition carries an
+  `enrollcast_error_*` / `enrollcast_warning_*` **class** (see `R/utils.R`,
+  `R/projection-matrix.R`) so callers and tests can catch it by class. Reuse the
+  shared predicate `is_count()` (base-R one-liner in `R/utils.R`) for
+  positive-integer checks rather than re-inlining it.
 
 ## Testing
 
 - **testthat 3rd edition** (`Config/testthat/edition: 3`).
-- Errors and warnings are tested with **snapshots**: `expect_snapshot(expr,
-  error = TRUE)`. After changing user-facing messages, re-run tests to update
+- Errors and warnings are tested two ways: **class assertions**
+  (`expect_error(expr, class = "enrollcast_error_*")`, likewise
+  `expect_warning(..., class = "enrollcast_warning_*")`) pin the condition class,
+  and **snapshots** (`expect_snapshot(expr, error = TRUE)`) pin the rendered cli
+  message. After changing user-facing messages, re-run tests to update
   `_snaps/*.md` and review the diff.
 - `expect_identical()` for exact values (integers like `3L`, character vectors,
   structure); `expect_equal()` (with `tolerance`) for floating-point ratios and
