@@ -99,3 +99,35 @@ test_that("projection_matrix errors on duplicate feeding ratios", {
     class = "enrollcast_error_duplicate_feeder"
   )
 })
+
+test_that("chain_order reconstructs the grade sequence", {
+  expect_identical(chain_order(c("K", "1"), c("1", "2")), c("K", "1", "2"))
+})
+
+test_that("chain_order handles a single transition pair", {
+  expect_identical(chain_order("K", "1"), c("K", "1"))
+})
+
+test_that("chain_order errors on ambiguous entry grade", {
+  expect_snapshot(chain_order(c("K", "9"), c("1", "2")), error = TRUE)
+  expect_error(
+    chain_order(c("K", "9"), c("1", "2")),
+    class = "enrollcast_error_ambiguous_entry"
+  )
+})
+
+test_that("chain_order errors on branching transitions", {
+  expect_snapshot(chain_order(c("K", "K", "1"), c("1", "2", "2")), error = TRUE)
+  expect_error(
+    chain_order(c("K", "K", "1"), c("1", "2", "2")),
+    class = "enrollcast_error_branching_transitions"
+  )
+})
+
+test_that("chain_order errors on a cycle", {
+  expect_snapshot(chain_order(c("Z", "a", "b"), c("a", "b", "a")), error = TRUE)
+  expect_error(
+    chain_order(c("Z", "a", "b"), c("a", "b", "a")),
+    class = "enrollcast_error_cyclic_transitions"
+  )
+})

@@ -33,33 +33,6 @@
       Warning:
       `grade_order` contains grade missing from data: 3.
 
-# chain_order errors on ambiguous entry grade
-
-    Code
-      chain_order(c("K", "9"), c("1", "2"))
-    Condition
-      Error:
-      ! Could not determine a unique entry grade from `ratios`.
-      i Pass `grade_order` explicitly.
-
-# chain_order errors on branching transitions
-
-    Code
-      chain_order(c("K", "K", "1"), c("1", "2", "2"))
-    Condition
-      Error:
-      ! A grade feeds more than one grade in `ratios` (branching transitions).
-      i Pass `grade_order` explicitly.
-
-# chain_order errors on a cycle
-
-    Code
-      chain_order(c("Z", "a", "b"), c("a", "b", "a"))
-    Condition
-      Error:
-      ! Cycle detected in grade transitions in `ratios`.
-      i Pass `grade_order` explicitly.
-
 # summarise_ratios weighted errors on length mismatch
 
     Code

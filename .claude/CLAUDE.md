@@ -67,11 +67,11 @@ Rscript -e 'source("data-raw/synthetic_enrollment.R")' # rebuild inst/extdata CS
 R/
   enrollcast-package.R     # "_PACKAGE" doc stub
   progression-ratios.R     # progression_ratios() + its internal helpers
-  projection-matrix.R      # projection_matrix()
+  projection-matrix.R      # projection_matrix() + its internal helpers
   project-enrollment.R     # project_enrollment() + its internal helpers
   swing-schedule.R         # swing_schedule() + its internal helpers
   utils.R                  # shared internals: is_count, check_columns,
-                           #   resolve_grade_order, chain_order, summarise_ratios,
+                           #   resolve_grade_order, summarise_ratios,
                            #   as_base_vector, as_entry_vector
 tests/testthat/            # test-*.R, helper-enrollcast.R, _snaps/*.md
 man/                       # roxygen-generated — never edit by hand

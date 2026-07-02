@@ -1,3 +1,50 @@
+# Reconstruct grade order from from/to transition pairs (linear chain).
+chain_order <- function(from, to, call = rlang::caller_env()) {
+  from <- as.character(from)
+  to <- as.character(to)
+  if (anyDuplicated(from)) {
+    cli::cli_abort(
+      c(
+        "A grade feeds more than one grade in {.arg ratios} (branching transitions).",
+        "i" = "Pass {.arg grade_order} explicitly."
+      ),
+      class = "enrollcast_error_branching_transitions",
+      call = call
+    )
+  }
+  entry <- setdiff(from, to)
+  if (length(entry) != 1) {
+    cli::cli_abort(
+      c(
+        "Could not determine a unique entry grade from {.arg ratios}.",
+        "i" = "Pass {.arg grade_order} explicitly."
+      ),
+      class = "enrollcast_error_ambiguous_entry",
+      call = call
+    )
+  }
+  nxt <- stats::setNames(to, from)
+  order <- entry
+  cur <- entry
+  steps <- 0L
+  while (cur %in% names(nxt)) {
+    steps <- steps + 1L
+    if (steps > length(from)) {
+      cli::cli_abort(
+        c(
+          "Cycle detected in grade transitions in {.arg ratios}.",
+          "i" = "Pass {.arg grade_order} explicitly."
+        ),
+        class = "enrollcast_error_cyclic_transitions",
+        call = call
+      )
+    }
+    cur <- nxt[[cur]]
+    order <- c(order, cur)
+  }
+  order
+}
+
 # Validate from/to transitions against the resolved grade order.
 check_projection_grades <- function(
   from,
