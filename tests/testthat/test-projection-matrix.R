@@ -135,6 +135,38 @@ test_that("projection_matrix rejects a grade_order containing duplicates", {
   )
 })
 
+test_that("projection_matrix rejects a non-numeric ratio column", {
+  r <- ratios_fixture()
+  r$ratio <- as.character(r$ratio)
+  expect_snapshot(projection_matrix(r), error = TRUE)
+  expect_error(projection_matrix(r), class = "enrollcast_error_ratio_type")
+})
+
+test_that("projection_matrix rejects negative ratios", {
+  r <- ratios_fixture()
+  r$ratio[1] <- -0.5
+  expect_snapshot(projection_matrix(r), error = TRUE)
+  expect_error(projection_matrix(r), class = "enrollcast_error_ratio_negative")
+})
+
+test_that("projection_matrix warns on NA ratios and keeps them in the matrix", {
+  r <- ratios_fixture()
+  r$ratio[2] <- NA
+  expect_snapshot(M <- projection_matrix(r))
+  expect_warning(projection_matrix(r), class = "enrollcast_warning_ratio_na")
+  M <- suppressWarnings(projection_matrix(r))
+  expect_identical(M["2", "1"], NA_real_)
+  expect_equal(M["1", "K"], 0.925)
+})
+
+test_that("projection_matrix warns on NaN ratios from sparse history", {
+  r <- ratios_fixture()
+  r$ratio[2] <- NaN
+  expect_warning(projection_matrix(r), class = "enrollcast_warning_ratio_na")
+  M <- suppressWarnings(projection_matrix(r))
+  expect_identical(M["2", "1"], NaN)
+})
+
 test_that("chain_order reconstructs the grade sequence", {
   expect_identical(chain_order(c("K", "1"), c("1", "2")), c("K", "1", "2"))
 })

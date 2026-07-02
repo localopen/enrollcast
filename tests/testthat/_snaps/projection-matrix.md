@@ -75,6 +75,33 @@
       ! `grade_order` must not contain duplicate grades.
       x Duplicated grade: 2.
 
+# projection_matrix rejects a non-numeric ratio column
+
+    Code
+      projection_matrix(r)
+    Condition
+      Error in `projection_matrix()`:
+      ! The ratio column of `ratios` must be numeric.
+      x ratio is <character>.
+
+# projection_matrix rejects negative ratios
+
+    Code
+      projection_matrix(r)
+    Condition
+      Error in `projection_matrix()`:
+      ! The ratio column of `ratios` must be non-negative.
+      x Found 1 negative value.
+
+# projection_matrix warns on NA ratios and keeps them in the matrix
+
+    Code
+      M <- projection_matrix(r)
+    Condition
+      Warning:
+      1 ratio in `ratios` is NA or NaN.
+      ! Grade fed by this ratio will project as NA.
+
 # chain_order errors on ambiguous entry grade
 
     Code

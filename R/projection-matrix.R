@@ -45,6 +45,31 @@ chain_order <- function(from, to, call = rlang::caller_env()) {
   order
 }
 
+# Validate ratio values: must be numeric and non-negative.
+check_ratio_values <- function(ratio, call = rlang::caller_env()) {
+  if (!is.numeric(ratio)) {
+    cli::cli_abort(
+      c(
+        "The {.field ratio} column of {.arg ratios} must be numeric.",
+        "x" = "{.field ratio} is {.cls {class(ratio)}}."
+      ),
+      class = "enrollcast_error_ratio_type",
+      call = call
+    )
+  }
+  if (any(ratio < 0, na.rm = TRUE)) {
+    cli::cli_abort(
+      c(
+        "The {.field ratio} column of {.arg ratios} must be non-negative.",
+        "x" = "Found {sum(ratio < 0, na.rm = TRUE)} negative value{?s}."
+      ),
+      class = "enrollcast_error_ratio_negative",
+      call = call
+    )
+  }
+  invisible(ratio)
+}
+
 # Abort when any grade is fed by more than one ratio row.
 check_duplicate_feeder <- function(to, call = rlang::caller_env()) {
   if (anyDuplicated(to)) {
@@ -136,6 +161,21 @@ check_projection_grades <- function(
   invisible(NULL)
 }
 
+# Warn when ratios contain NA/NaN; they propagate into the projection.
+warn_na_ratios <- function(ratio) {
+  n_na <- sum(is.na(ratio))
+  if (n_na > 0) {
+    cli::cli_warn(
+      c(
+        "{n_na} ratio{?s} in {.arg ratios} {?is/are} {.val {NA}} or {.val {NaN}}.",
+        "!" = "{cli::qty(n_na)}Grade{?s} fed by {?this/these} ratio{?s} will project as {.val {NA}}."
+      ),
+      class = "enrollcast_warning_ratio_na"
+    )
+  }
+  invisible(ratio)
+}
+
 #' Build the projection matrix
 #'
 #' Assembles the projection matrix used to advance enrollment. Progression ratios
@@ -162,6 +202,7 @@ check_projection_grades <- function(
 #' projection_matrix(ratios)
 projection_matrix <- function(ratios, grade_order = NULL) {
   check_columns(ratios, c("grade_from", "grade_to", "ratio"), "ratios")
+  check_ratio_values(ratios$ratio)
   from <- as.character(ratios$grade_from)
   to <- as.character(ratios$grade_to)
   check_duplicate_feeder(to)
@@ -174,6 +215,7 @@ projection_matrix <- function(ratios, grade_order = NULL) {
   }
 
   check_projection_grades(from, to, grade_order)
+  warn_na_ratios(ratios$ratio)
 
   M <- matrix(
     0,
