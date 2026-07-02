@@ -45,6 +45,47 @@ chain_order <- function(from, to, call = rlang::caller_env()) {
   order
 }
 
+# Abort when any grade is fed by more than one ratio row.
+check_duplicate_feeder <- function(to, call = rlang::caller_env()) {
+  if (anyDuplicated(to)) {
+    cli::cli_abort(
+      c(
+        "Each grade in {.arg ratios} may be fed by only one progression ratio.",
+        "x" = "Grade{?s} fed more than once: {.field {unique(to[duplicated(to)])}}.",
+        "i" = "Check {.field grade_to} in {.arg ratios} for duplicate rows."
+      ),
+      class = "enrollcast_error_duplicate_feeder",
+      call = call
+    )
+  }
+  invisible(to)
+}
+
+# Validate an explicit grade_order argument (no missing values, no duplicates).
+check_grade_order_arg <- function(grade_order, call = rlang::caller_env()) {
+  if (anyNA(grade_order)) {
+    cli::cli_abort(
+      c(
+        "{.arg grade_order} must not contain missing values.",
+        "x" = "Found {sum(is.na(grade_order))} missing value{?s}."
+      ),
+      class = "enrollcast_error_grade_order_na",
+      call = call
+    )
+  }
+  if (anyDuplicated(grade_order)) {
+    cli::cli_abort(
+      c(
+        "{.arg grade_order} must not contain duplicate grades.",
+        "x" = "Duplicated grade{?s}: {.field {unique(grade_order[duplicated(grade_order)])}}."
+      ),
+      class = "enrollcast_error_grade_order_duplicate",
+      call = call
+    )
+  }
+  invisible(grade_order)
+}
+
 # Validate from/to transitions against the resolved grade order.
 check_projection_grades <- function(
   from,
@@ -76,18 +117,6 @@ check_projection_grades <- function(
         "i" = "Known grades: {.field {grade_order}}."
       ),
       class = "enrollcast_error_unknown_grade",
-      call = call
-    )
-  }
-
-  if (anyDuplicated(to)) {
-    cli::cli_abort(
-      c(
-        "Each grade in {.arg ratios} may be fed by only one progression ratio.",
-        "x" = "Grade{?s} fed more than once: {.field {unique(to[duplicated(to)])}}.",
-        "i" = "Check {.field grade_to} in {.arg ratios} for duplicate rows."
-      ),
-      class = "enrollcast_error_duplicate_feeder",
       call = call
     )
   }
@@ -135,11 +164,13 @@ projection_matrix <- function(ratios, grade_order = NULL) {
   check_columns(ratios, c("grade_from", "grade_to", "ratio"), "ratios")
   from <- as.character(ratios$grade_from)
   to <- as.character(ratios$grade_to)
+  check_duplicate_feeder(to)
 
   if (is.null(grade_order)) {
     grade_order <- chain_order(from, to)
   } else {
     grade_order <- as.character(grade_order)
+    check_grade_order_arg(grade_order)
   }
 
   check_projection_grades(from, to, grade_order)

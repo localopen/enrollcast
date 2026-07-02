@@ -47,6 +47,34 @@
       x Grade fed more than once: 1.
       i Check grade_to in `ratios` for duplicate rows.
 
+# projection_matrix reports duplicate feeders when grade_order is omitted
+
+    Code
+      projection_matrix(r)
+    Condition
+      Error in `projection_matrix()`:
+      ! Each grade in `ratios` may be fed by only one progression ratio.
+      x Grade fed more than once: 1.
+      i Check grade_to in `ratios` for duplicate rows.
+
+# projection_matrix rejects a grade_order containing missing values
+
+    Code
+      projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", NA))
+    Condition
+      Error in `projection_matrix()`:
+      ! `grade_order` must not contain missing values.
+      x Found 1 missing value.
+
+# projection_matrix rejects a grade_order containing duplicates
+
+    Code
+      projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", "2"))
+    Condition
+      Error in `projection_matrix()`:
+      ! `grade_order` must not contain duplicate grades.
+      x Duplicated grade: 2.
+
 # chain_order errors on ambiguous entry grade
 
     Code

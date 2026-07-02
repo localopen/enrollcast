@@ -100,6 +100,41 @@ test_that("projection_matrix errors on duplicate feeding ratios", {
   )
 })
 
+test_that("projection_matrix reports duplicate feeders when grade_order is omitted", {
+  r <- data.frame(
+    grade_from = c("K", "1"),
+    grade_to = c("1", "1"),
+    ratio = c(0.9, 0.9)
+  )
+  expect_snapshot(projection_matrix(r), error = TRUE)
+  expect_error(
+    projection_matrix(r),
+    class = "enrollcast_error_duplicate_feeder"
+  )
+})
+
+test_that("projection_matrix rejects a grade_order containing missing values", {
+  expect_snapshot(
+    projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", NA)),
+    error = TRUE
+  )
+  expect_error(
+    projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", NA)),
+    class = "enrollcast_error_grade_order_na"
+  )
+})
+
+test_that("projection_matrix rejects a grade_order containing duplicates", {
+  expect_snapshot(
+    projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", "2")),
+    error = TRUE
+  )
+  expect_error(
+    projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", "2")),
+    class = "enrollcast_error_grade_order_duplicate"
+  )
+})
+
 test_that("chain_order reconstructs the grade sequence", {
   expect_identical(chain_order(c("K", "1"), c("1", "2")), c("K", "1", "2"))
 })
