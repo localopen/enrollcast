@@ -167,6 +167,54 @@ test_that("projection_matrix warns on NaN ratios from sparse history", {
   expect_identical(M["2", "1"], NaN)
 })
 
+test_that("projection_matrix rejects a transition feeding the entry grade", {
+  r <- data.frame(
+    grade_from = c("K", "1", "2"),
+    grade_to = c("1", "2", "K"),
+    ratio = c(0.9, 0.9, 0.5)
+  )
+  expect_snapshot(
+    projection_matrix(r, grade_order = c("K", "1", "2")),
+    error = TRUE
+  )
+  expect_error(
+    projection_matrix(r, grade_order = c("K", "1", "2")),
+    class = "enrollcast_error_nonadjacent_transition"
+  )
+})
+
+test_that("projection_matrix rejects skipped and backward transitions", {
+  r <- data.frame(
+    grade_from = c("K", "2"),
+    grade_to = c("2", "1"),
+    ratio = c(0.9, 0.9)
+  )
+  expect_snapshot(
+    projection_matrix(r, grade_order = c("K", "1", "2")),
+    error = TRUE
+  )
+  expect_error(
+    projection_matrix(r, grade_order = c("K", "1", "2")),
+    class = "enrollcast_error_nonadjacent_transition"
+  )
+})
+
+test_that("projection_matrix rejects branching transitions under an explicit grade_order", {
+  r <- data.frame(
+    grade_from = c("K", "K"),
+    grade_to = c("1", "2"),
+    ratio = c(0.9, 0.8)
+  )
+  expect_snapshot(
+    projection_matrix(r, grade_order = c("K", "1", "2")),
+    error = TRUE
+  )
+  expect_error(
+    projection_matrix(r, grade_order = c("K", "1", "2")),
+    class = "enrollcast_error_nonadjacent_transition"
+  )
+})
+
 test_that("chain_order reconstructs the grade sequence", {
   expect_identical(chain_order(c("K", "1"), c("1", "2")), c("K", "1", "2"))
 })

@@ -102,6 +102,36 @@
       1 ratio in `ratios` is NA or NaN.
       ! Grade fed by this ratio will project as NA.
 
+# projection_matrix rejects a transition feeding the entry grade
+
+    Code
+      projection_matrix(r, grade_order = c("K", "1", "2"))
+    Condition
+      Error in `projection_matrix()`:
+      ! Each ratio in `ratios` must feed the next grade up in `grade_order`.
+      x Non-adjacent transition: "2 -> K".
+      i Grade order: K, 1, and 2.
+
+# projection_matrix rejects skipped and backward transitions
+
+    Code
+      projection_matrix(r, grade_order = c("K", "1", "2"))
+    Condition
+      Error in `projection_matrix()`:
+      ! Each ratio in `ratios` must feed the next grade up in `grade_order`.
+      x Non-adjacent transitions: "K -> 2" and "2 -> 1".
+      i Grade order: K, 1, and 2.
+
+# projection_matrix rejects branching transitions under an explicit grade_order
+
+    Code
+      projection_matrix(r, grade_order = c("K", "1", "2"))
+    Condition
+      Error in `projection_matrix()`:
+      ! Each ratio in `ratios` must feed the next grade up in `grade_order`.
+      x Non-adjacent transition: "K -> 2".
+      i Grade order: K, 1, and 2.
+
 # chain_order errors on ambiguous entry grade
 
     Code

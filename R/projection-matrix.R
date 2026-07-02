@@ -161,6 +161,29 @@ check_projection_grades <- function(
   invisible(NULL)
 }
 
+# Every transition must feed the grade immediately above it in grade_order.
+check_subdiagonal <- function(
+  from,
+  to,
+  grade_order,
+  call = rlang::caller_env()
+) {
+  bad <- which(match(to, grade_order) != match(from, grade_order) + 1L)
+  if (length(bad)) {
+    pairs <- paste0(from[bad], " -> ", to[bad])
+    cli::cli_abort(
+      c(
+        "Each ratio in {.arg ratios} must feed the next grade up in {.arg grade_order}.",
+        "x" = "Non-adjacent transition{?s}: {.val {pairs}}.",
+        "i" = "Grade order: {.field {grade_order}}."
+      ),
+      class = "enrollcast_error_nonadjacent_transition",
+      call = call
+    )
+  }
+  invisible(NULL)
+}
+
 # Warn when ratios contain NA/NaN; they propagate into the projection.
 warn_na_ratios <- function(ratio) {
   n_na <- sum(is.na(ratio))
@@ -181,14 +204,18 @@ warn_na_ratios <- function(ratio) {
 #' Assembles the projection matrix used to advance enrollment. Progression ratios
 #' are placed on the sub-diagonal (each non-entry grade is fed by the grade
 #' below); the entry-grade row is left at zero because entry enrollment is
-#' supplied exogenously to [project_enrollment()].
+#' supplied exogenously to [project_enrollment()]. The ratios must form a single
+#' low-to-high chain: each `grade_to` must be the grade immediately above its
+#' `grade_from` in the resolved order.
 #'
 #' @param ratios A data frame with columns `grade_from`, `grade_to`, and
-#'   `ratio`, as returned by [progression_ratios()].
+#'   `ratio`, as returned by [progression_ratios()]. `ratio` must be numeric and
+#'   non-negative; `NA`/`NaN` ratios (e.g. from sparse history) are kept in the
+#'   matrix with a warning.
 #' @param grade_order Optional character vector giving the low-to-high grade
 #'   order. If omitted, the order is reconstructed from the transition chain.
 #'   Every non-entry grade in `grade_order` must appear as a `grade_to` in
-#'   `ratios`.
+#'   `ratios`. Must not contain duplicates or missing values.
 #'
 #' @return A square numeric matrix with grade dimnames.
 #' @export
@@ -215,6 +242,7 @@ projection_matrix <- function(ratios, grade_order = NULL) {
   }
 
   check_projection_grades(from, to, grade_order)
+  check_subdiagonal(from, to, grade_order)
   warn_na_ratios(ratios$ratio)
 
   M <- matrix(

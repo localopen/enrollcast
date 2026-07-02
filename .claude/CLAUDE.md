@@ -42,13 +42,17 @@ series; map over `split()` for multiple schools/sectors (see README).
 
 ## Commands
 
-All R commands assume the package root. Tests and the vignette need pandoc —
-**export `RSTUDIO_PANDOC` first** or `devtools` won't find it:
+All R commands assume the package root — the project uses **renv** (`.Rprofile`
+activates it), so running from elsewhere silently picks the wrong library.
+`covr` and `goodpractice` are not in the renv library; add dev tooling with
+`renv::install(...)` but do **not** `renv::snapshot()` (keep DESCRIPTION deps
+frozen). Tests and the vignette need pandoc — **export `RSTUDIO_PANDOC` first**
+or `devtools` won't find it:
 
 ```bash
 export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64
 
-Rscript -e "devtools::test()"                          # run tests (currently 218, FAIL 0)
+Rscript -e "devtools::test()"                          # run tests (currently 240, FAIL 0)
 Rscript -e 'devtools::check(cran = TRUE)'              # full R CMD check; expect 0/0/0
 Rscript -e 'covr::package_coverage(".")'              # coverage — target is 100%
 Rscript -e 'print(goodpractice::gp("."))'             # package quality gate

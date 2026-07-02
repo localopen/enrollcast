@@ -12,3 +12,13 @@
   steps as an alternative to the `ratios`/`horizon`/`entry` arguments.
 * `swing_schedule()` builds a swing/recovery projection schedule for a school
   passing through a temporary relocation.
+* `projection_matrix()` validates the `ratio` column: non-numeric columns and
+  negative values now error, and `NA`/`NaN` ratios are kept in the matrix with a
+  warning.
+* `projection_matrix()` rejects a `grade_order` containing duplicates or missing
+  values instead of silently building a malformed matrix.
+* `projection_matrix()` requires every transition to feed the next grade up in
+  the grade order, catching entry-feeding, self-loop, skipped, backward, and
+  branching transitions supplied with an explicit `grade_order`.
+* `projection_matrix()` reports a twice-fed grade as a duplicate feeder even
+  when `grade_order` is omitted (previously misreported as a cycle).
