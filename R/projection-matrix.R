@@ -1,3 +1,65 @@
+# Validate from/to transitions against the resolved grade order.
+check_projection_grades <- function(
+  from,
+  to,
+  grade_order,
+  call = rlang::caller_env()
+) {
+  G <- length(grade_order)
+  if (G < 2) {
+    cli::cli_abort(
+      c(
+        "A projection matrix needs at least 2 grades.",
+        "x" = "Found {.val {G}} grade{?s}.",
+        "i" = "Supply a longer series via {.arg ratios} or {.arg grade_order}."
+      ),
+      class = "enrollcast_error_too_few_grades",
+      call = call
+    )
+  }
+
+  ii <- match(to, grade_order)
+  jj <- match(from, grade_order)
+  if (anyNA(ii) || anyNA(jj)) {
+    unknown <- setdiff(unique(c(from, to)), grade_order)
+    cli::cli_abort(
+      c(
+        "{.arg ratios} references {cli::qty(unknown)} grade{?s} not in {.arg grade_order}.",
+        "x" = "Unknown grade{?s}: {.field {unknown}}.",
+        "i" = "Known grades: {.field {grade_order}}."
+      ),
+      class = "enrollcast_error_unknown_grade",
+      call = call
+    )
+  }
+
+  if (anyDuplicated(to)) {
+    cli::cli_abort(
+      c(
+        "Each grade in {.arg ratios} may be fed by only one progression ratio.",
+        "x" = "Grade{?s} fed more than once: {.field {unique(to[duplicated(to)])}}.",
+        "i" = "Check {.field grade_to} in {.arg ratios} for duplicate rows."
+      ),
+      class = "enrollcast_error_duplicate_feeder",
+      call = call
+    )
+  }
+
+  missing_in <- setdiff(grade_order[-1], to)
+  if (length(missing_in)) {
+    cli::cli_abort(
+      c(
+        "Every non-entry grade must be fed by a progression ratio.",
+        "x" = "Missing ratio{?s} feeding grade{?s}: {.field {missing_in}}.",
+        "i" = "{cli::qty(missing_in)}Add row{?s} to {.arg ratios} with {.field grade_to} set to {?this/these} grade{?s}."
+      ),
+      class = "enrollcast_error_missing_ratio",
+      call = call
+    )
+  }
+  invisible(NULL)
+}
+
 #' Build the projection matrix
 #'
 #' Assembles the projection matrix used to advance enrollment. Progression ratios
@@ -32,61 +94,15 @@ projection_matrix <- function(ratios, grade_order = NULL) {
   } else {
     grade_order <- as.character(grade_order)
   }
-  G <- length(grade_order)
-  if (G < 2) {
-    cli::cli_abort(
-      c(
-        "A projection matrix needs at least 2 grades.",
-        "x" = "Found {.val {G}} grade{?s}.",
-        "i" = "Supply a longer series via {.arg ratios} or {.arg grade_order}."
-      ),
-      class = "enrollcast_error_too_few_grades"
-    )
-  }
 
-  ii <- match(to, grade_order)
-  jj <- match(from, grade_order)
-  if (anyNA(ii) || anyNA(jj)) {
-    unknown <- setdiff(unique(c(from, to)), grade_order)
-    cli::cli_abort(
-      c(
-        "{.arg ratios} references {cli::qty(unknown)} grade{?s} not in {.arg grade_order}.",
-        "x" = "Unknown grade{?s}: {.field {unknown}}.",
-        "i" = "Known grades: {.field {grade_order}}."
-      ),
-      class = "enrollcast_error_unknown_grade"
-    )
-  }
-
-  if (anyDuplicated(to)) {
-    cli::cli_abort(
-      c(
-        "Each grade in {.arg ratios} may be fed by only one progression ratio.",
-        "x" = "Grade{?s} fed more than once: {.field {unique(to[duplicated(to)])}}.",
-        "i" = "Check {.field grade_to} in {.arg ratios} for duplicate rows."
-      ),
-      class = "enrollcast_error_duplicate_feeder"
-    )
-  }
+  check_projection_grades(from, to, grade_order)
 
   M <- matrix(
     0,
-    nrow = G,
-    ncol = G,
+    nrow = length(grade_order),
+    ncol = length(grade_order),
     dimnames = list(grade_order, grade_order)
   )
-  M[cbind(ii, jj)] <- ratios$ratio
-
-  missing_in <- setdiff(grade_order[-1], to)
-  if (length(missing_in)) {
-    cli::cli_abort(
-      c(
-        "Every non-entry grade must be fed by a progression ratio.",
-        "x" = "Missing ratio{?s} feeding grade{?s}: {.field {missing_in}}.",
-        "i" = "{cli::qty(missing_in)}Add row{?s} to {.arg ratios} with {.field grade_to} set to {?this/these} grade{?s}."
-      ),
-      class = "enrollcast_error_missing_ratio"
-    )
-  }
+  M[cbind(match(to, grade_order), match(from, grade_order))] <- ratios$ratio
   M
 }

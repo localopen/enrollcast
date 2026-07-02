@@ -100,9 +100,10 @@ chain_order <- function(from, to, call = rlang::caller_env()) {
   nxt <- stats::setNames(to, from)
   order <- entry
   cur <- entry
-  visited <- character(0)
+  steps <- 0L
   while (cur %in% names(nxt)) {
-    if (cur %in% visited) {
+    steps <- steps + 1L
+    if (steps > length(from)) {
       cli::cli_abort(
         c(
           "Cycle detected in grade transitions in {.arg ratios}.",
@@ -112,7 +113,6 @@ chain_order <- function(from, to, call = rlang::caller_env()) {
         call = call
       )
     }
-    visited <- c(visited, cur)
     cur <- nxt[[cur]]
     order <- c(order, cur)
   }
