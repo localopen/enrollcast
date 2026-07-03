@@ -135,6 +135,16 @@ test_that("projection_matrix rejects a grade_order containing duplicates", {
   )
 })
 
+test_that("projection_matrix rejects missing grade labels on the inferred path", {
+  r <- data.frame(
+    grade_from = c("K", "1"),
+    grade_to = c("1", NA),
+    ratio = c(0.9, 0.9)
+  )
+  expect_snapshot(projection_matrix(r), error = TRUE)
+  expect_error(projection_matrix(r), class = "enrollcast_error_grade_na")
+})
+
 test_that("projection_matrix rejects a non-numeric ratio column", {
   r <- ratios_fixture()
   r$ratio <- as.character(r$ratio)

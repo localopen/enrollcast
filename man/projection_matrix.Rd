@@ -8,9 +8,9 @@ projection_matrix(ratios, grade_order = NULL)
 }
 \arguments{
 \item{ratios}{A data frame with columns \code{grade_from}, \code{grade_to}, and
-\code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}. \code{ratio} must be numeric and
-non-negative; \code{NA}/\code{NaN} ratios (e.g. from sparse history) are kept in the
-matrix with a warning.}
+\code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}. \code{grade_from} and \code{grade_to}
+must not be missing. \code{ratio} must be numeric and non-negative; \code{NA}/\code{NaN}
+ratios (e.g. from sparse history) are kept in the matrix with a warning.}
 
 \item{grade_order}{Optional character vector giving the low-to-high grade
 order. If omitted, the order is reconstructed from the transition chain.

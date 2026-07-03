@@ -75,6 +75,15 @@
       ! `grade_order` must not contain duplicate grades.
       x Duplicated grade: 2.
 
+# projection_matrix rejects missing grade labels on the inferred path
+
+    Code
+      projection_matrix(r)
+    Condition
+      Error in `projection_matrix()`:
+      ! grade_from and grade_to in `ratios` must not be missing.
+      x Found 1 missing grade label.
+
 # projection_matrix rejects a non-numeric ratio column
 
     Code

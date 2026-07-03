@@ -70,6 +70,22 @@ check_ratio_values <- function(ratio, call = rlang::caller_env()) {
   invisible(ratio)
 }
 
+# Grade labels in `ratios` must not be missing.
+check_grade_labels <- function(from, to, call = rlang::caller_env()) {
+  n_na <- sum(is.na(from)) + sum(is.na(to))
+  if (n_na > 0) {
+    cli::cli_abort(
+      c(
+        "{.field grade_from} and {.field grade_to} in {.arg ratios} must not be missing.",
+        "x" = "Found {n_na} missing grade label{?s}."
+      ),
+      class = "enrollcast_error_grade_na",
+      call = call
+    )
+  }
+  invisible(NULL)
+}
+
 # Abort when any grade is fed by more than one ratio row.
 check_duplicate_feeder <- function(to, call = rlang::caller_env()) {
   if (anyDuplicated(to)) {
@@ -209,9 +225,9 @@ warn_na_ratios <- function(ratio) {
 #' `grade_from` in the resolved order.
 #'
 #' @param ratios A data frame with columns `grade_from`, `grade_to`, and
-#'   `ratio`, as returned by [progression_ratios()]. `ratio` must be numeric and
-#'   non-negative; `NA`/`NaN` ratios (e.g. from sparse history) are kept in the
-#'   matrix with a warning.
+#'   `ratio`, as returned by [progression_ratios()]. `grade_from` and `grade_to`
+#'   must not be missing. `ratio` must be numeric and non-negative; `NA`/`NaN`
+#'   ratios (e.g. from sparse history) are kept in the matrix with a warning.
 #' @param grade_order Optional character vector giving the low-to-high grade
 #'   order. If omitted, the order is reconstructed from the transition chain.
 #'   Every non-entry grade in `grade_order` must appear as a `grade_to` in
@@ -232,6 +248,7 @@ projection_matrix <- function(ratios, grade_order = NULL) {
   check_ratio_values(ratios$ratio)
   from <- as.character(ratios$grade_from)
   to <- as.character(ratios$grade_to)
+  check_grade_labels(from, to)
   check_duplicate_feeder(to)
 
   if (is.null(grade_order)) {
