@@ -178,6 +178,13 @@ test_that("projection_matrix rejects negative ratios", {
   expect_error(projection_matrix(r), class = "enrollcast_error_ratio_negative")
 })
 
+test_that("projection_matrix rejects an infinite ratio", {
+  r <- ratios_fixture()
+  r$ratio[1] <- Inf
+  expect_snapshot(projection_matrix(r), error = TRUE)
+  expect_error(projection_matrix(r), class = "enrollcast_error_ratio_infinite")
+})
+
 test_that("projection_matrix warns on NA ratios and keeps them in the matrix", {
   r <- ratios_fixture()
   r$ratio[2] <- NA

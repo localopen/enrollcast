@@ -111,6 +111,16 @@
       ! The ratio column of `ratios` must be non-negative.
       x Found 1 negative value.
 
+# projection_matrix rejects an infinite ratio
+
+    Code
+      projection_matrix(r)
+    Condition
+      Error in `projection_matrix()`:
+      ! The ratio column of `ratios` must be finite.
+      x Found 1 infinite value.
+      i An infinite ratio comes from a zero-enrollment feeder grade; drop or adjust it before building the matrix.
+
 # projection_matrix warns on NA ratios and keeps them in the matrix
 
     Code

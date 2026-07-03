@@ -67,6 +67,17 @@ check_ratio_values <- function(ratio, call = rlang::caller_env()) {
       call = call
     )
   }
+  if (any(ratio == Inf, na.rm = TRUE)) {
+    cli::cli_abort(
+      c(
+        "The {.field ratio} column of {.arg ratios} must be finite.",
+        "x" = "Found {sum(ratio == Inf, na.rm = TRUE)} infinite value{?s}.",
+        "i" = "An infinite ratio comes from a zero-enrollment feeder grade; drop or adjust it before building the matrix."
+      ),
+      class = "enrollcast_error_ratio_infinite",
+      call = call
+    )
+  }
   invisible(ratio)
 }
 
@@ -226,7 +237,8 @@ warn_na_ratios <- function(ratio) {
 #'
 #' @param ratios A data frame with columns `grade_from`, `grade_to`, and
 #'   `ratio`, as returned by [progression_ratios()]. `grade_from` and `grade_to`
-#'   must not be missing. `ratio` must be numeric and non-negative; `NA`/`NaN`
+#'   must not be missing. `ratio` must be numeric, non-negative, and finite; an
+#'   infinite ratio (from a zero-enrollment feeder) is rejected, while `NA`/`NaN`
 #'   ratios (e.g. from sparse history) are kept in the matrix with a warning.
 #' @param grade_order Optional character vector giving the low-to-high grade
 #'   order. If omitted, the order is reconstructed from the transition chain.
