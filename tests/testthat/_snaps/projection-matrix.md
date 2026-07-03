@@ -93,6 +93,15 @@
       ! The ratio column of `ratios` must be numeric.
       x ratio is <character>.
 
+# an all-NA (logical) ratio column is rejected as non-numeric
+
+    Code
+      projection_matrix(r)
+    Condition
+      Error in `projection_matrix()`:
+      ! The ratio column of `ratios` must be numeric.
+      x ratio is <logical>.
+
 # projection_matrix rejects negative ratios
 
     Code

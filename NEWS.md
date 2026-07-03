@@ -22,3 +22,6 @@
   branching transitions supplied with an explicit `grade_order`.
 * `projection_matrix()` reports a twice-fed grade as a duplicate feeder even
   when `grade_order` is omitted (previously misreported as a cycle).
+* `projection_matrix()` rejects missing `grade_from`/`grade_to` labels instead
+  of silently building a matrix with an `NA` grade dimname on the inferred
+  grade-order path.

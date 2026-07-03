@@ -152,6 +152,25 @@ test_that("projection_matrix rejects a non-numeric ratio column", {
   expect_error(projection_matrix(r), class = "enrollcast_error_ratio_type")
 })
 
+test_that("an all-NA (logical) ratio column is rejected as non-numeric", {
+  r <- ratios_fixture()
+  r$ratio <- c(NA, NA)
+  expect_snapshot(projection_matrix(r), error = TRUE)
+  expect_error(projection_matrix(r), class = "enrollcast_error_ratio_type")
+})
+
+test_that("a structural error pre-empts the NA-ratio warning", {
+  r <- data.frame(
+    grade_from = c("K", "1"),
+    grade_to = c("2", "3"),
+    ratio = c(NA, 0.9)
+  )
+  expect_no_warning(expect_error(
+    projection_matrix(r, grade_order = c("K", "1", "2", "3")),
+    class = "enrollcast_error_missing_ratio"
+  ))
+})
+
 test_that("projection_matrix rejects negative ratios", {
   r <- ratios_fixture()
   r$ratio[1] <- -0.5

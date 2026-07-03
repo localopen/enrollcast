@@ -52,7 +52,7 @@ or `devtools` won't find it:
 ```bash
 export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64
 
-Rscript -e "devtools::test()"                          # run tests (currently 240, FAIL 0)
+Rscript -e "devtools::test()"                          # run tests (currently 246, FAIL 0)
 Rscript -e 'devtools::check(cran = TRUE)'              # full R CMD check; expect 0/0/0
 Rscript -e 'covr::package_coverage(".")'              # coverage — target is 100%
 Rscript -e 'print(goodpractice::gp("."))'             # package quality gate
