@@ -1,0 +1,70 @@
+# enrollcast
+
+Initial-development R package for school-enrollment projection by grade
+progression ratios. It projects one grade-by-year series per call; callers split
+and map when projecting multiple schools or sectors.
+
+## Setup and verification
+
+- Run R commands from the package root. `.Rprofile` activates the project renv;
+  running elsewhere can silently use the wrong library.
+- On a fresh checkout run `Rscript -e 'renv::restore()'`. Do not run
+  `renv::snapshot()` merely to install optional development tools.
+- This machine needs
+  `export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64` before devtools
+  commands that load the vignette.
+- Full tests: `Rscript -e 'devtools::test()'`.
+- Focused test file: `Rscript -e 'devtools::test(filter = "project-enrollment")'`
+  (replace the filter with the test filename stem).
+- Full package check: `Rscript -e 'devtools::check(cran = TRUE)'`.
+- Format with `air format .`; if `air` is not on `PATH`, use
+  `/Users/rory/.local/bin/air format .`.
+- GitLab CI only publishes `docs/` from `main`; it does not run tests or R CMD
+  check. Verify locally.
+
+## Projection invariants
+
+- Pipeline: `progression_ratios()` computes `grade_from`, `grade_to`, `ratio`;
+  `projection_matrix()` places ratios on the sub-diagonal;
+  `project_enrollment()` advances the vector; `swing_schedule()` builds
+  per-year matrix/entry steps.
+- A progression ratio is destination-grade enrollment at `t + 1` divided by
+  feeder-grade enrollment at `t`.
+- The lowest/entry grade is exogenous. Its projection-matrix row stays zero and
+  `project_enrollment()` overwrites it each year from `entry` (or holds the base
+  value with a warning when `entry = NULL`).
+- `project_enrollment()` returns projected years only; it does not include the
+  base year.
+- A schedule step is `list(matrix, entry)`. `entry = NULL` means do not
+  overwrite that year's entry grade; all step matrices must have identical row
+  and column grade names in the same order.
+- `swing_schedule()` holds enrollment flat during swing years, applies recovery
+  multipliers, then resumes normal projection.
+- Grade order is semantic. Prefer an ordered factor or explicit `grade_order`;
+  mixed labels such as `K`, `1`, `2` otherwise fall back to alphabetical order
+  with a warning.
+
+## Generated sources
+
+- Edit roxygen comments in `R/`, then run
+  `Rscript -e 'devtools::document()'`; never hand-edit `man/` or `NAMESPACE`.
+- Edit `README.Rmd`, then run `Rscript -e 'devtools::build_readme()'`; do not
+  edit generated `README.md` directly.
+- `data-raw/synthetic_enrollment.R` generates
+  `inst/extdata/synthetic_enrollment.csv`.
+
+## Code and tests
+
+- Keep dependencies minimal (`cli`, `rlang`, and base-recommended packages are
+  the only imports); do not add a dependency without maintainer approval.
+- User-facing conditions use `cli::cli_abort()`, `cli::cli_warn()`, or
+  `cli::cli_inform()` and carry a stable `enrollcast_error_*` or
+  `enrollcast_warning_*` class. Reuse shared validators in `R/utils.R`, notably
+  `is_count()` and `resolve_grade_order()`.
+- Tests pair class assertions with snapshots of rendered cli messages. When a
+  message changes, update and review `tests/testthat/_snaps/*.md` rather than
+  weakening either assertion.
+- Use `expect_identical()` for exact structure, integers, and characters;
+  retain `expect_equal()` for floating-point ratios and enrollments.
+- `enrollcast_fixture()` in `tests/testthat/helper-enrollcast.R` is the shared
+  ordered K-2, 2021-2023 fixture.
