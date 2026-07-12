@@ -26,8 +26,13 @@ swing_schedule(
 
 - ratios:
 
-  A data frame of progression ratios from
+  A data frame with columns `grade_from`, `grade_to`, and `ratio`, as
+  returned by
   [`progression_ratios()`](https://gitlab.com/localopen/enrollcast/reference/progression_ratios.md).
+  `grade_from` and `grade_to` must not be missing. `ratio` must be
+  numeric, non-negative, and finite; an infinite ratio (from a
+  zero-enrollment feeder) is rejected, while `NA`/`NaN` ratios (e.g.
+  from sparse history) are kept in the matrix with a warning.
 
 - horizon:
 
@@ -43,19 +48,24 @@ swing_schedule(
   Recovery multipliers applied for one year each, immediately after the
   swing and compounding on the prior year: a numeric vector
   (whole-school, one multiplier per recovery year) or a grade-by-year
-  numeric matrix (one row per grade). Use `numeric(0)` for no recovery
-  window.
+  numeric matrix (one row per grade). Values must be finite,
+  non-missing, and non-negative. Named matrix rows are matched and
+  reordered by grade; unnamed rows are interpreted in projection grade
+  order. Use `numeric(0)` for no recovery window.
 
 - entry:
 
-  Exogenous entry-grade enrollment for the normal (GPR) years only — the
+  Exogenous entry-grade enrollment for the normal (GPR) years only — one
+  finite, non-missing, non-negative numeric value for each of the
   `horizon - swing_years - length(recovery)` years after recovery. Must
   be empty when there are no normal years.
 
 - grade_order:
 
-  Optional low-to-high grade order, passed to
-  [`projection_matrix()`](https://gitlab.com/localopen/enrollcast/reference/projection_matrix.md).
+  Optional character vector giving the low-to-high grade order. If
+  omitted, the order is reconstructed from the transition chain. Every
+  non-entry grade in `grade_order` must appear as a `grade_to` in
+  `ratios`. Must not contain duplicates or missing values.
 
 ## Value
 

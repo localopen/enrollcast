@@ -82,9 +82,26 @@ projection_matrix(ratios)
 LEAs, split and map:
 
 ``` r
-projections <- lapply(split(history, history$school), function(df) {
+school_history <- rbind(
+  transform(history, school = "North"),
+  transform(history, school = "South", enrollment = enrollment + 20)
+)
+
+projections <- lapply(split(school_history, school_history$school), function(df) {
   ratios <- progression_ratios(df)
-  base <- df[df$year == max(df$year), c("grade", "enrollment")]
+  base <- df[df$year == max(df$year), c("year", "grade", "enrollment")]
   project_enrollment(base, ratios, horizon = 3, entry = rep(100, 3))
 })
+
+projections$North
+#>   year grade enrollment
+#> 1 2024     K  100.00000
+#> 2 2024     1  111.00000
+#> 3 2024     2   95.81579
+#> 4 2025     K  100.00000
+#> 5 2025     1   92.50000
+#> 6 2025     2  107.42982
+#> 7 2026     K  100.00000
+#> 8 2026     1   92.50000
+#> 9 2026     2   89.52485
 ```

@@ -51,7 +51,7 @@
 <div class="page-header"><h1 id="enrollcast">enrollcast<a class="anchor" aria-label="anchor" href="#enrollcast"></a>
 </h1></div>
 <!-- badges: start -->
-<!-- badges: end -->
+
 <p><code>enrollcast</code> projects school enrollment using the cohort survival / grade progression ratio method, implemented as a matrix projection. It works at any level of aggregation (school, district, LEA, city-wide) and any number of grades, because it operates on a single grade-by-year enrollment series.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -76,30 +76,64 @@
 <span><span class="co"># 1. Calculate progression ratios.</span></span>
 <span><span class="va">ratios</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/progression_ratios.html">progression_ratios</a></span><span class="op">(</span><span class="va">history</span>, method <span class="op">=</span> <span class="st">"mean"</span><span class="op">)</span></span>
 <span><span class="va">ratios</span></span>
+<span><span class="co">#&gt;   grade_from grade_to     ratio</span></span>
+<span><span class="co">#&gt; 1          K        1 0.9250000</span></span>
+<span><span class="co">#&gt; 2          1        2 0.9678363</span></span>
 <span></span>
 <span><span class="co"># 2. Project forward. The entry grade (K) is supplied exogenously.</span></span>
 <span><span class="va">base</span> <span class="op">&lt;-</span> <span class="va">history</span><span class="op">[</span><span class="va">history</span><span class="op">$</span><span class="va">year</span> <span class="op">==</span> <span class="fl">2023</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"grade"</span>, <span class="st">"enrollment"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">projection</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/project_enrollment.html">project_enrollment</a></span><span class="op">(</span></span>
-<span>  base       <span class="op">=</span> <span class="va">base</span>,</span>
-<span>  ratios     <span class="op">=</span> <span class="va">ratios</span>,</span>
-<span>  horizon    <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  entry      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">125</span>, <span class="fl">130</span>, <span class="fl">128</span><span class="op">)</span>,</span>
+<span>  base <span class="op">=</span> <span class="va">base</span>,</span>
+<span>  ratios <span class="op">=</span> <span class="va">ratios</span>,</span>
+<span>  horizon <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  entry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">125</span>, <span class="fl">130</span>, <span class="fl">128</span><span class="op">)</span>,</span>
 <span>  start_year <span class="op">=</span> <span class="fl">2023</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">projection</span></span></code></pre></div>
+<span><span class="va">projection</span></span>
+<span><span class="co">#&gt;   year grade enrollment</span></span>
+<span><span class="co">#&gt; 1 2024     K  125.00000</span></span>
+<span><span class="co">#&gt; 2 2024     1  111.00000</span></span>
+<span><span class="co">#&gt; 3 2024     2   95.81579</span></span>
+<span><span class="co">#&gt; 4 2025     K  130.00000</span></span>
+<span><span class="co">#&gt; 5 2025     1  115.62500</span></span>
+<span><span class="co">#&gt; 6 2025     2  107.42982</span></span>
+<span><span class="co">#&gt; 7 2026     K  128.00000</span></span>
+<span><span class="co">#&gt; 8 2026     1  120.25000</span></span>
+<span><span class="co">#&gt; 9 2026     2  111.90607</span></span></code></pre></div>
 <p>Inspect the underlying projection matrix at any time:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/projection_matrix.html">projection_matrix</a></span><span class="op">(</span><span class="va">ratios</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/projection_matrix.html">projection_matrix</a></span><span class="op">(</span><span class="va">ratios</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       K         1 2</span></span>
+<span><span class="co">#&gt; K 0.000 0.0000000 0</span></span>
+<span><span class="co">#&gt; 1 0.925 0.0000000 0</span></span>
+<span><span class="co">#&gt; 2 0.000 0.9678363 0</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="multiple-aggregation-units">Multiple aggregation units<a class="anchor" aria-label="anchor" href="#multiple-aggregation-units"></a>
 </h3>
 <p><code>enrollcast</code> projects one series per call. To project many schools or LEAs, split and map:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">projections</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">history</span>, <span class="va">history</span><span class="op">$</span><span class="va">school</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="op">{</span></span>
+<code class="sourceCode R"><span><span class="va">school_history</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">history</span>, school <span class="op">=</span> <span class="st">"North"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">history</span>, school <span class="op">=</span> <span class="st">"South"</span>, enrollment <span class="op">=</span> <span class="va">enrollment</span> <span class="op">+</span> <span class="fl">20</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">projections</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">school_history</span>, <span class="va">school_history</span><span class="op">$</span><span class="va">school</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">ratios</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/progression_ratios.html">progression_ratios</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
-<span>  <span class="va">base</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">year</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">year</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"grade"</span>, <span class="st">"enrollment"</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="va">base</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">year</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">year</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"year"</span>, <span class="st">"grade"</span>, <span class="st">"enrollment"</span><span class="op">)</span><span class="op">]</span></span>
 <span>  <span class="fu"><a href="reference/project_enrollment.html">project_enrollment</a></span><span class="op">(</span><span class="va">base</span>, <span class="va">ratios</span>, horizon <span class="op">=</span> <span class="fl">3</span>, entry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">projections</span><span class="op">$</span><span class="va">North</span></span>
+<span><span class="co">#&gt;   year grade enrollment</span></span>
+<span><span class="co">#&gt; 1 2024     K  100.00000</span></span>
+<span><span class="co">#&gt; 2 2024     1  111.00000</span></span>
+<span><span class="co">#&gt; 3 2024     2   95.81579</span></span>
+<span><span class="co">#&gt; 4 2025     K  100.00000</span></span>
+<span><span class="co">#&gt; 5 2025     1   92.50000</span></span>
+<span><span class="co">#&gt; 6 2025     2  107.42982</span></span>
+<span><span class="co">#&gt; 7 2026     K  100.00000</span></span>
+<span><span class="co">#&gt; 8 2026     1   92.50000</span></span>
+<span><span class="co">#&gt; 9 2026     2   89.52485</span></span></code></pre></div>
 </div>
 </div>
 </div>
@@ -134,7 +168,13 @@
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://www.repostatus.org/#wip" class="external-link"><img src="https://www.repostatus.org/badges/latest/wip.svg" alt="Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public."></a></li>
+<li><a href="https://rorylawless.r-universe.dev/" class="external-link"><img src="https://rorylawless.r-universe.dev/badges/:name" alt="name status badge"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>
@@ -145,7 +185,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

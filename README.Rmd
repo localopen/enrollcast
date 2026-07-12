@@ -68,13 +68,20 @@ projection_matrix(ratios)
 
 ### Multiple aggregation units
 
-`enrollcast` projects one series per call. To project many schools or LEAs, split and
-map:
+`enrollcast` projects one series per call. To project many schools or LEAs,
+split and map:
 
-```{r example-multiple, eval=FALSE}
-projections <- lapply(split(history, history$school), function(df) {
+```{r example-multiple}
+school_history <- rbind(
+  transform(history, school = "North"),
+  transform(history, school = "South", enrollment = enrollment + 20)
+)
+
+projections <- lapply(split(school_history, school_history$school), function(df) {
   ratios <- progression_ratios(df)
-  base <- df[df$year == max(df$year), c("grade", "enrollment")]
+  base <- df[df$year == max(df$year), c("year", "grade", "enrollment")]
   project_enrollment(base, ratios, horizon = 3, entry = rep(100, 3))
 })
+
+projections$North
 ```

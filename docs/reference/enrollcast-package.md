@@ -10,7 +10,7 @@ future enrollment forward an arbitrary horizon.
 
 Useful links:
 
-- <https://https://rorylawless.r-universe.dev/enrollcast>
+- <https://rorylawless.r-universe.dev/enrollcast>
 
 - <https://gitlab.com/localopen/enrollcast>
 
