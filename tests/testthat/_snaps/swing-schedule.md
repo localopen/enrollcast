@@ -1,7 +1,7 @@
 # swing_schedule rejects an over-long swing+recovery
 
     Code
-      swing_schedule(ss_ratios(), horizon = 2, swing_years = 2, recovery = c(1.1),
+      swing_schedule(ss_ratios(), horizon = 2, swing_years = 2, recovery = 1.1,
       entry = NULL)
     Condition
       Error in `swing_schedule()`:
@@ -20,7 +20,7 @@
 # entry length must match the number of normal years
 
     Code
-      swing_schedule(ss_ratios(), horizon = 5, swing_years = 1, recovery = c(1.1),
+      swing_schedule(ss_ratios(), horizon = 5, swing_years = 1, recovery = 1.1,
       entry = c(130, 140))
     Condition
       Error in `swing_schedule()`:
@@ -30,7 +30,7 @@
 # swing_years must be a non-negative integer
 
     Code
-      swing_schedule(ss_ratios(), horizon = 3, swing_years = -1, recovery = c(1.1),
+      swing_schedule(ss_ratios(), horizon = 3, swing_years = -1, recovery = 1.1,
       entry = 130)
     Condition
       Error in `swing_schedule()`:
@@ -55,6 +55,24 @@
       Error in `swing_schedule()`:
       ! `recovery` must be a numeric vector or a grade-by-year matrix.
       x You supplied a string.
+
+# recovery values must be finite non-missing and non-negative
+
+    Code
+      swing_schedule(ss_ratios(), horizon = 3, swing_years = 0, recovery = c(1.1, Inf),
+      entry = 130)
+    Condition
+      Error in `swing_schedule()`:
+      ! `recovery` values must be numeric, finite, non-missing, and non-negative.
+
+# named recovery matrix grades must uniquely match projection grades
+
+    Code
+      swing_schedule(ss_ratios(), horizon = 1, swing_years = 0, recovery = matrix(1.1,
+        nrow = 3, dimnames = list(c("K", "K", "2"), NULL)))
+    Condition
+      Error in `swing_schedule()`:
+      ! Named `recovery` matrix rows must be unique and exactly match the projection grades.
 
 # entry must be empty when there are no normal years
 

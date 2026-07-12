@@ -6,35 +6,30 @@ ratios_fixture <- function() {
   )
 }
 
-test_that("projection_matrix builds the correct shape and sub-diagonal", {
-  M <- projection_matrix(ratios_fixture())
+test_that("projection_matrix builds the canonical sub-diagonal matrix", {
+  M <- projection_matrix(ratios_fixture()[2:1, ])
   expect_identical(dim(M), c(3L, 3L))
   expect_identical(rownames(M), c("K", "1", "2"))
   expect_identical(colnames(M), c("K", "1", "2"))
-  expect_equal(M["1", "K"], 0.925)
-  expect_equal(M["2", "1"], 0.96783626)
-})
-
-test_that("projection_matrix zeroes the entry row and all non-feeder cells", {
-  M <- projection_matrix(ratios_fixture())
-  expect_identical(unname(M["K", ]), c(0, 0, 0))
-  expect_identical(sum(M != 0), 2L)
-})
-
-test_that("projection_matrix honours an explicit grade_order", {
-  M <- projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2"))
-  expect_identical(rownames(M), c("K", "1", "2"))
+  expect_equal(
+    unname(M),
+    matrix(c(0, 0.925, 0, 0, 0, 0.96783626, 0, 0, 0), nrow = 3)
+  )
 })
 
 test_that("a ratio of zero is kept, not treated as missing", {
   r <- ratios_fixture()
   r$ratio[2] <- 0
   M <- projection_matrix(r)
-  expect_equal(M["2", "1"], 0)
+  expect_identical(M["2", "1"], 0)
 })
 
-test_that("explicit grade_order places ratio values correctly", {
-  M <- projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2"))
+test_that("explicit grade_order controls dimnames and ratio placement", {
+  M <- projection_matrix(
+    ratios_fixture()[2:1, ],
+    grade_order = c("K", "1", "2")
+  )
+  expect_identical(dimnames(M), list(c("K", "1", "2"), c("K", "1", "2")))
   expect_equal(M["1", "K"], 0.925)
   expect_equal(M["2", "1"], 0.96783626)
 })
@@ -251,34 +246,22 @@ test_that("projection_matrix rejects branching transitions under an explicit gra
   )
 })
 
-test_that("chain_order reconstructs the grade sequence", {
-  expect_identical(chain_order(c("K", "1"), c("1", "2")), c("K", "1", "2"))
-})
-
-test_that("chain_order handles a single transition pair", {
-  expect_identical(chain_order("K", "1"), c("K", "1"))
-})
-
-test_that("chain_order errors on ambiguous entry grade", {
-  expect_snapshot(chain_order(c("K", "9"), c("1", "2")), error = TRUE)
+test_that("chain_order reports branching transitions", {
+  from <- c("K", "K", "1")
+  to <- c("1", "2", "3")
+  expect_snapshot(chain_order(from, to), error = TRUE)
   expect_error(
-    chain_order(c("K", "9"), c("1", "2")),
-    class = "enrollcast_error_ambiguous_entry"
-  )
-})
-
-test_that("chain_order errors on branching transitions", {
-  expect_snapshot(chain_order(c("K", "K", "1"), c("1", "2", "2")), error = TRUE)
-  expect_error(
-    chain_order(c("K", "K", "1"), c("1", "2", "2")),
+    chain_order(from, to),
     class = "enrollcast_error_branching_transitions"
   )
 })
 
-test_that("chain_order errors on a cycle", {
-  expect_snapshot(chain_order(c("Z", "a", "b"), c("a", "b", "a")), error = TRUE)
+test_that("chain_order reports cyclic transitions", {
+  from <- c("K", "1", "2", "3")
+  to <- c("1", "2", "3", "2")
+  expect_snapshot(chain_order(from, to), error = TRUE)
   expect_error(
-    chain_order(c("Z", "a", "b"), c("a", "b", "a")),
+    chain_order(from, to),
     class = "enrollcast_error_cyclic_transitions"
   )
 })

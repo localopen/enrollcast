@@ -1,3 +1,12 @@
+# base_year rejects invalid years
+
+    Code
+      base_year(data.frame(year = c(2022, 2023), grade = c("K", "1"), enrollment = c(
+        1, 2)))
+    Condition
+      Error:
+      ! `base` year must contain one finite integer value.
+
 # check_columns errors on missing columns
 
     Code
@@ -76,6 +85,22 @@
       Error:
       ! `base` enrollment must be non-negative.
 
+# as_base_vector rejects invalid enrollment values
+
+    Code
+      as_base_vector(c(K = NA_real_, `1` = 99, `2` = 91), c("K", "1", "2"))
+    Condition
+      Error:
+      ! `base` enrollment must be numeric, finite, and non-missing.
+
+# as_base_vector rejects duplicate or missing grade names
+
+    Code
+      as_base_vector(setNames(c(120, 99, 91), c("K", "K", "2")), c("K", "1", "2"))
+    Condition
+      Error:
+      ! `base` grade names must be present and unique.
+
 # as_entry_vector errors on negative values
 
     Code
@@ -83,6 +108,14 @@
     Condition
       Error:
       ! `entry` values must be non-negative.
+
+# as_entry_vector rejects invalid values without coercion
+
+    Code
+      as_entry_vector(c(130, NA_real_), 2)
+    Condition
+      Error:
+      ! `entry` values must be numeric, finite, and non-missing.
 
 # summarise_ratios weighted errors when weights are missing
 
@@ -117,59 +150,4 @@
       Error:
       ! `entry` must be a numeric vector or a data frame with a value column.
       x You supplied a string.
-
-# check_schedule rejects malformed schedules
-
-    Code
-      check_schedule(list())
-    Condition
-      Error:
-      ! `schedule` must be a non-empty <list> of projection steps.
-      x You supplied an empty list.
-
----
-
-    Code
-      check_schedule(list(list(entry = 1)))
-    Condition
-      Error:
-      ! Each `schedule` step must be a <list> with a matrix element.
-      x Got a list.
-
----
-
-    Code
-      check_schedule(list(list(matrix = m[, 1, drop = FALSE])))
-    Condition
-      Error:
-      ! Each `schedule` step matrix must be square.
-      x This matrix is 2x1.
-
----
-
-    Code
-      check_schedule(list(list(matrix = bad)))
-    Condition
-      Error:
-      ! Each `schedule` step matrix must have identical row and column dimnames.
-      x Row names "K" and "1" do not match column names "X" and "Y".
-
----
-
-    Code
-      check_schedule(list(list(matrix = m), list(matrix = m2)))
-    Condition
-      Error:
-      ! All `schedule` step matrices must share the same grade dimnames in the same order.
-      i Step 1 grades: "K" and "1".
-      x Differing step: 2.
-
----
-
-    Code
-      check_schedule(list(list(matrix = m, entry = c(1, 2))))
-    Condition
-      Error:
-      ! Each `schedule` step entry must be `NULL` or a single number.
-      x Got a double vector of length 2.
 

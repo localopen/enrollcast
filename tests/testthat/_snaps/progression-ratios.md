@@ -1,3 +1,12 @@
+# column selectors are distinct non-missing character scalars
+
+    Code
+      progression_ratios(fx, year = "year", grade = "year")
+    Condition
+      Error in `progression_ratios()`:
+      ! `year`, `grade`, and `enrollment` must be distinct non-missing character scalars.
+      x Each argument must select exactly one different column in `data`.
+
 # non-numeric enrollment is rejected
 
     Code
@@ -44,6 +53,15 @@
       ! The enrollment column of `data` must be non-negative.
       x Found 1 negative value.
 
+# non-finite historical enrollment is rejected but NA is allowed
+
+    Code
+      progression_ratios(fx)
+    Condition
+      Error in `progression_ratios()`:
+      ! The enrollment column of `data` must contain finite values or NA.
+      x Found 1 non-finite value.
+
 # fewer than two grades is rejected
 
     Code
@@ -53,14 +71,56 @@
       ! `data` must contain at least 2 grades to compute progression ratios.
       x The grade column has 1 grade.
 
+# all-missing grades are rejected as missing
+
+    Code
+      progression_ratios(fx)
+    Condition
+      Error in `progression_ratios()`:
+      ! The grade column of `data` must not contain missing values.
+      x Found 9 missing values.
+
 # non-numeric year is rejected
 
     Code
       progression_ratios(fx)
     Condition
       Error in `progression_ratios()`:
-      ! The year column of `data` must be numeric or coercible to numeric.
-      x 1 value could not be coerced.
+      ! The year column of `data` must be coercible to finite integers.
+      x Found 1 invalid value.
+
+# years must coerce to finite integers
+
+    Code
+      progression_ratios(fx)
+    Condition
+      Error in `progression_ratios()`:
+      ! The year column of `data` must be coercible to finite integers.
+      x Found 1 invalid value.
+
+# weights are accepted only by the weighted method
+
+    Code
+      progression_ratios(enrollcast_fixture(), method = "mean", weights = 1:2)
+    Condition
+      Error in `progression_ratios()`:
+      ! `weights` may only be supplied for `method = "weighted"`.
+
+# weighted method validates weight values
+
+    Code
+      progression_ratios(enrollcast_fixture(), method = "weighted", weights = c(1, -1))
+    Condition
+      Error in `progression_ratios()`:
+      ! `weights` must be numeric, finite, non-missing, and non-negative.
+
+# weighted method requires a positive weight sum
+
+    Code
+      progression_ratios(enrollcast_fixture(), method = "weighted", weights = c(0, 0))
+    Condition
+      Error in `progression_ratios()`:
+      ! `weights` must have a positive sum.
 
 # n_years must be a positive integer
 

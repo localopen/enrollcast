@@ -1,13 +1,34 @@
-# Validate inputs and return cleaned pieces (grades, enrollment, order, years).
-prepare_enrollment <- function(
+check_enrollment_selectors <- function(
   data,
   year,
   grade,
   enrollment,
-  grade_order,
   call = rlang::caller_env()
 ) {
+  selectors <- list(year = year, grade = grade, enrollment = enrollment)
+  valid_selectors <- vapply(
+    selectors,
+    function(x) is.character(x) && length(x) == 1 && !is.na(x),
+    logical(1)
+  )
+  if (!all(valid_selectors) || anyDuplicated(unlist(selectors))) {
+    cli::cli_abort(
+      c(
+        "{.arg year}, {.arg grade}, and {.arg enrollment} must be distinct non-missing character scalars.",
+        "x" = "Each argument must select exactly one different column in {.arg data}."
+      ),
+      class = "enrollcast_error_column_selector",
+      call = call
+    )
+  }
   check_columns(data, c(year, grade, enrollment), "data", call = call)
+}
+
+check_enrollment_values <- function(
+  data,
+  enrollment,
+  call = rlang::caller_env()
+) {
   if (!is.numeric(data[[enrollment]])) {
     cli::cli_abort(
       c(
@@ -15,6 +36,19 @@ prepare_enrollment <- function(
         "x" = "{.field {enrollment}} is {.cls {class(data[[enrollment]])}}."
       ),
       class = "enrollcast_error_enrollment_type",
+      call = call
+    )
+  }
+
+  invalid_enrollment <- is.nan(data[[enrollment]]) |
+    (!is.na(data[[enrollment]]) & !is.finite(data[[enrollment]]))
+  if (any(invalid_enrollment)) {
+    cli::cli_abort(
+      c(
+        "The {.field {enrollment}} column of {.arg data} must contain finite values or {.val {NA}}.",
+        "x" = "Found {sum(invalid_enrollment)} non-finite value{?s}."
+      ),
+      class = "enrollcast_error_enrollment_nonfinite",
       call = call
     )
   }
@@ -29,6 +63,19 @@ prepare_enrollment <- function(
       call = call
     )
   }
+}
+
+check_enrollment_grades <- function(data, grade, call = rlang::caller_env()) {
+  if (anyNA(data[[grade]])) {
+    cli::cli_abort(
+      c(
+        "The {.field {grade}} column of {.arg data} must not contain missing values.",
+        "x" = "Found {sum(is.na(data[[grade]]))} missing value{?s}."
+      ),
+      class = "enrollcast_error_grade_na",
+      call = call
+    )
+  }
 
   if (length(unique(as.character(data[[grade]]))) < 2) {
     cli::cli_abort(
@@ -40,30 +87,39 @@ prepare_enrollment <- function(
       call = call
     )
   }
+}
 
+coerce_enrollment_year <- function(data, year, call = rlang::caller_env()) {
   yr <- suppressWarnings(as.numeric(as.character(data[[year]])))
-  if (anyNA(yr)) {
+  invalid_year <- is.na(yr) |
+    !is.finite(yr) |
+    (is.finite(yr) & yr %% 1 != 0)
+  if (any(invalid_year)) {
     cli::cli_abort(
       c(
-        "The {.field {year}} column of {.arg data} must be numeric or coercible to numeric.",
-        "x" = "{sum(is.na(yr) & !is.na(data[[year]]))} value{?s} could not be coerced."
+        "The {.field {year}} column of {.arg data} must be coercible to finite integers.",
+        "x" = "Found {sum(invalid_year)} invalid value{?s}."
       ),
       class = "enrollcast_error_year_type",
       call = call
     )
   }
-  data[[year]] <- yr
+  yr
+}
 
-  if (anyNA(data[[grade]])) {
-    cli::cli_abort(
-      c(
-        "The {.field {grade}} column of {.arg data} must not contain missing values.",
-        "x" = "Found {sum(is.na(data[[grade]]))} missing value{?s}."
-      ),
-      class = "enrollcast_error_grade_na",
-      call = call
-    )
-  }
+# Validate inputs and return cleaned pieces (grades, enrollment, order, years).
+prepare_enrollment <- function(
+  data,
+  year,
+  grade,
+  enrollment,
+  grade_order,
+  call = rlang::caller_env()
+) {
+  check_enrollment_selectors(data, year, grade, enrollment, call = call)
+  check_enrollment_values(data, enrollment, call = call)
+  check_enrollment_grades(data, grade, call = call)
+  data[[year]] <- coerce_enrollment_year(data, year, call = call)
 
   # Honour an explicit grade_order even for an already-ordered factor; otherwise
   # trust the ordered factor's levels (dropping any that are unused).
@@ -163,16 +219,20 @@ check_n_years <- function(n_years, call = rlang::caller_env()) {
 #' summarised across the available year-to-year transitions.
 #'
 #' @param data A long data frame of historical enrollment with one row per
-#'   grade per year.
-#' @param year,grade,enrollment Column names in `data` (character scalars).
-#'   Defaults are `"year"`, `"grade"`, `"enrollment"`.
+#'   grade per year. Enrollment may be `NA`, but non-missing values must be
+#'   finite and non-negative; `NaN` and infinite values are rejected. Year
+#'   values must be coercible to finite integers and must not be missing.
+#' @param year,grade,enrollment Distinct, non-missing character scalars naming
+#'   columns in `data`. Defaults are `"year"`, `"grade"`, and `"enrollment"`.
 #' @param method How to summarise per-year ratios into one ratio per grade:
 #'   `"mean"` (default), `"geometric"`, `"median"`, `"last"` (most recent
 #'   transition only), or `"weighted"`.
 #' @param n_years Optional. Use only the most recent `n_years` transitions. If
 #'   `n_years` exceeds the number of available transitions, all are used.
-#' @param weights For `method = "weighted"`, a numeric vector aligned
-#'   most-recent to oldest, with one weight per transition year used.
+#' @param weights For `method = "weighted"`, a finite, non-missing,
+#'   non-negative numeric vector aligned most-recent to oldest, with one weight
+#'   per transition year used and a positive sum. Do not supply weights for
+#'   other methods.
 #' @param grade_order Optional character vector giving the low-to-high grade
 #'   order. If omitted, factor levels, numeric ordering, or (with a warning)
 #'   alphabetical ordering is used.

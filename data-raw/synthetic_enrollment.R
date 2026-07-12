@@ -121,8 +121,7 @@ rows <- do.call(
       sector = sector,
       grade = rep(grade_codes, times = length(years)),
       grade_label = rep(grade_labels, times = length(years)),
-      enrollment = as.integer(as.vector(m)),
-      stringsAsFactors = FALSE
+      enrollment = as.integer(as.vector(m))
     )
   })
 )

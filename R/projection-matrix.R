@@ -113,31 +113,6 @@ check_duplicate_feeder <- function(to, call = rlang::caller_env()) {
   invisible(to)
 }
 
-# Validate an explicit grade_order argument (no missing values, no duplicates).
-check_grade_order_arg <- function(grade_order, call = rlang::caller_env()) {
-  if (anyNA(grade_order)) {
-    cli::cli_abort(
-      c(
-        "{.arg grade_order} must not contain missing values.",
-        "x" = "Found {sum(is.na(grade_order))} missing value{?s}."
-      ),
-      class = "enrollcast_error_grade_order_na",
-      call = call
-    )
-  }
-  if (anyDuplicated(grade_order)) {
-    cli::cli_abort(
-      c(
-        "{.arg grade_order} must not contain duplicate grades.",
-        "x" = "Duplicated grade{?s}: {.field {unique(grade_order[duplicated(grade_order)])}}."
-      ),
-      class = "enrollcast_error_grade_order_duplicate",
-      call = call
-    )
-  }
-  invisible(grade_order)
-}
-
 # Validate from/to transitions against the resolved grade order.
 check_projection_grades <- function(
   from,

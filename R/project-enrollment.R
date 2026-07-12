@@ -1,6 +1,6 @@
 # Validate horizon and return it as an integer.
 check_horizon <- function(horizon, call = rlang::caller_env()) {
-  if (!is_count(horizon)) {
+  if (!is_count(horizon) || horizon > .Machine$integer.max) {
     cli::cli_abort(
       c(
         "{.arg horizon} must be a single positive integer.",
@@ -11,6 +11,29 @@ check_horizon <- function(horizon, call = rlang::caller_env()) {
     )
   }
   as.integer(horizon)
+}
+
+check_start_year <- function(start_year, call = rlang::caller_env()) {
+  if (
+    !is.numeric(start_year) ||
+      length(start_year) != 1 ||
+      !is.finite(start_year) ||
+      start_year %% 1 != 0
+  ) {
+    cli::cli_abort(
+      "{.arg start_year} must be one finite integer.",
+      class = "enrollcast_error_start_year",
+      call = call
+    )
+  }
+  if (abs(start_year) > .Machine$integer.max) {
+    cli::cli_abort(
+      "{.arg start_year} must be within the R integer range.",
+      class = "enrollcast_error_start_year",
+      call = call
+    )
+  }
+  start_year
 }
 
 # Resolve exogenous entry-grade values for each projected year.
@@ -34,12 +57,18 @@ entry_values <- function(
   as_entry_vector(entry, horizon, call = call)
 }
 
-# Validate one projection step's entry value (NULL or a single number).
+# Validate one step's entry value (NULL or one finite, non-negative number).
 check_step_entry <- function(entry, call = rlang::caller_env()) {
-  if (!is.null(entry) && !(is.numeric(entry) && length(entry) == 1)) {
+  if (
+    !is.null(entry) &&
+      !(is.numeric(entry) &&
+        length(entry) == 1 &&
+        is.finite(entry) &&
+        entry >= 0)
+  ) {
     cli::cli_abort(
       c(
-        "Each {.arg schedule} step {.field entry} must be {.code NULL} or a single number.",
+        "Each {.arg schedule} step {.field entry} must be {.code NULL} or one finite, non-negative number.",
         "x" = "Got {.obj_type_friendly {entry}} of length {length(entry)}."
       ),
       class = "enrollcast_error_step_entry",
@@ -48,8 +77,7 @@ check_step_entry <- function(entry, call = rlang::caller_env()) {
   }
 }
 
-# Validate one projection step; return its grade order.
-check_step <- function(step, call = rlang::caller_env()) {
+check_step_matrix <- function(step, call = rlang::caller_env()) {
   if (!is.list(step) || is.null(step$matrix)) {
     cli::cli_abort(
       c(
@@ -71,22 +99,59 @@ check_step <- function(step, call = rlang::caller_env()) {
       call = call
     )
   }
-  if (is.null(rownames(m)) || !identical(rownames(m), colnames(m))) {
+  m
+}
+
+check_step_matrix_values <- function(m, call = rlang::caller_env()) {
+  if (
+    !is.numeric(m) ||
+      anyNA(m) ||
+      !all(is.finite(m)) ||
+      any(m < 0)
+  ) {
+    cli::cli_abort(
+      "Each {.arg schedule} step {.field matrix} must contain finite, non-missing, non-negative numeric values.",
+      class = "enrollcast_error_step_values",
+      call = call
+    )
+  }
+}
+
+check_step_dimnames <- function(m, call = rlang::caller_env()) {
+  rn <- rownames(m)
+  cn <- colnames(m)
+  if (is.null(rn) || is.null(cn)) {
     cli::cli_abort(
       c(
-        "Each {.arg schedule} step {.field matrix} must have identical row and column dimnames.",
-        "x" = if (is.null(rownames(m))) {
-          "This matrix has no row names."
-        } else {
-          "Row names {.val {rownames(m)}} do not match column names {.val {colnames(m)}}."
-        }
+        "Each {.arg schedule} step {.field matrix} must have present, unique, identical row and column names in the same order.",
+        "x" = "This matrix is missing row or column names."
       ),
       class = "enrollcast_error_step_dimnames",
       call = call
     )
   }
+  if (
+    anyNA(rn) || !all(nzchar(rn)) || anyDuplicated(rn) || !identical(rn, cn)
+  ) {
+    cli::cli_abort(
+      c(
+        "Each {.arg schedule} step {.field matrix} must have present, unique, identical row and column names in the same order.",
+        "x" = "Row names {.val {rn}} and column names {.val {cn}} are invalid or do not match."
+      ),
+      class = "enrollcast_error_step_dimnames",
+      call = call
+    )
+  }
+  rn
+}
+
+# Validate one projection step; return its grade order.
+check_step <- function(step, call = rlang::caller_env()) {
+  m <- check_step_matrix(step, call = call)
+  check_step_matrix_values(m, call = call)
+  go <- check_step_dimnames(m, call = call)
   check_step_entry(step$entry, call = call)
-  rownames(m)
+  go
 }
 
 # Validate a user-supplied projection schedule; return its grade order.
@@ -95,10 +160,10 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
     cli::cli_abort(
       c(
         "{.arg schedule} must be a non-empty {.cls list} of projection steps.",
-        "x" = if (!is.list(schedule)) {
-          "You supplied {.obj_type_friendly {schedule}}."
-        } else {
+        "x" = if (is.list(schedule)) {
           "You supplied an empty list."
+        } else {
+          "You supplied {.obj_type_friendly {schedule}}."
         }
       ),
       class = "enrollcast_error_schedule_shape",
@@ -148,27 +213,32 @@ run_projection <- function(steps, base_vec, out_years) {
 #' progression ratio method. Internally builds a projection matrix from `ratios`
 #' and advances enrollment one year at a time (one matrix-vector product per
 #' projected year), overwriting the entry grade with the supplied exogenous
-#' value each year.
+#' value each year. `ratios` is optional when a `schedule` is supplied.
 #'
+#' @inheritParams projection_matrix
 #' @param base Most recent observed enrollment: either a data frame with
 #'   columns `grade` and `enrollment` (optionally `year`), or a named numeric
-#'   vector (names are grades).
-#' @param ratios A data frame of progression ratios from
-#'   [progression_ratios()]. Optional when a `schedule` is supplied.
+#'   vector. Grade values or vector names must be present and unique. Enrollment
+#'   must be finite, non-missing, and non-negative.
 #' @param horizon Number of years to project (a positive integer).
 #' @param entry Exogenous entry-grade enrollment for each projected year: a
 #'   numeric vector of length `horizon`, or a data frame with an `enrollment`
-#'   or `value` column. If `NULL`, the entry grade is held constant at its base
-#'   value and a warning is issued.
+#'   or `value` column. Values must be finite, non-missing, and non-negative. If
+#'   `NULL`, the entry grade is held constant at its base value and a warning is
+#'   issued.
 #' @param schedule Optional prebuilt projection schedule: a list of per-year
 #'   steps, each `list(matrix = <square projection matrix>, entry = <NULL or a
 #'   single number>)`, as produced by [swing_schedule()]. When supplied,
 #'   `ratios` and `entry` must be `NULL` and `horizon` defaults to the schedule
-#'   length. Step matrices must share identical grade dimnames, which determine
-#'   the grade order `base` is aligned to.
+#'   length. Each matrix must be numeric, square, and contain only finite,
+#'   non-missing, non-negative coefficients. Its row and column names must be
+#'   unique and identical in the same order; all steps must use the same names.
+#'   A step's `entry` must be `NULL` or one finite, non-negative number.
 #' @param start_year Optional integer label for the base year; output years run
-#'   from `start_year + 1`. If `NULL`, it is derived from a `year` column in
-#'   `base` when present, otherwise output years are `1..horizon`.
+#'   from `start_year + 1`. An explicit value and all resulting years must be
+#'   within the R integer range. If `NULL`, the year is derived from `base$year`
+#'   when present; that column must contain one unambiguous integer within the
+#'   same range. With no year column, output years are `1..horizon`.
 #'
 #' @return A long data frame with columns `year`, `grade`, and `enrollment`,
 #'   covering the projected years only.
@@ -207,7 +277,10 @@ project_enrollment <- function(
     go <- check_schedule(schedule)
     if (is.null(horizon)) {
       horizon <- length(schedule)
-    } else if (horizon != length(schedule)) {
+    } else {
+      horizon <- check_horizon(horizon)
+    }
+    if (horizon != length(schedule)) {
       cli::cli_abort(
         c(
           "{.arg horizon} must equal the {.arg schedule} length.",
@@ -237,8 +310,23 @@ project_enrollment <- function(
       list(matrix = m, entry = entry_vals[[h]])
     })
   }
-  if (is.null(start_year)) {
+  derived_year <- is.null(start_year)
+  if (derived_year) {
     start_year <- base_year(base)
+  } else {
+    start_year <- check_start_year(start_year)
+  }
+  if (!is.null(start_year) && start_year > .Machine$integer.max - horizon) {
+    if (derived_year) {
+      cli::cli_abort(
+        "{.arg base} year and {.arg horizon} must produce years within the R integer range.",
+        class = "enrollcast_error_base_year"
+      )
+    }
+    cli::cli_abort(
+      "{.arg start_year} and {.arg horizon} must produce years within the R integer range.",
+      class = "enrollcast_error_start_year"
+    )
   }
   out_years <- if (is.null(start_year)) {
     seq_len(horizon)

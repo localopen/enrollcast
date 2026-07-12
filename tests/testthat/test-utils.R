@@ -26,6 +26,26 @@ test_that("summarise_ratios computes each method", {
   )
 })
 
+test_that("summarise_ratios returns NA_real_ for all-NA rows", {
+  R <- matrix(NA_real_, nrow = 1, ncol = 2, dimnames = list("1", NULL))
+  methods <- c("mean", "median", "geometric", "last", "weighted")
+  for (method in methods) {
+    weights <- if (method == "weighted") c(1, 1) else NULL
+    expect_identical(
+      summarise_ratios(R, method, weights),
+      c("1" = NA_real_)
+    )
+  }
+})
+
+test_that("weighted summaries return NA when observations have zero weight", {
+  R <- matrix(c(NA_real_, 0.9), nrow = 1, dimnames = list("1", NULL))
+  expect_identical(
+    summarise_ratios(R, "weighted", weights = c(0, 1)),
+    c("1" = NA_real_)
+  )
+})
+
 test_that("as_base_vector aligns a data frame to the grade order", {
   df <- data.frame(
     year = 2023,
@@ -48,15 +68,29 @@ test_that("base_year derives the year from a single-year base data frame", {
   expect_identical(base_year(df), 2023)
 })
 
-test_that("base_year returns NULL when no year can be derived", {
+test_that("base_year returns NULL when base has no year column", {
   expect_null(base_year(c(K = 120))) # not a data frame
   expect_null(base_year(data.frame(grade = "K", enrollment = 120))) # no column
-  expect_null(base_year(
-    data.frame(year = c(2022, 2023), grade = c("K", "1"), enrollment = c(1, 2))
-  )) # ambiguous
-  expect_null(base_year(
-    data.frame(year = "spring", grade = "K", enrollment = 120)
-  )) # not numeric-coercible
+})
+
+test_that("base_year rejects invalid years", {
+  invalid <- list(c(2022, 2023), "spring", NA_real_, Inf, 2023.5)
+  for (year in invalid) {
+    base <- data.frame(
+      year = year,
+      grade = rep("K", length(year)),
+      enrollment = rep(120, length(year))
+    )
+    expect_error(base_year(base), class = "enrollcast_error_base_year")
+  }
+  expect_snapshot(
+    base_year(data.frame(
+      year = c(2022, 2023),
+      grade = c("K", "1"),
+      enrollment = c(1, 2)
+    )),
+    error = TRUE
+  )
 })
 
 test_that("as_entry_vector returns a validated numeric vector", {
@@ -167,12 +201,76 @@ test_that("as_base_vector errors on negative enrollment", {
   )
 })
 
+test_that("as_base_vector rejects invalid enrollment values", {
+  invalid <- list(
+    c(K = NA_real_, `1` = 99, `2` = 91),
+    c(K = Inf, `1` = 99, `2` = 91),
+    data.frame(grade = c("K", "1", "2"), enrollment = c("120", "99", "91"))
+  )
+  for (base in invalid) {
+    expect_error(
+      as_base_vector(base, c("K", "1", "2")),
+      class = "enrollcast_error_base_values"
+    )
+  }
+  expect_snapshot(
+    as_base_vector(c(K = NA_real_, `1` = 99, `2` = 91), c("K", "1", "2")),
+    error = TRUE
+  )
+})
+
+test_that("as_base_vector validates enrollment on extra grades", {
+  base <- c(K = 120, `1` = 99, `2` = 91, extra = Inf)
+  expect_error(
+    as_base_vector(base, c("K", "1", "2")),
+    class = "enrollcast_error_base_values"
+  )
+})
+
+test_that("as_base_vector rejects duplicate or missing grade names", {
+  invalid <- list(
+    data.frame(grade = c("K", "K", "2"), enrollment = c(120, 99, 91)),
+    data.frame(grade = c("K", NA, "2"), enrollment = c(120, 99, 91)),
+    setNames(c(120, 99, 91), c("K", "K", "2")),
+    setNames(c(120, 99, 91), c("K", NA, "2"))
+  )
+  for (base in invalid) {
+    expect_error(
+      as_base_vector(base, c("K", "1", "2")),
+      class = "enrollcast_error_base_grade_names"
+    )
+  }
+  expect_snapshot(
+    as_base_vector(
+      setNames(c(120, 99, 91), c("K", "K", "2")),
+      c("K", "1", "2")
+    ),
+    error = TRUE
+  )
+})
+
 test_that("as_entry_vector errors on negative values", {
   expect_snapshot(as_entry_vector(c(130, -5), 2), error = TRUE)
   expect_error(
     as_entry_vector(c(130, -5), 2),
     class = "enrollcast_error_entry_negative"
   )
+})
+
+test_that("as_entry_vector rejects invalid values without coercion", {
+  invalid <- list(
+    c(130, NA_real_),
+    c(130, Inf),
+    data.frame(enrollment = c("130", "140")),
+    data.frame(value = c(130, NA_real_))
+  )
+  for (entry in invalid) {
+    expect_error(
+      as_entry_vector(entry, 2),
+      class = "enrollcast_error_entry_values"
+    )
+  }
+  expect_snapshot(as_entry_vector(c(130, NA_real_), 2), error = TRUE)
 })
 
 test_that("summarise_ratios last returns NA when all transitions are NA", {
@@ -210,67 +308,5 @@ test_that("as_entry_vector errors on an unsupported entry type", {
   expect_error(
     as_entry_vector("oops", 2),
     class = "enrollcast_error_entry_type"
-  )
-})
-
-test_that("check_schedule accepts a valid schedule and returns grade order", {
-  m <- projection_matrix(
-    data.frame(grade_from = "K", grade_to = "1", ratio = 0.9)
-  )
-  expect_identical(
-    check_schedule(list(
-      list(matrix = m, entry = 1),
-      list(matrix = m, entry = NULL)
-    )),
-    c("K", "1")
-  )
-})
-
-test_that("check_schedule rejects malformed schedules", {
-  m <- projection_matrix(
-    data.frame(grade_from = "K", grade_to = "1", ratio = 0.9)
-  )
-  expect_snapshot(check_schedule(list()), error = TRUE)
-  expect_error(
-    check_schedule(list()),
-    class = "enrollcast_error_schedule_shape"
-  )
-  expect_snapshot(check_schedule(list(list(entry = 1))), error = TRUE)
-  expect_error(
-    check_schedule(list(list(entry = 1))),
-    class = "enrollcast_error_step_shape"
-  )
-  expect_snapshot(
-    check_schedule(list(list(matrix = m[, 1, drop = FALSE]))),
-    error = TRUE
-  )
-  expect_error(
-    check_schedule(list(list(matrix = m[, 1, drop = FALSE]))),
-    class = "enrollcast_error_step_not_square"
-  )
-  bad <- m
-  colnames(bad) <- c("X", "Y")
-  expect_snapshot(check_schedule(list(list(matrix = bad))), error = TRUE)
-  expect_error(
-    check_schedule(list(list(matrix = bad))),
-    class = "enrollcast_error_step_dimnames"
-  )
-  m2 <- m
-  dimnames(m2) <- list(c("1", "K"), c("1", "K"))
-  expect_snapshot(
-    check_schedule(list(list(matrix = m), list(matrix = m2))),
-    error = TRUE
-  )
-  expect_error(
-    check_schedule(list(list(matrix = m), list(matrix = m2))),
-    class = "enrollcast_error_schedule_inconsistent"
-  )
-  expect_snapshot(
-    check_schedule(list(list(matrix = m, entry = c(1, 2)))),
-    error = TRUE
-  )
-  expect_error(
-    check_schedule(list(list(matrix = m, entry = c(1, 2)))),
-    class = "enrollcast_error_step_entry"
   )
 })

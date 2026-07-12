@@ -160,28 +160,19 @@
       x Non-adjacent transition: "K -> 2".
       i Grade order: K, 1, and 2.
 
-# chain_order errors on ambiguous entry grade
+# chain_order reports branching transitions
 
     Code
-      chain_order(c("K", "9"), c("1", "2"))
-    Condition
-      Error:
-      ! Could not determine a unique entry grade from `ratios`.
-      i Pass `grade_order` explicitly.
-
-# chain_order errors on branching transitions
-
-    Code
-      chain_order(c("K", "K", "1"), c("1", "2", "2"))
+      chain_order(from, to)
     Condition
       Error:
       ! A grade feeds more than one grade in `ratios` (branching transitions).
       i Pass `grade_order` explicitly.
 
-# chain_order errors on a cycle
+# chain_order reports cyclic transitions
 
     Code
-      chain_order(c("Z", "a", "b"), c("a", "b", "a"))
+      chain_order(from, to)
     Condition
       Error:
       ! Cycle detected in grade transitions in `ratios`.

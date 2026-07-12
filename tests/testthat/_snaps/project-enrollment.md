@@ -34,6 +34,48 @@
       ! `horizon` must be a single positive integer.
       x You supplied a number of length 1.
 
+# base enrollment cannot contain NA
+
+    Code
+      project_enrollment(v, proj_ratios(), horizon = 1, entry = 130)
+    Condition
+      Error in `project_enrollment()`:
+      ! `base` enrollment must be numeric, finite, and non-missing.
+
+# start_year must be one finite integer
+
+    Code
+      project_enrollment(proj_base(), proj_ratios(), horizon = 1, entry = 130,
+      start_year = 2023.5)
+    Condition
+      Error in `project_enrollment()`:
+      ! `start_year` must be one finite integer.
+
+# start_year must be within the R integer range
+
+    Code
+      project_enrollment(proj_base(), proj_ratios(), horizon = 1, entry = 130,
+      start_year = .Machine$integer.max + 1)
+    Condition
+      Error in `project_enrollment()`:
+      ! `start_year` must be within the R integer range.
+
+---
+
+    Code
+      project_enrollment(base, proj_ratios(), horizon = 1, entry = 130)
+    Condition
+      Error in `project_enrollment()`:
+      ! `base` year and `horizon` must produce years within the R integer range.
+
+# invalid base years do not fall back to relative years
+
+    Code
+      project_enrollment(base, proj_ratios(), horizon = 1, entry = 130)
+    Condition
+      Error in `project_enrollment()`:
+      ! `base` year must contain one finite integer value.
+
 # schedule and ratios are mutually exclusive
 
     Code
@@ -61,6 +103,15 @@
       ! `horizon` must equal the `schedule` length.
       x `horizon` is 2 but `schedule` has 1 step.
 
+# schedule matrices must contain valid numeric values
+
+    Code
+      project_enrollment(proj_base(), schedule = list(list(matrix = replace(valid, 1,
+        Inf))))
+    Condition
+      Error in `project_enrollment()`:
+      ! Each `schedule` step matrix must contain finite, non-missing, non-negative numeric values.
+
 # check_step rejects a non-list step
 
     Code
@@ -85,8 +136,8 @@
       check_step(list(matrix = m))
     Condition
       Error:
-      ! Each `schedule` step matrix must have identical row and column dimnames.
-      x This matrix has no row names.
+      ! Each `schedule` step matrix must have present, unique, identical row and column names in the same order.
+      x This matrix is missing row or column names.
 
 # check_step rejects a matrix with mismatched row and col names
 
@@ -94,8 +145,8 @@
       check_step(list(matrix = m))
     Condition
       Error:
-      ! Each `schedule` step matrix must have identical row and column dimnames.
-      x Row names "K" and "1" do not match column names "K" and "2".
+      ! Each `schedule` step matrix must have present, unique, identical row and column names in the same order.
+      x Row names "K" and "1" and column names "K" and "2" are invalid or do not match.
 
 # check_step rejects an invalid step entry
 
@@ -103,7 +154,7 @@
       check_step(list(matrix = m, entry = c(1, 2)))
     Condition
       Error:
-      ! Each `schedule` step entry must be `NULL` or a single number.
+      ! Each `schedule` step entry must be `NULL` or one finite, non-negative number.
       x Got a double vector of length 2.
 
 # check_schedule rejects a non-list schedule

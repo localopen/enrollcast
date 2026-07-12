@@ -1,7 +1,16 @@
-test_that("mean is the default method", {
-  r <- progression_ratios(enrollcast_fixture())
-  expect_identical(r$grade_from, c("K", "1"))
-  expect_identical(r$grade_to, c("1", "2"))
+test_that("progression_ratios returns the canonical ordered structure", {
+  fx <- enrollcast_fixture()
+  r <- progression_ratios(fx[c(9, 2, 7, 1, 5, 3, 8, 4, 6), ])
+
+  expect_named(r, c("grade_from", "grade_to", "ratio"))
+  expect_identical(
+    r[c("grade_from", "grade_to")],
+    data.frame(
+      grade_from = c("K", "1"),
+      grade_to = c("1", "2")
+    )
+  )
+  expect_type(r$ratio, "double")
   expect_equal(r$ratio, c(0.925, (88 / 90 + 91 / 95) / 2))
 })
 
@@ -34,6 +43,26 @@ test_that("column names are overridable", {
   names(fx) <- c("yr", "gr", "n")
   r <- progression_ratios(fx, year = "yr", grade = "gr", enrollment = "n")
   expect_equal(r$ratio[1], 0.925)
+})
+
+test_that("column selectors are distinct non-missing character scalars", {
+  fx <- enrollcast_fixture()
+  invalid <- list(
+    list(year = NA_character_, grade = "grade", enrollment = "enrollment"),
+    list(year = c("year", "yr"), grade = "grade", enrollment = "enrollment"),
+    list(year = 1, grade = "grade", enrollment = "enrollment"),
+    list(year = "year", grade = "year", enrollment = "enrollment")
+  )
+  for (args in invalid) {
+    expect_error(
+      do.call(progression_ratios, c(list(data = fx), args)),
+      class = "enrollcast_error_column_selector"
+    )
+  }
+  expect_snapshot(
+    progression_ratios(fx, year = "year", grade = "year"),
+    error = TRUE
+  )
 })
 
 test_that("non-numeric enrollment is rejected", {
@@ -83,6 +112,23 @@ test_that("negative enrollment is rejected", {
   )
 })
 
+test_that("non-finite historical enrollment is rejected but NA is allowed", {
+  for (value in c(NaN, Inf, -Inf)) {
+    fx <- enrollcast_fixture()
+    fx$enrollment[1] <- value
+    expect_error(
+      progression_ratios(fx),
+      class = "enrollcast_error_enrollment_nonfinite"
+    )
+  }
+  fx <- enrollcast_fixture()
+  fx$enrollment[1] <- Inf
+  expect_snapshot(progression_ratios(fx), error = TRUE)
+
+  fx$enrollment[1] <- NA_real_
+  expect_no_error(progression_ratios(fx))
+})
+
 test_that("fewer than two grades is rejected", {
   fx <- enrollcast_fixture()
   fx <- fx[fx$grade == "K", ]
@@ -93,6 +139,13 @@ test_that("fewer than two grades is rejected", {
   )
 })
 
+test_that("all-missing grades are rejected as missing", {
+  fx <- enrollcast_fixture()
+  fx$grade <- NA_character_
+  expect_snapshot(progression_ratios(fx), error = TRUE)
+  expect_error(progression_ratios(fx), class = "enrollcast_error_grade_na")
+})
+
 test_that("non-numeric year is rejected", {
   fx <- enrollcast_fixture()
   fx$year <- as.character(fx$year)
@@ -101,12 +154,103 @@ test_that("non-numeric year is rejected", {
   expect_error(progression_ratios(fx), class = "enrollcast_error_year_type")
 })
 
+test_that("years must coerce to finite integers", {
+  for (value in c(NA_character_, "Inf", "-Inf", "2021.5")) {
+    fx <- enrollcast_fixture()
+    fx$year <- as.character(fx$year)
+    fx$year[1] <- value
+    expect_error(progression_ratios(fx), class = "enrollcast_error_year_type")
+  }
+  fx <- enrollcast_fixture()
+  fx$year <- as.character(fx$year)
+  fx$year[1] <- "2021.5"
+  expect_snapshot(progression_ratios(fx), error = TRUE)
+})
+
+test_that("duplicate grade-year rows are detected after year coercion", {
+  fx <- enrollcast_fixture()
+  extra <- fx[1, ]
+  fx$year <- as.character(fx$year)
+  extra$year <- "02021"
+  expect_error(
+    progression_ratios(rbind(fx, extra)),
+    class = "enrollcast_error_duplicate_rows"
+  )
+})
+
 test_that("grade_order overrides factor levels", {
   fx <- enrollcast_fixture()
   fx$grade <- as.character(fx$grade)
   r <- progression_ratios(fx, grade_order = c("K", "1", "2"))
   expect_identical(r$grade_from, c("K", "1"))
   expect_equal(r$ratio[1], 0.925)
+})
+
+test_that("grade_order rejects missing and duplicate grades", {
+  expect_error(
+    progression_ratios(enrollcast_fixture(), grade_order = c("K", "1", NA)),
+    class = "enrollcast_error_grade_order_na"
+  )
+  expect_error(
+    progression_ratios(
+      enrollcast_fixture(),
+      grade_order = c("K", "1", "2", "2")
+    ),
+    class = "enrollcast_error_grade_order_duplicate"
+  )
+})
+
+test_that("weights are accepted only by the weighted method", {
+  expect_snapshot(
+    progression_ratios(enrollcast_fixture(), method = "mean", weights = 1:2),
+    error = TRUE
+  )
+  expect_error(
+    progression_ratios(enrollcast_fixture(), method = "mean", weights = 1:2),
+    class = "enrollcast_error_weights_unused"
+  )
+})
+
+test_that("weighted method validates weight values", {
+  invalid <- list("weights", c(1, NA), c(1, Inf), c(1, -1))
+  for (weights in invalid) {
+    expect_error(
+      progression_ratios(
+        enrollcast_fixture(),
+        method = "weighted",
+        weights = weights
+      ),
+      class = "enrollcast_error_weights_values",
+      info = sprintf("weights: %s", toString(weights))
+    )
+  }
+  expect_snapshot(
+    progression_ratios(
+      enrollcast_fixture(),
+      method = "weighted",
+      weights = c(1, -1)
+    ),
+    error = TRUE
+  )
+})
+
+test_that("weighted method requires a positive weight sum", {
+  expect_snapshot(
+    progression_ratios(
+      enrollcast_fixture(),
+      method = "weighted",
+      weights = c(0, 0)
+    ),
+    error = TRUE
+  )
+  expect_error(
+    progression_ratios(
+      enrollcast_fixture(),
+      method = "weighted",
+      weights = c(0, 0)
+    ),
+    class = "enrollcast_error_weights_sum"
+  )
 })
 
 test_that("missing transitions are dropped for averaging methods", {
