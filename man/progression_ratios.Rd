@@ -17,10 +17,12 @@ progression_ratios(
 }
 \arguments{
 \item{data}{A long data frame of historical enrollment with one row per
-grade per year.}
+grade per year. Enrollment may be \code{NA}, but non-missing values must be
+finite and non-negative; \code{NaN} and infinite values are rejected. Year
+values must be coercible to finite integers and must not be missing.}
 
-\item{year, grade, enrollment}{Column names in \code{data} (character scalars).
-Defaults are \code{"year"}, \code{"grade"}, \code{"enrollment"}.}
+\item{year, grade, enrollment}{Distinct, non-missing character scalars naming
+columns in \code{data}. Defaults are \code{"year"}, \code{"grade"}, and \code{"enrollment"}.}
 
 \item{method}{How to summarise per-year ratios into one ratio per grade:
 \code{"mean"} (default), \code{"geometric"}, \code{"median"}, \code{"last"} (most recent
@@ -29,8 +31,10 @@ transition only), or \code{"weighted"}.}
 \item{n_years}{Optional. Use only the most recent \code{n_years} transitions. If
 \code{n_years} exceeds the number of available transitions, all are used.}
 
-\item{weights}{For \code{method = "weighted"}, a numeric vector aligned
-most-recent to oldest, with one weight per transition year used.}
+\item{weights}{For \code{method = "weighted"}, a finite, non-missing,
+non-negative numeric vector aligned most-recent to oldest, with one weight
+per transition year used and a positive sum. Do not supply weights for
+other methods.}
 
 \item{grade_order}{Optional character vector giving the low-to-high grade
 order. If omitted, factor levels, numeric ordering, or (with a warning)

@@ -14,7 +14,11 @@ swing_schedule(
 )
 }
 \arguments{
-\item{ratios}{A data frame of progression ratios from \code{\link[=progression_ratios]{progression_ratios()}}.}
+\item{ratios}{A data frame with columns \code{grade_from}, \code{grade_to}, and
+\code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}. \code{grade_from} and \code{grade_to}
+must not be missing. \code{ratio} must be numeric, non-negative, and finite; an
+infinite ratio (from a zero-enrollment feeder) is rejected, while \code{NA}/\code{NaN}
+ratios (e.g. from sparse history) are kept in the matrix with a warning.}
 
 \item{horizon}{Number of years to project (a positive integer).}
 
@@ -24,14 +28,20 @@ non-negative integer); enrollment is held flat at \code{base}.}
 \item{recovery}{Recovery multipliers applied for one year each, immediately
 after the swing and compounding on the prior year: a numeric vector
 (whole-school, one multiplier per recovery year) or a grade-by-year numeric
-matrix (one row per grade). Use \code{numeric(0)} for no recovery window.}
+matrix (one row per grade). Values must be finite, non-missing, and
+non-negative. Named matrix rows are matched and reordered by grade;
+unnamed rows are interpreted in projection grade order. Use \code{numeric(0)}
+for no recovery window.}
 
 \item{entry}{Exogenous entry-grade enrollment for the normal (GPR) years only
-— the \code{horizon - swing_years - length(recovery)} years after recovery. Must
-be empty when there are no normal years.}
+— one finite, non-missing, non-negative numeric value for each of the
+\code{horizon - swing_years - length(recovery)} years after recovery. Must be
+empty when there are no normal years.}
 
-\item{grade_order}{Optional low-to-high grade order, passed to
-\code{\link[=projection_matrix]{projection_matrix()}}.}
+\item{grade_order}{Optional character vector giving the low-to-high grade
+order. If omitted, the order is reconstructed from the transition chain.
+Every non-entry grade in \code{grade_order} must appear as a \code{grade_to} in
+\code{ratios}. Must not contain duplicates or missing values.}
 }
 \value{
 A list of \code{horizon} projection steps suitable for the \code{schedule}

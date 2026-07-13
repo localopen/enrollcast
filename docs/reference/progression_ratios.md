@@ -25,12 +25,14 @@ progression_ratios(
 - data:
 
   A long data frame of historical enrollment with one row per grade per
-  year.
+  year. Enrollment may be `NA`, but non-missing values must be finite
+  and non-negative; `NaN` and infinite values are rejected. Year values
+  must be coercible to finite integers and must not be missing.
 
 - year, grade, enrollment:
 
-  Column names in `data` (character scalars). Defaults are `"year"`,
-  `"grade"`, `"enrollment"`.
+  Distinct, non-missing character scalars naming columns in `data`.
+  Defaults are `"year"`, `"grade"`, and `"enrollment"`.
 
 - method:
 
@@ -45,8 +47,9 @@ progression_ratios(
 
 - weights:
 
-  For `method = "weighted"`, a numeric vector aligned most-recent to
-  oldest, with one weight per transition year used.
+  For `method = "weighted"`, a finite, non-missing, non-negative numeric
+  vector aligned most-recent to oldest, with one weight per transition
+  year used and a positive sum. Do not supply weights for other methods.
 
 - grade_order:
 

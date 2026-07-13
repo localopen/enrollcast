@@ -4,7 +4,8 @@ Projects grade-level enrollment forward an arbitrary horizon using the
 grade progression ratio method. Internally builds a projection matrix
 from `ratios` and advances enrollment one year at a time (one
 matrix-vector product per projected year), overwriting the entry grade
-with the supplied exogenous value each year.
+with the supplied exogenous value each year. `ratios` is optional when a
+`schedule` is supplied.
 
 ## Usage
 
@@ -25,13 +26,18 @@ project_enrollment(
 
   Most recent observed enrollment: either a data frame with columns
   `grade` and `enrollment` (optionally `year`), or a named numeric
-  vector (names are grades).
+  vector. Grade values or vector names must be present and unique.
+  Enrollment must be finite, non-missing, and non-negative.
 
 - ratios:
 
-  A data frame of progression ratios from
+  A data frame with columns `grade_from`, `grade_to`, and `ratio`, as
+  returned by
   [`progression_ratios()`](https://gitlab.com/localopen/enrollcast/reference/progression_ratios.md).
-  Optional when a `schedule` is supplied.
+  `grade_from` and `grade_to` must not be missing. `ratio` must be
+  numeric, non-negative, and finite; an infinite ratio (from a
+  zero-enrollment feeder) is rejected, while `NA`/`NaN` ratios (e.g.
+  from sparse history) are kept in the matrix with a warning.
 
 - horizon:
 
@@ -41,8 +47,9 @@ project_enrollment(
 
   Exogenous entry-grade enrollment for each projected year: a numeric
   vector of length `horizon`, or a data frame with an `enrollment` or
-  `value` column. If `NULL`, the entry grade is held constant at its
-  base value and a warning is issued.
+  `value` column. Values must be finite, non-missing, and non-negative.
+  If `NULL`, the entry grade is held constant at its base value and a
+  warning is issued.
 
 - schedule:
 
@@ -51,14 +58,20 @@ project_enrollment(
   as produced by
   [`swing_schedule()`](https://gitlab.com/localopen/enrollcast/reference/swing_schedule.md).
   When supplied, `ratios` and `entry` must be `NULL` and `horizon`
-  defaults to the schedule length. Step matrices must share identical
-  grade dimnames, which determine the grade order `base` is aligned to.
+  defaults to the schedule length. Each matrix must be numeric, square,
+  and contain only finite, non-missing, non-negative coefficients. Its
+  row and column names must be unique and identical in the same order;
+  all steps must use the same names. A step's `entry` must be `NULL` or
+  one finite, non-negative number.
 
 - start_year:
 
   Optional integer label for the base year; output years run from
-  `start_year + 1`. If `NULL`, it is derived from a `year` column in
-  `base` when present, otherwise output years are `1..horizon`.
+  `start_year + 1`. An explicit value and all resulting years must be
+  within the R integer range. If `NULL`, the year is derived from
+  `base$year` when present; that column must contain one unambiguous
+  integer within the same range. With no year column, output years are
+  `1..horizon`.
 
 ## Value
 

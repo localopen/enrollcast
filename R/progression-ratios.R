@@ -1,60 +1,213 @@
+check_enrollment_selectors <- function(
+  data,
+  year,
+  grade,
+  enrollment,
+  call = rlang::caller_env()
+) {
+  selectors <- list(year = year, grade = grade, enrollment = enrollment)
+  valid_selectors <- vapply(
+    selectors,
+    function(x) is.character(x) && length(x) == 1 && !is.na(x),
+    logical(1)
+  )
+  if (!all(valid_selectors) || anyDuplicated(unlist(selectors))) {
+    cli::cli_abort(
+      c(
+        "{.arg year}, {.arg grade}, and {.arg enrollment} must be distinct non-missing character scalars.",
+        "x" = "Each argument must select exactly one different column in {.arg data}."
+      ),
+      class = "enrollcast_error_column_selector",
+      call = call
+    )
+  }
+  check_columns(data, c(year, grade, enrollment), "data", call = call)
+}
+
+check_enrollment_values <- function(
+  data,
+  enrollment,
+  call = rlang::caller_env()
+) {
+  if (!is.numeric(data[[enrollment]])) {
+    cli::cli_abort(
+      c(
+        "The {.field {enrollment}} column of {.arg data} must be numeric.",
+        "x" = "{.field {enrollment}} is {.cls {class(data[[enrollment]])}}."
+      ),
+      class = "enrollcast_error_enrollment_type",
+      call = call
+    )
+  }
+
+  invalid_enrollment <- is.nan(data[[enrollment]]) |
+    (!is.na(data[[enrollment]]) & !is.finite(data[[enrollment]]))
+  if (any(invalid_enrollment)) {
+    cli::cli_abort(
+      c(
+        "The {.field {enrollment}} column of {.arg data} must contain finite values or {.val {NA}}.",
+        "x" = "Found {sum(invalid_enrollment)} non-finite value{?s}."
+      ),
+      class = "enrollcast_error_enrollment_nonfinite",
+      call = call
+    )
+  }
+
+  if (any(data[[enrollment]] < 0, na.rm = TRUE)) {
+    cli::cli_abort(
+      c(
+        "The {.field {enrollment}} column of {.arg data} must be non-negative.",
+        "x" = "Found {sum(data[[enrollment]] < 0, na.rm = TRUE)} negative value{?s}."
+      ),
+      class = "enrollcast_error_enrollment_negative",
+      call = call
+    )
+  }
+}
+
+check_enrollment_grades <- function(data, grade, call = rlang::caller_env()) {
+  if (anyNA(data[[grade]])) {
+    cli::cli_abort(
+      c(
+        "The {.field {grade}} column of {.arg data} must not contain missing values.",
+        "x" = "Found {sum(is.na(data[[grade]]))} missing value{?s}."
+      ),
+      class = "enrollcast_error_grade_na",
+      call = call
+    )
+  }
+
+  if (length(unique(as.character(data[[grade]]))) < 2) {
+    cli::cli_abort(
+      c(
+        "{.arg data} must contain at least 2 grades to compute progression ratios.",
+        "x" = "The {.field {grade}} column has {length(unique(as.character(data[[grade]])))} grade{?s}."
+      ),
+      class = "enrollcast_error_too_few_grades",
+      call = call
+    )
+  }
+}
+
+coerce_enrollment_year <- function(data, year, call = rlang::caller_env()) {
+  yr <- suppressWarnings(as.numeric(as.character(data[[year]])))
+  invalid_year <- is.na(yr) |
+    !is.finite(yr) |
+    (is.finite(yr) & yr %% 1 != 0)
+  if (any(invalid_year)) {
+    cli::cli_abort(
+      c(
+        "The {.field {year}} column of {.arg data} must be coercible to finite integers.",
+        "x" = "Found {sum(invalid_year)} invalid value{?s}."
+      ),
+      class = "enrollcast_error_year_type",
+      call = call
+    )
+  }
+  yr
+}
+
 # Validate inputs and return cleaned pieces (grades, enrollment, order, years).
-prepare_enrollment <- function(data, year, grade, enrollment, grade_order) {
-  check_columns(data, c(year, grade, enrollment), "data")
-  gr_raw <- data[[grade]]
-  en <- data[[enrollment]]
-  if (!is.numeric(en)) {
-    stop("`enrollment` column must be numeric.", call. = FALSE)
+prepare_enrollment <- function(
+  data,
+  year,
+  grade,
+  enrollment,
+  grade_order,
+  call = rlang::caller_env()
+) {
+  check_enrollment_selectors(data, year, grade, enrollment, call = call)
+  check_enrollment_values(data, enrollment, call = call)
+  check_enrollment_grades(data, grade, call = call)
+  data[[year]] <- coerce_enrollment_year(data, year, call = call)
+
+  # Honour an explicit grade_order even for an already-ordered factor; otherwise
+  # trust the ordered factor's levels (dropping any that are unused).
+  if (!is.ordered(data[[grade]]) || !is.null(grade_order)) {
+    go <- resolve_grade_order(data[[grade]], grade_order, call = call)
+    data[[grade]] <- factor(
+      as.character(data[[grade]]),
+      levels = go,
+      ordered = TRUE
+    )
+  } else {
+    data[[grade]] <- droplevels(data[[grade]])
   }
-  if (any(en < 0, na.rm = TRUE)) {
-    stop("`enrollment` must be non-negative.", call. = FALSE)
-  }
-  go <- resolve_grade_order(gr_raw, grade_order)
-  if (length(go) < 2) {
-    stop("Need at least 2 grades to compute progression ratios.", call. = FALSE)
-  }
-  yr_num <- suppressWarnings(as.numeric(as.character(data[[year]])))
-  if (anyNA(yr_num)) {
-    stop("`year` must be numeric or coercible to numeric.", call. = FALSE)
-  }
-  list(grade = as.character(gr_raw), enrollment = en, go = go, year = yr_num)
+
+  data
 }
 
 # Build a grade x year enrollment matrix from long records.
-enrollment_matrix <- function(grade, year, enrollment, go) {
-  years <- sort(unique(year))
-  ri <- match(grade, go)
-  ci <- match(year, years)
-  if (anyNA(ri)) {
-    stop("Some grades are not in the resolved grade order.", call. = FALSE)
+enrollment_matrix <- function(
+  data,
+  year,
+  grade,
+  enrollment,
+  call = rlang::caller_env()
+) {
+  go <- levels(data[[grade]])
+  years <- sort(unique(data[[year]]))
+
+  if (anyDuplicated(data[, c(grade, year)]) > 0) {
+    cli::cli_abort(
+      c(
+        "{.arg data} must have one row per grade per year.",
+        "x" = "Found duplicate ({.field {grade}}, {.field {year}}) row{?s}.",
+        "i" = "Aggregate or de-duplicate before calling {.fn progression_ratios}."
+      ),
+      class = "enrollcast_error_duplicate_rows",
+      call = call
+    )
   }
-  if (anyDuplicated(cbind(ri, ci))) {
-    stop("Duplicate (grade, year) rows in `data`.", call. = FALSE)
-  }
+
+  # Fill in missing (grade, year) combinations with NA
+  expand <- expand.grid(
+    stats::setNames(list(years, go), c(year, grade))
+  )
+
+  data <- merge(expand, data, by = c(year, grade), all.x = TRUE)
+
+  data <- data[order(data[[year]], data[[grade]]), ]
+
   w <- matrix(
-    NA_real_,
+    data[[enrollment]],
     nrow = length(go),
     ncol = length(years),
     dimnames = list(go, as.character(years))
   )
-  w[cbind(ri, ci)] <- enrollment
   w
 }
 
 # Per-transition ratios: destination grade at t+1 over feeder grade at t.
-transition_ratios <- function(w) {
+transition_ratios <- function(w, call = rlang::caller_env()) {
   years <- as.numeric(colnames(w))
   trans <- which(diff(years) == 1)
   if (length(trans) == 0) {
-    stop("No consecutive year pairs found to form transitions.", call. = FALSE)
+    cli::cli_abort(
+      c(
+        "Cannot compute progression ratios without consecutive years.",
+        "x" = "{.arg data} has no adjacent year pair.",
+        "i" = "Years present: {.val {as.numeric(colnames(w))}}."
+      ),
+      class = "enrollcast_error_no_transitions",
+      call = call
+    )
   }
+
   w[-1, trans + 1, drop = FALSE] / w[-nrow(w), trans, drop = FALSE]
 }
 
 # Validate the optional n_years argument.
-check_n_years <- function(n_years) {
+check_n_years <- function(n_years, call = rlang::caller_env()) {
   if (!is.null(n_years) && !is_count(n_years)) {
-    stop("`n_years` must be a positive integer.", call. = FALSE)
+    cli::cli_abort(
+      c(
+        "{.arg n_years} must be a single positive integer.",
+        "x" = "You supplied {.obj_type_friendly {n_years}}."
+      ),
+      class = "enrollcast_error_n_years",
+      call = call
+    )
   }
 }
 
@@ -66,16 +219,20 @@ check_n_years <- function(n_years) {
 #' summarised across the available year-to-year transitions.
 #'
 #' @param data A long data frame of historical enrollment with one row per
-#'   grade per year.
-#' @param year,grade,enrollment Column names in `data` (character scalars).
-#'   Defaults are `"year"`, `"grade"`, `"enrollment"`.
+#'   grade per year. Enrollment may be `NA`, but non-missing values must be
+#'   finite and non-negative; `NaN` and infinite values are rejected. Year
+#'   values must be coercible to finite integers and must not be missing.
+#' @param year,grade,enrollment Distinct, non-missing character scalars naming
+#'   columns in `data`. Defaults are `"year"`, `"grade"`, and `"enrollment"`.
 #' @param method How to summarise per-year ratios into one ratio per grade:
 #'   `"mean"` (default), `"geometric"`, `"median"`, `"last"` (most recent
 #'   transition only), or `"weighted"`.
 #' @param n_years Optional. Use only the most recent `n_years` transitions. If
 #'   `n_years` exceeds the number of available transitions, all are used.
-#' @param weights For `method = "weighted"`, a numeric vector aligned
-#'   most-recent to oldest, with one weight per transition year used.
+#' @param weights For `method = "weighted"`, a finite, non-missing,
+#'   non-negative numeric vector aligned most-recent to oldest, with one weight
+#'   per transition year used and a positive sum. Do not supply weights for
+#'   other methods.
 #' @param grade_order Optional character vector giving the low-to-high grade
 #'   order. If omitted, factor levels, numeric ordering, or (with a warning)
 #'   alphabetical ordering is used.
@@ -110,20 +267,22 @@ progression_ratios <- function(
   method <- match.arg(method)
   check_n_years(n_years)
   clean <- prepare_enrollment(data, year, grade, enrollment, grade_order)
-  w <- enrollment_matrix(clean$grade, clean$year, clean$enrollment, clean$go)
+  w <- enrollment_matrix(clean, year, grade, enrollment)
   r <- transition_ratios(w)
   if (!is.null(n_years)) {
     r <- r[, utils::tail(seq_len(ncol(r)), n_years), drop = FALSE]
   }
   if (any(is.infinite(r)) || any(is.nan(r))) {
-    warning(
-      "Some progression ratios are infinite or NaN because a feeder grade ",
-      "had zero enrollment in at least one transition.",
-      call. = FALSE
+    cli::cli_warn(
+      c(
+        "{sum(is.infinite(r) | is.nan(r))} progression ratio{?s} {?is/are} infinite or {.val {NaN}}.",
+        "!" = "A feeder grade had zero enrollment in at least one transition."
+      ),
+      class = "enrollcast_warning_undefined_ratios"
     )
   }
   ratio <- summarise_ratios(r, method = method, weights = weights)
-  go <- clean$go
+  go <- levels(clean[[grade]])
   data.frame(
     grade_from = go[-length(go)],
     grade_to = go[-1],

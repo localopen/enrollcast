@@ -10,6 +10,8 @@
 ^Meta$
 ^\.claude$
 CLAUDE.md
+^AGENTS\.md$
+^gp_results\.csv$
 ^data-raw$
 ^\.gitlab-ci\.yml$
 ^_pkgdown\.yml$
@@ -18,3 +20,5 @@ air.toml
 jarl.toml
 CITATION.cff
 ^CITATION\.cff$
+^\.vscode$
+^README\.Rmd$

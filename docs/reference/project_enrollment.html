@@ -3,11 +3,11 @@
 progression ratio method. Internally builds a projection matrix from ratios
 and advances enrollment one year at a time (one matrix-vector product per
 projected year), overwriting the entry grade with the supplied exogenous
-value each year."><meta property="og:description" content="Projects grade-level enrollment forward an arbitrary horizon using the grade
+value each year. ratios is optional when a schedule is supplied."><meta property="og:description" content="Projects grade-level enrollment forward an arbitrary horizon using the grade
 progression ratio method. Internally builds a projection matrix from ratios
 and advances enrollment one year at a time (one matrix-vector product per
 projected year), overwriting the entry grade with the supplied exogenous
-value each year."></head><body>
+value each year. ratios is optional when a schedule is supplied."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -47,7 +47,7 @@ value each year."></head><body>
 progression ratio method. Internally builds a projection matrix from <code>ratios</code>
 and advances enrollment one year at a time (one matrix-vector product per
 projected year), overwriting the entry grade with the supplied exogenous
-value each year.</p>
+value each year. <code>ratios</code> is optional when a <code>schedule</code> is supplied.</p>
     </div>
 
     <div class="section level2">
@@ -69,12 +69,16 @@ value each year.</p>
 <dl><dt id="arg-base">base<a class="anchor" aria-label="anchor" href="#arg-base"></a></dt>
 <dd><p>Most recent observed enrollment: either a data frame with
 columns <code>grade</code> and <code>enrollment</code> (optionally <code>year</code>), or a named numeric
-vector (names are grades).</p></dd>
+vector. Grade values or vector names must be present and unique. Enrollment
+must be finite, non-missing, and non-negative.</p></dd>
 
 
 <dt id="arg-ratios">ratios<a class="anchor" aria-label="anchor" href="#arg-ratios"></a></dt>
-<dd><p>A data frame of progression ratios from
-<code><a href="progression_ratios.html">progression_ratios()</a></code>. Optional when a <code>schedule</code> is supplied.</p></dd>
+<dd><p>A data frame with columns <code>grade_from</code>, <code>grade_to</code>, and
+<code>ratio</code>, as returned by <code><a href="progression_ratios.html">progression_ratios()</a></code>. <code>grade_from</code> and <code>grade_to</code>
+must not be missing. <code>ratio</code> must be numeric, non-negative, and finite; an
+infinite ratio (from a zero-enrollment feeder) is rejected, while <code>NA</code>/<code>NaN</code>
+ratios (e.g. from sparse history) are kept in the matrix with a warning.</p></dd>
 
 
 <dt id="arg-horizon">horizon<a class="anchor" aria-label="anchor" href="#arg-horizon"></a></dt>
@@ -84,22 +88,27 @@ vector (names are grades).</p></dd>
 <dt id="arg-entry">entry<a class="anchor" aria-label="anchor" href="#arg-entry"></a></dt>
 <dd><p>Exogenous entry-grade enrollment for each projected year: a
 numeric vector of length <code>horizon</code>, or a data frame with an <code>enrollment</code>
-or <code>value</code> column. If <code>NULL</code>, the entry grade is held constant at its base
-value and a warning is issued.</p></dd>
+or <code>value</code> column. Values must be finite, non-missing, and non-negative. If
+<code>NULL</code>, the entry grade is held constant at its base value and a warning is
+issued.</p></dd>
 
 
 <dt id="arg-schedule">schedule<a class="anchor" aria-label="anchor" href="#arg-schedule"></a></dt>
 <dd><p>Optional prebuilt projection schedule: a list of per-year
 steps, each <code>list(matrix = &lt;square projection matrix&gt;, entry = &lt;NULL or a single number&gt;)</code>, as produced by <code><a href="swing_schedule.html">swing_schedule()</a></code>. When supplied,
 <code>ratios</code> and <code>entry</code> must be <code>NULL</code> and <code>horizon</code> defaults to the schedule
-length. Step matrices must share identical grade dimnames, which determine
-the grade order <code>base</code> is aligned to.</p></dd>
+length. Each matrix must be numeric, square, and contain only finite,
+non-missing, non-negative coefficients. Its row and column names must be
+unique and identical in the same order; all steps must use the same names.
+A step's <code>entry</code> must be <code>NULL</code> or one finite, non-negative number.</p></dd>
 
 
 <dt id="arg-start-year">start_year<a class="anchor" aria-label="anchor" href="#arg-start-year"></a></dt>
 <dd><p>Optional integer label for the base year; output years run
-from <code>start_year + 1</code>. If <code>NULL</code>, it is derived from a <code>year</code> column in
-<code>base</code> when present, otherwise output years are <code>1..horizon</code>.</p></dd>
+from <code>start_year + 1</code>. An explicit value and all resulting years must be
+within the R integer range. If <code>NULL</code>, the year is derived from <code>base$year</code>
+when present; that column must contain one unambiguous integer within the
+same range. With no year column, output years are <code>1..horizon</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -142,7 +151,7 @@ covering the projected years only.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

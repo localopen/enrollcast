@@ -7,3 +7,6 @@
 ..Rcheck/
 inst/doc
 /Meta/
+
+/.quarto/
+**/*.quarto_ipynb

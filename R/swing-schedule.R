@@ -1,68 +1,123 @@
+check_recovery_values <- function(recovery, call = rlang::caller_env()) {
+  if (anyNA(recovery) || !all(is.finite(recovery)) || any(recovery < 0)) {
+    cli::cli_abort(
+      "{.arg recovery} values must be numeric, finite, non-missing, and non-negative.",
+      class = "enrollcast_error_recovery_values",
+      call = call
+    )
+  }
+}
+
+align_recovery_matrix <- function(recovery, go, call = rlang::caller_env()) {
+  G <- length(go)
+  if (nrow(recovery) != G) {
+    cli::cli_abort(
+      c(
+        "{.arg recovery} matrix must have one row per grade.",
+        "x" = "Expected {G} row{?s} but got {nrow(recovery)}."
+      ),
+      class = "enrollcast_error_recovery_dim",
+      call = call
+    )
+  }
+  rn <- rownames(recovery)
+  if (is.null(rn)) {
+    return(recovery)
+  }
+  if (anyNA(rn) || !all(nzchar(rn)) || anyDuplicated(rn) || !setequal(rn, go)) {
+    cli::cli_abort(
+      "Named {.arg recovery} matrix rows must be unique and exactly match the projection grades.",
+      class = "enrollcast_error_recovery_names",
+      call = call
+    )
+  }
+  recovery[go, , drop = FALSE]
+}
+
 # Normalize recovery multipliers (scalar-per-year vector or grade-by-year
 # matrix) to a per-year list of length-G diagonal vectors.
-recovery_diagonals <- function(recovery, go) {
+recovery_diagonals <- function(recovery, go, call = rlang::caller_env()) {
   G <- length(go)
   if (is.matrix(recovery)) {
-    if (nrow(recovery) != G) {
-      stop(
-        sprintf("`recovery` matrix must have one row per grade (%d).", G),
-        call. = FALSE
+    recovery <- align_recovery_matrix(recovery, go, call = call)
+    if (!is.numeric(recovery)) {
+      cli::cli_abort(
+        "{.arg recovery} values must be numeric, finite, non-missing, and non-negative.",
+        class = "enrollcast_error_recovery_values",
+        call = call
       )
     }
+    check_recovery_values(recovery, call = call)
     return(lapply(seq_len(ncol(recovery)), function(j) {
       stats::setNames(recovery[, j], go)
     }))
   }
   if (!is.numeric(recovery)) {
-    stop(
-      "`recovery` must be a numeric vector or a grade-by-year matrix.",
-      call. = FALSE
+    cli::cli_abort(
+      c(
+        "{.arg recovery} must be a numeric vector or a grade-by-year matrix.",
+        "x" = "You supplied {.obj_type_friendly {recovery}}."
+      ),
+      class = "enrollcast_error_recovery_type",
+      call = call
     )
   }
+  check_recovery_values(recovery, call = call)
   lapply(recovery, function(mult) stats::setNames(rep(mult, G), go))
 }
 
+is_nonnegative_integer <- function(x) {
+  is.numeric(x) && length(x) == 1 && is.finite(x) && x >= 0 && x %% 1 == 0
+}
+
 # Number of normal (GPR) years; errors if swing + recovery exceed the horizon.
-check_swing <- function(swing_years, n_recovery, horizon) {
-  if (
-    length(swing_years) != 1 ||
-      !is.numeric(swing_years) ||
-      swing_years < 0 ||
-      swing_years %% 1 != 0
-  ) {
-    stop("`swing_years` must be a non-negative integer.", call. = FALSE)
+check_swing <- function(
+  swing_years,
+  n_recovery,
+  horizon,
+  call = rlang::caller_env()
+) {
+  if (!is_nonnegative_integer(swing_years)) {
+    cli::cli_abort(
+      "{.arg swing_years} must be a non-negative integer.",
+      class = "enrollcast_error_swing_years",
+      call = call
+    )
   }
   n_normal <- horizon - swing_years - n_recovery
   if (n_normal < 0) {
-    stop(
-      "`swing_years` plus recovery length must not exceed `horizon`.",
-      call. = FALSE
+    cli::cli_abort(
+      c(
+        "{.arg swing_years} plus recovery length must not exceed {.arg horizon}.",
+        "x" = "{swing_years} + {n_recovery} > {horizon}."
+      ),
+      class = "enrollcast_error_swing_too_long",
+      call = call
     )
   }
   n_normal
 }
 
 # Validate exogenous entry for the normal years; return it as a numeric vector.
-normal_entry <- function(entry, n_normal) {
+normal_entry <- function(entry, n_normal, call = rlang::caller_env()) {
   if (n_normal == 0) {
     if (length(entry) > 0) {
-      stop(
-        "`entry` must be empty when there are no normal (GPR) years.",
-        call. = FALSE
+      cli::cli_abort(
+        "{.arg entry} must be empty when there are no normal (GPR) years.",
+        class = "enrollcast_error_entry_unexpected",
+        call = call
       )
     }
     return(numeric(0))
   }
   if (is.null(entry)) {
-    stop(
-      sprintf(
-        "`entry` is required for the %d normal year(s) after recovery.",
-        n_normal
-      ),
-      call. = FALSE
+    cli::cli_abort(
+      "{.arg entry} is required for the {n_normal} normal year{?s} after recovery.",
+      class = "enrollcast_error_entry_required",
+      call = call
     )
   }
-  as_entry_vector(entry, n_normal)
+  as_entry_vector(entry, n_normal, call = call)
 }
 
 # A diagonal projection step with the given grade dimnames.
@@ -81,19 +136,21 @@ diag_step <- function(d, go) {
 #' then projected with the grade progression ratio method (the normal
 #' projection matrix) for the remaining years.
 #'
-#' @param ratios A data frame of progression ratios from [progression_ratios()].
-#' @param horizon Number of years to project (a positive integer).
+#' @inheritParams project_enrollment
+#' @inheritParams projection_matrix
 #' @param swing_years Number of leading years the school is swinging (a
 #'   non-negative integer); enrollment is held flat at `base`.
 #' @param recovery Recovery multipliers applied for one year each, immediately
 #'   after the swing and compounding on the prior year: a numeric vector
 #'   (whole-school, one multiplier per recovery year) or a grade-by-year numeric
-#'   matrix (one row per grade). Use `numeric(0)` for no recovery window.
+#'   matrix (one row per grade). Values must be finite, non-missing, and
+#'   non-negative. Named matrix rows are matched and reordered by grade;
+#'   unnamed rows are interpreted in projection grade order. Use `numeric(0)`
+#'   for no recovery window.
 #' @param entry Exogenous entry-grade enrollment for the normal (GPR) years only
-#'   — the `horizon - swing_years - length(recovery)` years after recovery. Must
-#'   be empty when there are no normal years.
-#' @param grade_order Optional low-to-high grade order, passed to
-#'   [projection_matrix()].
+#'   — one finite, non-missing, non-negative numeric value for each of the
+#'   `horizon - swing_years - length(recovery)` years after recovery. Must be
+#'   empty when there are no normal years.
 #'
 #' @return A list of `horizon` projection steps suitable for the `schedule`
 #'   argument of [project_enrollment()].

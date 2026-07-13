@@ -16,27 +16,36 @@ project_enrollment(
 \arguments{
 \item{base}{Most recent observed enrollment: either a data frame with
 columns \code{grade} and \code{enrollment} (optionally \code{year}), or a named numeric
-vector (names are grades).}
+vector. Grade values or vector names must be present and unique. Enrollment
+must be finite, non-missing, and non-negative.}
 
-\item{ratios}{A data frame of progression ratios from
-\code{\link[=progression_ratios]{progression_ratios()}}. Optional when a \code{schedule} is supplied.}
+\item{ratios}{A data frame with columns \code{grade_from}, \code{grade_to}, and
+\code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}. \code{grade_from} and \code{grade_to}
+must not be missing. \code{ratio} must be numeric, non-negative, and finite; an
+infinite ratio (from a zero-enrollment feeder) is rejected, while \code{NA}/\code{NaN}
+ratios (e.g. from sparse history) are kept in the matrix with a warning.}
 
 \item{horizon}{Number of years to project (a positive integer).}
 
 \item{entry}{Exogenous entry-grade enrollment for each projected year: a
 numeric vector of length \code{horizon}, or a data frame with an \code{enrollment}
-or \code{value} column. If \code{NULL}, the entry grade is held constant at its base
-value and a warning is issued.}
+or \code{value} column. Values must be finite, non-missing, and non-negative. If
+\code{NULL}, the entry grade is held constant at its base value and a warning is
+issued.}
 
 \item{schedule}{Optional prebuilt projection schedule: a list of per-year
 steps, each \verb{list(matrix = <square projection matrix>, entry = <NULL or a single number>)}, as produced by \code{\link[=swing_schedule]{swing_schedule()}}. When supplied,
 \code{ratios} and \code{entry} must be \code{NULL} and \code{horizon} defaults to the schedule
-length. Step matrices must share identical grade dimnames, which determine
-the grade order \code{base} is aligned to.}
+length. Each matrix must be numeric, square, and contain only finite,
+non-missing, non-negative coefficients. Its row and column names must be
+unique and identical in the same order; all steps must use the same names.
+A step's \code{entry} must be \code{NULL} or one finite, non-negative number.}
 
 \item{start_year}{Optional integer label for the base year; output years run
-from \code{start_year + 1}. If \code{NULL}, it is derived from a \code{year} column in
-\code{base} when present, otherwise output years are \verb{1..horizon}.}
+from \code{start_year + 1}. An explicit value and all resulting years must be
+within the R integer range. If \code{NULL}, the year is derived from \code{base$year}
+when present; that column must contain one unambiguous integer within the
+same range. With no year column, output years are \verb{1..horizon}.}
 }
 \value{
 A long data frame with columns \code{year}, \code{grade}, and \code{enrollment},
@@ -47,7 +56,7 @@ Projects grade-level enrollment forward an arbitrary horizon using the grade
 progression ratio method. Internally builds a projection matrix from \code{ratios}
 and advances enrollment one year at a time (one matrix-vector product per
 projected year), overwriting the entry grade with the supplied exogenous
-value each year.
+value each year. \code{ratios} is optional when a \code{schedule} is supplied.
 }
 \examples{
 history <- data.frame(

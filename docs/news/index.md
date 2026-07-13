@@ -4,17 +4,15 @@
 
 - Initial development version.
 - [`progression_ratios()`](https://gitlab.com/localopen/enrollcast/reference/progression_ratios.md)
-  computes grade progression ratios from historical grade-level
-  enrollment, with configurable averaging (`mean`, `geometric`,
-  `median`, `last`, `weighted`).
+  validates column selectors, historical enrollment and years, and
+  supports mean, geometric, median, last, and strictly validated
+  weighted summaries.
+- [`project_enrollment()`](https://gitlab.com/localopen/enrollcast/reference/project_enrollment.md)
+  validates base and entry enrollment, year labels, and prebuilt
+  schedules while projecting an arbitrary horizon.
 - [`projection_matrix()`](https://gitlab.com/localopen/enrollcast/reference/projection_matrix.md)
-  assembles the projection matrix from progression ratios.
-- [`project_enrollment()`](https://gitlab.com/localopen/enrollcast/reference/project_enrollment.md)
-  projects enrollment forward an arbitrary horizon, taking the entry
-  grade exogenously.
-- [`project_enrollment()`](https://gitlab.com/localopen/enrollcast/reference/project_enrollment.md)
-  accepts a prebuilt per-year `schedule` of projection steps as an
-  alternative to the `ratios`/`horizon`/`entry` arguments.
+  validates ratio values, grade labels and order, and requires one
+  adjacent low-to-high transition per non-entry grade.
 - [`swing_schedule()`](https://gitlab.com/localopen/enrollcast/reference/swing_schedule.md)
-  builds a swing/recovery projection schedule for a school passing
-  through a temporary relocation.
+  builds swing/recovery schedules with strictly validated entry and
+  recovery values; named recovery rows are aligned by grade.
