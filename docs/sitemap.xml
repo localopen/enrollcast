@@ -1,5 +1,6 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://gitlab.com/localopen/enrollcast/404.html</loc></url>
+<url><loc>https://gitlab.com/localopen/enrollcast/AGENTS.html</loc></url>
 <url><loc>https://gitlab.com/localopen/enrollcast/LICENSE-text.html</loc></url>
 <url><loc>https://gitlab.com/localopen/enrollcast/LICENSE.html</loc></url>
 <url><loc>https://gitlab.com/localopen/enrollcast/articles/enrollcast.html</loc></url>
@@ -14,3 +15,4 @@
 <url><loc>https://gitlab.com/localopen/enrollcast/reference/projection_matrix.html</loc></url>
 <url><loc>https://gitlab.com/localopen/enrollcast/reference/swing_schedule.html</loc></url>
 </urlset>
+

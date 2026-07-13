@@ -10,3 +10,5 @@ inst/doc
 
 /.quarto/
 **/*.quarto_ipynb
+
+docs/AGENTS.*
