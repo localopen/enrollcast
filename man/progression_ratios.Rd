@@ -57,4 +57,15 @@ history <- data.frame(
   enrollment = c(100, 90, 80, 110, 95, 88, 120, 99, 91)
 )
 progression_ratios(history)
+
+# For method = "weighted", weights align most-recent to oldest: here the
+# 2022->2023 transition gets weight 2 and 2021->2022 gets weight 1.
+progression_ratios(history, method = "weighted", weights = c(2, 1))
+
+# The same K -> 1 ratio via stats::weighted.mean(). Unlike `weights`
+# above, weighted.mean() pairs each weight with the value at the same
+# position, and the per-year ratios run oldest to newest -- so the
+# weights must be reversed to line up.
+k_ratios <- c(95 / 100, 99 / 110) # 2021->2022, then 2022->2023
+stats::weighted.mean(k_ratios, rev(c(2, 1)))
 }

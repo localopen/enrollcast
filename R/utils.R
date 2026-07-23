@@ -179,6 +179,8 @@ summarise_ratios <- function(
   call = rlang::caller_env()
 ) {
   check_ratio_weights(R, method, weights, call = call)
+  # `weights` is aligned most-recent -> oldest; rows of R run oldest ->
+  # newest, so reverse to line the weights up with the columns.
   weights <- rev(weights)
   apply(R, 1, summarise_ratio_row, method = method, weights = weights)
 }
