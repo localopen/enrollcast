@@ -10,6 +10,8 @@ has not yet been a stable, usable release suitable for the
 public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![name status
 badge](https://rorylawless.r-universe.dev/badges/:name)](https://rorylawless.r-universe.dev/)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 `enrollcast` projects school enrollment using the cohort survival /
