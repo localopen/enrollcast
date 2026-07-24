@@ -84,9 +84,14 @@ projection_matrix(ratios)
 LEAs, split and map:
 
 ``` r
-school_history <- rbind(
-  transform(history, school = "North"),
-  transform(history, school = "South", enrollment = enrollment + 20)
+school_history <- data.frame(
+  school = rep(c("North", "South"), each = 9),
+  year = rep(2021:2023, each = 3, times = 2),
+  grade = factor(rep(c("K", "1", "2"), times = 6), levels = c("K", "1", "2")),
+  enrollment = c(
+    100, 90, 80, 110, 95, 88, 120, 99, 91,
+    120, 110, 100, 130, 115, 108, 140, 119, 111
+  )
 )
 
 projections <- lapply(
