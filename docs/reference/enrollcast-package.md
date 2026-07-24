@@ -12,9 +12,9 @@ Useful links:
 
 - <https://rorylawless.r-universe.dev/enrollcast>
 
-- <https://gitlab.com/localopen/enrollcast>
+- <https://github.com/localopen/enrollcast>
 
-- Report bugs at <https://gitlab.com/localopen/enrollcast/-/issues>
+- Report bugs at <https://github.com/localopen/enrollcast/issues>
 
 ## Author
 

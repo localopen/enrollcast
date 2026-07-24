@@ -88,7 +88,7 @@ projection
 
 ## Stitching history and projection
 
-[`project_enrollment()`](https://gitlab.com/localopen/enrollcast/reference/project_enrollment.md)
+[`project_enrollment()`](https://github.com/localopen/enrollcast/reference/project_enrollment.md)
 returns projected years only. Combine with history for plotting:
 
 ``` r
@@ -113,7 +113,7 @@ head(combined)
 
 A school temporarily relocated during modernization typically sees
 depressed enrollment that recovers after it returns.
-[`swing_schedule()`](https://gitlab.com/localopen/enrollcast/reference/swing_schedule.md)
+[`swing_schedule()`](https://github.com/localopen/enrollcast/reference/swing_schedule.md)
 builds a per-year projection schedule: enrollment is held flat during
 the swing, scaled by recovery multipliers for a few years, then
 projected normally.

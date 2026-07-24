@@ -33,7 +33,7 @@ project_enrollment(
 
   A data frame with columns `grade_from`, `grade_to`, and `ratio`, as
   returned by
-  [`progression_ratios()`](https://gitlab.com/localopen/enrollcast/reference/progression_ratios.md).
+  [`progression_ratios()`](https://github.com/localopen/enrollcast/reference/progression_ratios.md).
   `grade_from` and `grade_to` must not be missing. `ratio` must be
   numeric, non-negative, and finite; an infinite ratio (from a
   zero-enrollment feeder) is rejected, while `NA`/`NaN` ratios (e.g.
@@ -56,7 +56,7 @@ project_enrollment(
   Optional prebuilt projection schedule: a list of per-year steps, each
   `list(matrix = <square projection matrix>, entry = <NULL or a single number>)`,
   as produced by
-  [`swing_schedule()`](https://gitlab.com/localopen/enrollcast/reference/swing_schedule.md).
+  [`swing_schedule()`](https://github.com/localopen/enrollcast/reference/swing_schedule.md).
   When supplied, `ratios` and `entry` must be `NULL` and `horizon`
   defaults to the schedule length. Each matrix must be numeric, square,
   and contain only finite, non-missing, non-negative coefficients. Its

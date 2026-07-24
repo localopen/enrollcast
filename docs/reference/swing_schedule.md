@@ -1,7 +1,7 @@
 # Build a swing/recovery projection schedule
 
 Assembles a per-year
-[`project_enrollment()`](https://gitlab.com/localopen/enrollcast/reference/project_enrollment.md)
+[`project_enrollment()`](https://github.com/localopen/enrollcast/reference/project_enrollment.md)
 schedule for a school passing through a temporary relocation ("swing"):
 enrollment is held flat at the depressed observed level during the swing
 (identity steps), scaled by year-over-year recovery multipliers for the
@@ -28,7 +28,7 @@ swing_schedule(
 
   A data frame with columns `grade_from`, `grade_to`, and `ratio`, as
   returned by
-  [`progression_ratios()`](https://gitlab.com/localopen/enrollcast/reference/progression_ratios.md).
+  [`progression_ratios()`](https://github.com/localopen/enrollcast/reference/progression_ratios.md).
   `grade_from` and `grade_to` must not be missing. `ratio` must be
   numeric, non-negative, and finite; an infinite ratio (from a
   zero-enrollment feeder) is rejected, while `NA`/`NaN` ratios (e.g.
@@ -71,7 +71,7 @@ swing_schedule(
 
 A list of `horizon` projection steps suitable for the `schedule`
 argument of
-[`project_enrollment()`](https://gitlab.com/localopen/enrollcast/reference/project_enrollment.md).
+[`project_enrollment()`](https://github.com/localopen/enrollcast/reference/project_enrollment.md).
 
 ## Examples
 

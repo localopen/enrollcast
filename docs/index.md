@@ -11,7 +11,7 @@ enrollment series.
 ``` r
 
 # install.packages("pak")
-pak::pak("gitlab::localopen/enrollcast")
+pak::pak("localopen/enrollcast")
 ```
 
 ## Usage
@@ -79,11 +79,14 @@ school_history <- rbind(
   transform(history, school = "South", enrollment = enrollment + 20)
 )
 
-projections <- lapply(split(school_history, school_history$school), function(df) {
-  ratios <- progression_ratios(df)
-  base <- df[df$year == max(df$year), c("year", "grade", "enrollment")]
-  project_enrollment(base, ratios, horizon = 3, entry = rep(100, 3))
-})
+projections <- lapply(
+  split(school_history, school_history$school),
+  function(df) {
+    ratios <- progression_ratios(df)
+    base <- df[df$year == max(df$year), c("year", "grade", "enrollment")]
+    project_enrollment(base, ratios, horizon = 3, entry = rep(100, 3))
+  }
+)
 
 projections$North
 #>   year grade enrollment

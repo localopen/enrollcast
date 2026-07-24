@@ -11,7 +11,7 @@ enrollment series.
 ``` r
 
 # install.packages("pak")
-pak::pak("gitlab::localopen/enrollcast")
+pak::pak("localopen/enrollcast")
 ```
 
 ## Usage
@@ -79,11 +79,14 @@ school_history <- rbind(
   transform(history, school = "South", enrollment = enrollment + 20)
 )
 
-projections <- lapply(split(school_history, school_history$school), function(df) {
-  ratios <- progression_ratios(df)
-  base <- df[df$year == max(df$year), c("year", "grade", "enrollment")]
-  project_enrollment(base, ratios, horizon = 3, entry = rep(100, 3))
-})
+projections <- lapply(
+  split(school_history, school_history$school),
+  function(df) {
+    ratios <- progression_ratios(df)
+    base <- df[df$year == max(df$year), c("year", "grade", "enrollment")]
+    project_enrollment(base, ratios, horizon = 3, entry = rep(100, 3))
+  }
+)
 
 projections$North
 #>   year grade enrollment
@@ -102,13 +105,13 @@ projections$North
 
 ## All functions
 
-- [`progression_ratios()`](https://gitlab.com/localopen/enrollcast/reference/progression_ratios.md)
+- [`progression_ratios()`](https://github.com/localopen/enrollcast/reference/progression_ratios.md)
   : Compute grade progression ratios
-- [`project_enrollment()`](https://gitlab.com/localopen/enrollcast/reference/project_enrollment.md)
+- [`project_enrollment()`](https://github.com/localopen/enrollcast/reference/project_enrollment.md)
   : Project enrollment forward
-- [`projection_matrix()`](https://gitlab.com/localopen/enrollcast/reference/projection_matrix.md)
+- [`projection_matrix()`](https://github.com/localopen/enrollcast/reference/projection_matrix.md)
   : Build the projection matrix
-- [`swing_schedule()`](https://gitlab.com/localopen/enrollcast/reference/swing_schedule.md)
+- [`swing_schedule()`](https://github.com/localopen/enrollcast/reference/swing_schedule.md)
   : Build a swing/recovery projection schedule
 
 # Articles
@@ -116,4 +119,4 @@ projections$North
 ### All vignettes
 
 - [Projecting enrollment with
-  enrollcast](https://gitlab.com/localopen/enrollcast/articles/enrollcast.md):
+  enrollcast](https://github.com/localopen/enrollcast/articles/enrollcast.md):

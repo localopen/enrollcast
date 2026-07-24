@@ -4,7 +4,7 @@ Assembles the projection matrix used to advance enrollment. Progression
 ratios are placed on the sub-diagonal (each non-entry grade is fed by
 the grade below); the entry-grade row is left at zero because entry
 enrollment is supplied exogenously to
-[`project_enrollment()`](https://gitlab.com/localopen/enrollcast/reference/project_enrollment.md).
+[`project_enrollment()`](https://github.com/localopen/enrollcast/reference/project_enrollment.md).
 The ratios must form a single low-to-high chain: each `grade_to` must be
 the grade immediately above its `grade_from` in the resolved order.
 
@@ -20,7 +20,7 @@ projection_matrix(ratios, grade_order = NULL)
 
   A data frame with columns `grade_from`, `grade_to`, and `ratio`, as
   returned by
-  [`progression_ratios()`](https://gitlab.com/localopen/enrollcast/reference/progression_ratios.md).
+  [`progression_ratios()`](https://github.com/localopen/enrollcast/reference/progression_ratios.md).
   `grade_from` and `grade_to` must not be missing. `ratio` must be
   numeric, non-negative, and finite; an infinite ratio (from a
   zero-enrollment feeder) is rejected, while `NA`/`NaN` ratios (e.g.
