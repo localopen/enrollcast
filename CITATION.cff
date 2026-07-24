@@ -19,7 +19,7 @@ authors:
   given-names: Rory
   email: rory@rorylawless.com
   orcid: https://orcid.org/0009-0003-7688-309X
-repository-code: https://gitlab.com/localopen/enrollcast
+repository-code: https://github.com/localopen/enrollcast
 url: https://rorylawless.r-universe.dev/enrollcast
 contact:
 - family-names: Lawless
@@ -41,6 +41,35 @@ references:
   year: '2026'
   doi: 10.32614/R.manuals
   version: '>= 4.0'
+- type: software
+  title: cli
+  abstract: 'cli: Helpers for Developing Command Line Interfaces'
+  notes: Imports
+  url: https://cli.r-lib.org
+  repository: https://CRAN.R-project.org/package=cli
+  authors:
+  - family-names: Csárdi
+    given-names: Gábor
+    email: gabor@posit.co
+  year: '2026'
+  doi: 10.32614/CRAN.package.cli
+  version: '>= 3.4.0'
+- type: software
+  title: rlang
+  abstract: 'rlang: Functions for Base Types and Core R and ''Tidyverse'' Features'
+  notes: Imports
+  url: https://rlang.r-lib.org
+  repository: https://CRAN.R-project.org/package=rlang
+  authors:
+  - family-names: Henry
+    given-names: Lionel
+    email: lionel@posit.co
+  - family-names: Wickham
+    given-names: Hadley
+    email: hadley@posit.co
+  year: '2026'
+  doi: 10.32614/CRAN.package.rlang
+  version: '>= 1.0.0'
 - type: software
   title: stats
   abstract: 'R: A Language and Environment for Statistical Computing'

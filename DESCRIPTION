@@ -8,8 +8,8 @@ Description: Projects school enrollment using the cohort survival / grade
     compute progression ratios from historical grade-level enrollment and to 
     project future enrollment forward an arbitrary horizon.
 License: MIT + file LICENSE
-URL: https://rorylawless.r-universe.dev/enrollcast, https://gitlab.com/localopen/enrollcast
-BugReports: https://gitlab.com/localopen/enrollcast/-/issues
+URL: https://rorylawless.r-universe.dev/enrollcast, https://github.com/localopen/enrollcast
+BugReports: https://github.com/localopen/enrollcast/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0

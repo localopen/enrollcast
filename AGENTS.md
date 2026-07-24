@@ -19,7 +19,7 @@ and map when projecting multiple schools or sectors.
 - Full package check: `Rscript -e 'devtools::check(cran = TRUE)'`.
 - Format with `air format .`; if `air` is not on `PATH`, use
   `/Users/rory/.local/bin/air format .`.
-- GitLab CI only publishes `docs/` from `main`; it does not run tests or R CMD
+- GitHub CI only publishes `docs/` from `main`; it does not run tests or R CMD
   check. Verify locally.
 
 ## Projection invariants
