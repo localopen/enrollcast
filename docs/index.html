@@ -117,14 +117,30 @@
 <span>  year <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">2021</span><span class="op">:</span><span class="fl">2023</span>, each <span class="op">=</span> <span class="fl">3</span>, times <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  grade <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"K"</span>, <span class="st">"1"</span>, <span class="st">"2"</span><span class="op">)</span>, times <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"K"</span>, <span class="st">"1"</span>, <span class="st">"2"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  enrollment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="fl">100</span>, <span class="fl">90</span>, <span class="fl">80</span>, <span class="fl">110</span>, <span class="fl">95</span>, <span class="fl">88</span>, <span class="fl">120</span>, <span class="fl">99</span>, <span class="fl">91</span>,</span>
-<span>    <span class="fl">120</span>, <span class="fl">110</span>, <span class="fl">100</span>, <span class="fl">130</span>, <span class="fl">115</span>, <span class="fl">108</span>, <span class="fl">140</span>, <span class="fl">119</span>, <span class="fl">111</span></span>
+<span>    <span class="fl">100</span>,</span>
+<span>    <span class="fl">90</span>,</span>
+<span>    <span class="fl">80</span>,</span>
+<span>    <span class="fl">110</span>,</span>
+<span>    <span class="fl">95</span>,</span>
+<span>    <span class="fl">88</span>,</span>
+<span>    <span class="fl">120</span>,</span>
+<span>    <span class="fl">99</span>,</span>
+<span>    <span class="fl">91</span>,</span>
+<span>    <span class="fl">120</span>,</span>
+<span>    <span class="fl">110</span>,</span>
+<span>    <span class="fl">100</span>,</span>
+<span>    <span class="fl">130</span>,</span>
+<span>    <span class="fl">115</span>,</span>
+<span>    <span class="fl">108</span>,</span>
+<span>    <span class="fl">140</span>,</span>
+<span>    <span class="fl">119</span>,</span>
+<span>    <span class="fl">111</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">projections</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">school_history</span>, <span class="va">school_history</span><span class="op">$</span><span class="va">school</span><span class="op">)</span>,</span>
-<span>  <span class="kw">function</span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  \<span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">ratios</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/progression_ratios.html">progression_ratios</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
 <span>    <span class="va">base</span> <span class="op">&lt;-</span> <span class="va">df</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">year</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">year</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"year"</span>, <span class="st">"grade"</span>, <span class="st">"enrollment"</span><span class="op">)</span><span class="op">]</span></span>
 <span>    <span class="fu"><a href="reference/project_enrollment.html">project_enrollment</a></span><span class="op">(</span><span class="va">base</span>, <span class="va">ratios</span>, horizon <span class="op">=</span> <span class="fl">3</span>, entry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
@@ -190,6 +206,8 @@
 <li><a href="https://www.repostatus.org/#wip" class="external-link"><img src="https://www.repostatus.org/badges/latest/wip.svg" alt="Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public."></a></li>
 <li><a href="https://rorylawless.r-universe.dev/" class="external-link"><img src="https://rorylawless.r-universe.dev/badges/:name" alt="name status badge"></a></li>
 <li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
+<li><a href="https://github.com/localopen/enrollcast/actions/workflows/R-CMD-check.yaml"><img src="https://github.com/localopen/enrollcast/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://app.codecov.io/gh/localopen/enrollcast" class="external-link"><img src="https://codecov.io/gh/localopen/enrollcast/graph/badge.svg" alt="Codecov test coverage"></a></li>
 </ul>
 </div>
 

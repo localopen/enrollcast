@@ -79,14 +79,30 @@ school_history <- data.frame(
   year = rep(2021:2023, each = 3, times = 2),
   grade = factor(rep(c("K", "1", "2"), times = 6), levels = c("K", "1", "2")),
   enrollment = c(
-    100, 90, 80, 110, 95, 88, 120, 99, 91,
-    120, 110, 100, 130, 115, 108, 140, 119, 111
+    100,
+    90,
+    80,
+    110,
+    95,
+    88,
+    120,
+    99,
+    91,
+    120,
+    110,
+    100,
+    130,
+    115,
+    108,
+    140,
+    119,
+    111
   )
 )
 
 projections <- lapply(
   split(school_history, school_history$school),
-  function(df) {
+  \(df) {
     ratios <- progression_ratios(df)
     base <- df[df$year == max(df$year), c("year", "grade", "enrollment")]
     project_enrollment(base, ratios, horizon = 3, entry = rep(100, 3))

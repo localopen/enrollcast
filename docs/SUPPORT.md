@@ -19,9 +19,8 @@ help!](https://www.tidyverse.org/help/) section of the tidyverse site.
 Armed with your reprex, the next step is to figure out [where to
 ask](https://www.tidyverse.org/help/#where-to-ask).
 
-- If it’s a question: start with
-  [community.rstudio.com](https://community.rstudio.com/), and/or
-  StackOverflow. There are more people there to answer questions.
+- If it’s a question: start with [the localopen GitHub
+  Discussions](https://github.com/orgs/localopen/discussions).
 
 - If it’s a bug: you’re in the right place, [file an
   issue](https://github.com/localopen/enrollcast/issues/new).
