@@ -1,7 +1,6 @@
 # Contributing to enrollcast
 
 This outlines how to propose a change to enrollcast.
-For a detailed discussion on contributing to this and other tidyverse packages, please see the [development contributing guide](https://rstd.io/tidy-contrib) and our [code review principles](https://code-review.tidyverse.org/).
 
 ## Fixing typos
 
@@ -32,8 +31,8 @@ See our guide on [how to create a great issue](https://code-review.tidyverse.org
 
 ### Code style
 
-*   New code should follow the tidyverse [style guide](https://style.tidyverse.org). 
-    You can use [Air](https://posit-dev.github.io/air/) to apply this style, but please don't restyle code that has nothing to do with your PR.  
+<!-- *   New code should follow the tidyverse [style guide](https://style.tidyverse.org). 
+    You can use [Air](https://posit-dev.github.io/air/) to apply this style, but please don't restyle code that has nothing to do with your PR.   -->
 
 *  We use [roxygen2](https://cran.r-project.org/package=roxygen2), with [Markdown syntax](https://cran.r-project.org/web/packages/roxygen2/vignettes/rd-formatting.html), for documentation.  
 
