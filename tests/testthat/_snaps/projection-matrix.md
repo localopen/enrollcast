@@ -1,3 +1,12 @@
+# ratios must be a data frame or subclass
+
+    Code
+      projection_matrix(as.list(ratios))
+    Condition
+      Error in `projection_matrix()`:
+      ! `ratios` must be a data frame.
+      x You supplied a list.
+
 # projection_matrix errors on a missing feeding ratio
 
     Code

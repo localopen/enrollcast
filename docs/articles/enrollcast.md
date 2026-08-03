@@ -46,6 +46,13 @@ ratios
 #> 2          1        2 0.9678363
 ```
 
+Ratios are calculated only from observed adjacent calendar-year pairs.
+If the history contains a gap,
+[`progression_ratios()`](https://github.com/localopen/enrollcast/reference/progression_ratios.md)
+warns and uses the adjacent pairs on either side without constructing a
+transition across the missing period. A history with no adjacent year
+pair cannot produce progression ratios and is rejected.
+
 The ratios sit on the sub-diagonal of the projection matrix; the
 entry-grade row is zero because entry is supplied exogenously.
 

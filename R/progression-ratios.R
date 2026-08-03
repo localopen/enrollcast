@@ -116,6 +116,12 @@ prepare_enrollment <- function(
   grade_order,
   call = rlang::caller_env()
 ) {
+  check_data_frame(
+    data,
+    "data",
+    "enrollcast_error_data_type",
+    call = call
+  )
   check_enrollment_selectors(data, year, grade, enrollment, call = call)
   check_enrollment_values(data, enrollment, call = call)
   check_enrollment_grades(data, grade, call = call)
@@ -181,7 +187,8 @@ enrollment_matrix <- function(
 # Per-transition ratios: destination grade at t+1 over feeder grade at t.
 transition_ratios <- function(w, call = rlang::caller_env()) {
   years <- as.numeric(colnames(w))
-  trans <- which(diff(years) == 1)
+  year_differences <- diff(years)
+  trans <- which(year_differences == 1)
   if (length(trans) == 0) {
     cli::cli_abort(
       c(
@@ -191,6 +198,19 @@ transition_ratios <- function(w, call = rlang::caller_env()) {
       ),
       class = "enrollcast_error_no_transitions",
       call = call
+    )
+  }
+
+  gaps <- which(year_differences > 1)
+  if (length(gaps) > 0) {
+    gap_pairs <- paste0(years[gaps], " -> ", years[gaps + 1])
+    cli::cli_warn(
+      c(
+        "Historical years are not consecutive.",
+        "i" = "Only adjacent-year transitions will be used.",
+        "!" = "{cli::qty(length(gaps))}Gap{?s} between observed years: {.val {gap_pairs}}."
+      ),
+      class = "enrollcast_warning_year_gaps"
     )
   }
 
@@ -218,17 +238,24 @@ check_n_years <- function(n_years, call = rlang::caller_env()) {
 #' in that grade divided by enrollment in the grade below one year earlier,
 #' summarised across the available year-to-year transitions.
 #'
-#' @param data A long data frame of historical enrollment with one row per
-#'   grade per year. Enrollment may be `NA`, but non-missing values must be
-#'   finite and non-negative; `NaN` and infinite values are rejected. Year
-#'   values must be coercible to finite integers and must not be missing.
+#' Only transitions between observed consecutive calendar years are used. If
+#' the history has one or more calendar-year gaps but still contains an adjacent
+#' year pair, the gaps are reported in a warning and are not bridged. Histories
+#' with no adjacent year pair are rejected.
+#'
+#' @param data A long data frame or data-frame subclass of historical enrollment
+#'   with one row per grade per year. Enrollment may be `NA`, but non-missing
+#'   values must be finite and non-negative; `NaN` and infinite values are
+#'   rejected. Year values must be coercible to finite integers and must not be
+#'   missing.
 #' @param year,grade,enrollment Distinct, non-missing character scalars naming
 #'   columns in `data`. Defaults are `"year"`, `"grade"`, and `"enrollment"`.
 #' @param method How to summarise per-year ratios into one ratio per grade:
 #'   `"mean"` (default), `"geometric"`, `"median"`, `"last"` (most recent
 #'   transition only), or `"weighted"`.
-#' @param n_years Optional. Use only the most recent `n_years` transitions. If
-#'   `n_years` exceeds the number of available transitions, all are used.
+#' @param n_years Optional. Use only the most recent `n_years` available
+#'   adjacent-year transitions. If `n_years` exceeds the number of available
+#'   transitions, all are used.
 #' @param weights For `method = "weighted"`, a finite, non-missing,
 #'   non-negative numeric vector aligned most-recent to oldest, with one weight
 #'   per transition year used and a positive sum. Do not supply weights for

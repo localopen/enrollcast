@@ -5,6 +5,25 @@ is_count <- function(x) {
   is.numeric(x) && length(x) == 1 && is.finite(x) && x %% 1 == 0 && x >= 1
 }
 
+check_data_frame <- function(
+  x,
+  arg,
+  class,
+  call = rlang::caller_env()
+) {
+  if (!is.data.frame(x)) {
+    cli::cli_abort(
+      c(
+        "{.arg {arg}} must be a data frame.",
+        "x" = "You supplied {.obj_type_friendly {x}}."
+      ),
+      class = class,
+      call = call
+    )
+  }
+  invisible(x)
+}
+
 check_columns <- function(
   data,
   cols,

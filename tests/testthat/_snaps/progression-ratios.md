@@ -1,3 +1,12 @@
+# data must be a data frame or subclass
+
+    Code
+      progression_ratios(as.list(fx))
+    Condition
+      Error in `progression_ratios()`:
+      ! `data` must be a data frame.
+      x You supplied a list.
+
 # column selectors are distinct non-missing character scalars
 
     Code
@@ -33,6 +42,26 @@
       ! Cannot compute progression ratios without consecutive years.
       x `data` has no adjacent year pair.
       i Years present: 2021 and 2023.
+
+# partial year gaps warn and use only adjacent transitions
+
+    Code
+      invisible(progression_ratios(history))
+    Condition
+      Warning:
+      Historical years are not consecutive.
+      i Only adjacent-year transitions will be used.
+      ! Gap between observed years: "2021 -> 2023".
+
+# multiple year gaps are reported in one warning
+
+    Code
+      invisible(progression_ratios(history))
+    Condition
+      Warning:
+      Historical years are not consecutive.
+      i Only adjacent-year transitions will be used.
+      ! Gaps between observed years: "2020 -> 2022" and "2023 -> 2025".
 
 # duplicate grade-year rows are rejected
 

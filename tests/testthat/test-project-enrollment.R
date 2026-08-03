@@ -354,8 +354,8 @@ test_that("schedule matrices must contain valid numeric values", {
   invalid <- list(
     matrix(TRUE, 3, 3, dimnames = dimnames(valid)),
     matrix("1", 3, 3, dimnames = dimnames(valid)),
-    replace(valid, 1, NA_real_),
     replace(valid, 1, Inf),
+    replace(valid, 1, -Inf),
     replace(valid, 1, -1)
   )
   for (m in invalid) {
@@ -364,6 +364,98 @@ test_that("schedule matrices must contain valid numeric values", {
       class = "enrollcast_error_step_values"
     )
   }
+})
+
+test_that("schedule matrices allow missing coefficients with one warning", {
+  valid <- projection_matrix(proj_ratios())
+  missing <- valid
+  missing["2", "1"] <- NA_real_
+  undefined <- valid
+  undefined["2", "1"] <- NaN
+  schedule <- list(
+    list(matrix = missing, entry = 130),
+    list(matrix = undefined, entry = 140)
+  )
+
+  warnings <- list()
+  result <- withCallingHandlers(
+    project_enrollment(proj_base(), schedule = schedule),
+    warning = function(cnd) {
+      warnings[[length(warnings) + 1]] <<- cnd
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_length(warnings, 1)
+  expect_s3_class(warnings[[1]], "enrollcast_warning_schedule_na")
+  expect_identical(
+    result$enrollment[result$year == 1 & result$grade == "2"],
+    NA_real_
+  )
+  expect_true(is.nan(
+    result$enrollment[result$year == 2 & result$grade == "2"]
+  ))
+  expect_snapshot(
+    invisible(project_enrollment(proj_base(), schedule = schedule))
+  )
+})
+
+test_that("schedule structural errors pre-empt missing-value warnings", {
+  valid <- projection_matrix(proj_ratios())
+  missing <- valid
+  missing["2", "1"] <- NA_real_
+  inconsistent <- valid
+  dimnames(inconsistent) <- list(
+    c("PK", "K", "1"),
+    c("PK", "K", "1")
+  )
+  schedule <- list(
+    list(matrix = missing, entry = 130),
+    list(matrix = inconsistent, entry = 140)
+  )
+
+  warnings <- list()
+  expect_error(
+    withCallingHandlers(
+      check_schedule(schedule),
+      warning = function(cnd) {
+        warnings[[length(warnings) + 1]] <<- cnd
+      }
+    ),
+    class = "enrollcast_error_schedule_inconsistent"
+  )
+  expect_length(warnings, 0)
+})
+
+test_that("swing schedules preserve missing ratios through projection", {
+  ratios <- proj_ratios()
+  ratios$ratio[2] <- NA_real_
+  direct <- suppressWarnings(
+    project_enrollment(
+      proj_base(),
+      ratios,
+      horizon = 2,
+      entry = c(130, 140)
+    )
+  )
+
+  expect_warning(
+    schedule <- swing_schedule(
+      ratios,
+      horizon = 2,
+      swing_years = 0,
+      recovery = numeric(0),
+      entry = c(130, 140)
+    ),
+    class = "enrollcast_warning_ratio_na"
+  )
+  expect_warning(
+    scheduled <- project_enrollment(proj_base(), schedule = schedule),
+    class = "enrollcast_warning_schedule_na"
+  )
+
+  expect_identical(scheduled, direct)
+  expect_true(all(is.na(scheduled$enrollment[scheduled$grade == "2"])))
 })
 
 test_that("schedule matrix grade names must be present and unique", {

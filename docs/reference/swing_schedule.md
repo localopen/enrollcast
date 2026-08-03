@@ -26,8 +26,8 @@ swing_schedule(
 
 - ratios:
 
-  A data frame with columns `grade_from`, `grade_to`, and `ratio`, as
-  returned by
+  A data frame or data-frame subclass with columns `grade_from`,
+  `grade_to`, and `ratio`, as returned by
   [`progression_ratios()`](https://github.com/localopen/enrollcast/reference/progression_ratios.md).
   `grade_from` and `grade_to` must not be missing. `ratio` must be
   numeric, non-negative, and finite; an infinite ratio (from a

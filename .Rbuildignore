@@ -23,4 +23,5 @@ CITATION.cff
 ^README\.Rmd$
 ^[.]?air[.]toml$
 ^\.github$
+^\.nojekyll$
 ^codecov\.yml$

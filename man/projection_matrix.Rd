@@ -7,11 +7,12 @@
 projection_matrix(ratios, grade_order = NULL)
 }
 \arguments{
-\item{ratios}{A data frame with columns \code{grade_from}, \code{grade_to}, and
-\code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}. \code{grade_from} and \code{grade_to}
-must not be missing. \code{ratio} must be numeric, non-negative, and finite; an
-infinite ratio (from a zero-enrollment feeder) is rejected, while \code{NA}/\code{NaN}
-ratios (e.g. from sparse history) are kept in the matrix with a warning.}
+\item{ratios}{A data frame or data-frame subclass with columns \code{grade_from},
+\code{grade_to}, and \code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}. \code{grade_from}
+and \code{grade_to} must not be missing. \code{ratio} must be numeric, non-negative,
+and finite; an infinite ratio (from a zero-enrollment feeder) is rejected,
+while \code{NA}/\code{NaN} ratios (e.g. from sparse history) are kept in the matrix
+with a warning.}
 
 \item{grade_order}{Optional character vector giving the low-to-high grade
 order. If omitted, the order is reconstructed from the transition chain.

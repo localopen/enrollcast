@@ -66,10 +66,11 @@ summarised across the available year-to-year transitions.</p>
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>A long data frame of historical enrollment with one row per
-grade per year. Enrollment may be <code>NA</code>, but non-missing values must be
-finite and non-negative; <code>NaN</code> and infinite values are rejected. Year
-values must be coercible to finite integers and must not be missing.</p></dd>
+<dd><p>A long data frame or data-frame subclass of historical enrollment
+with one row per grade per year. Enrollment may be <code>NA</code>, but non-missing
+values must be finite and non-negative; <code>NaN</code> and infinite values are
+rejected. Year values must be coercible to finite integers and must not be
+missing.</p></dd>
 
 
 <dt id="arg-year-grade-enrollment">year, grade, enrollment<a class="anchor" aria-label="anchor" href="#arg-year-grade-enrollment"></a></dt>
@@ -84,8 +85,9 @@ transition only), or <code>"weighted"</code>.</p></dd>
 
 
 <dt id="arg-n-years">n_years<a class="anchor" aria-label="anchor" href="#arg-n-years"></a></dt>
-<dd><p>Optional. Use only the most recent <code>n_years</code> transitions. If
-<code>n_years</code> exceeds the number of available transitions, all are used.</p></dd>
+<dd><p>Optional. Use only the most recent <code>n_years</code> available
+adjacent-year transitions. If <code>n_years</code> exceeds the number of available
+transitions, all are used.</p></dd>
 
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
@@ -105,6 +107,13 @@ alphabetical ordering is used.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data frame with columns <code>grade_from</code>, <code>grade_to</code>, and <code>ratio</code>,
 one row per non-entry grade.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Only transitions between observed consecutive calendar years are used. If
+the history has one or more calendar-year gaps but still contains an adjacent
+year pair, the gaps are reported in a warning and are not bridged. Histories
+with no adjacent year pair are rejected.</p>
     </div>
 
     <div class="section level2">
