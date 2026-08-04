@@ -39,10 +39,13 @@ steps, each \verb{list(matrix = <square projection matrix>, entry = <NULL or a s
 \code{ratios} and \code{entry} must be \code{NULL} and \code{horizon} defaults to the schedule
 length. Each matrix must be numeric and square; non-missing coefficients
 must be finite and non-negative. \code{NA}/\code{NaN} coefficients are preserved and
-trigger a warning because they may propagate into later grades and years.
-Matrix row and column names must be unique and identical in the same order;
-all steps must use the same names. A step's \code{entry} must be \code{NULL} or one
-finite, non-negative number.}
+trigger a warning. A missing coefficient can make its output row missing.
+If that missing enrollment remains after entry replacement, the next
+matrix multiplication spreads missingness to all grade results because zero
+times a missing value is still missing. A non-\code{NULL} entry value then
+restores only the entry grade. Matrix row and column names must be unique
+and identical in the same order; all steps must use the same names. A
+step's \code{entry} must be \code{NULL} or one finite, non-negative number.}
 
 \item{start_year}{Optional integer label for the base year; output years run
 from \code{start_year + 1}. An explicit value and all resulting years must be

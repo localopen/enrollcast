@@ -56,7 +56,9 @@ summarised across the available year-to-year transitions.
 Only transitions between observed consecutive calendar years are used. If
 the history has one or more calendar-year gaps but still contains an adjacent
 year pair, the gaps are reported in a warning and are not bridged. Histories
-with no adjacent year pair are rejected.
+with no adjacent year pair are rejected. Gap detection examines the complete
+supplied history before \code{n_years} selects recent adjacent transitions, so an
+older gap still warns even when it lies outside the selected transitions.
 }
 \examples{
 history <- data.frame(

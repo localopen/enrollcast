@@ -241,7 +241,9 @@ check_n_years <- function(n_years, call = rlang::caller_env()) {
 #' Only transitions between observed consecutive calendar years are used. If
 #' the history has one or more calendar-year gaps but still contains an adjacent
 #' year pair, the gaps are reported in a warning and are not bridged. Histories
-#' with no adjacent year pair are rejected.
+#' with no adjacent year pair are rejected. Gap detection examines the complete
+#' supplied history before `n_years` selects recent adjacent transitions, so an
+#' older gap still warns even when it lies outside the selected transitions.
 #'
 #' @param data A long data frame or data-frame subclass of historical enrollment
 #'   with one row per grade per year. Enrollment may be `NA`, but non-missing

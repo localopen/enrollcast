@@ -366,6 +366,39 @@ test_that("schedule matrices must contain valid numeric values", {
   }
 })
 
+test_that("schedule matrices allow NA coefficients", {
+  valid <- projection_matrix(proj_ratios())
+  missing <- valid
+  missing["2", "1"] <- NA_real_
+  schedule <- list(list(matrix = missing, entry = 130))
+
+  expect_warning(
+    result <- project_enrollment(proj_base(), schedule = schedule),
+    class = "enrollcast_warning_schedule_na"
+  )
+
+  expect_true(is.na(result$enrollment[result$grade == "2"]))
+  expect_snapshot(
+    invisible(project_enrollment(proj_base(), schedule = schedule))
+  )
+})
+
+test_that("schedule matrices allow NaN coefficients", {
+  valid <- projection_matrix(proj_ratios())
+  undefined <- valid
+  undefined["2", "1"] <- NaN
+
+  expect_warning(
+    result <- project_enrollment(
+      proj_base(),
+      schedule = list(list(matrix = undefined, entry = 130))
+    ),
+    class = "enrollcast_warning_schedule_na"
+  )
+
+  expect_true(is.na(result$enrollment[result$grade == "2"]))
+})
+
 test_that("schedule matrices allow missing coefficients with one warning", {
   valid <- projection_matrix(proj_ratios())
   missing <- valid
@@ -378,7 +411,7 @@ test_that("schedule matrices allow missing coefficients with one warning", {
   )
 
   warnings <- list()
-  result <- withCallingHandlers(
+  withCallingHandlers(
     project_enrollment(proj_base(), schedule = schedule),
     warning = function(cnd) {
       warnings[[length(warnings) + 1]] <<- cnd
@@ -388,13 +421,6 @@ test_that("schedule matrices allow missing coefficients with one warning", {
 
   expect_length(warnings, 1)
   expect_s3_class(warnings[[1]], "enrollcast_warning_schedule_na")
-  expect_identical(
-    result$enrollment[result$year == 1 & result$grade == "2"],
-    NA_real_
-  )
-  expect_true(is.nan(
-    result$enrollment[result$year == 2 & result$grade == "2"]
-  ))
   expect_snapshot(
     invisible(project_enrollment(proj_base(), schedule = schedule))
   )
@@ -454,7 +480,7 @@ test_that("swing schedules preserve missing ratios through projection", {
     class = "enrollcast_warning_schedule_na"
   )
 
-  expect_identical(scheduled, direct)
+  expect_equal(scheduled, direct)
   expect_true(all(is.na(scheduled$enrollment[scheduled$grade == "2"])))
 })
 

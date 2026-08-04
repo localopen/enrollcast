@@ -100,10 +100,13 @@ steps, each <code>list(matrix = &lt;square projection matrix&gt;, entry = &lt;NU
 <code>ratios</code> and <code>entry</code> must be <code>NULL</code> and <code>horizon</code> defaults to the schedule
 length. Each matrix must be numeric and square; non-missing coefficients
 must be finite and non-negative. <code>NA</code>/<code>NaN</code> coefficients are preserved and
-trigger a warning because they may propagate into later grades and years.
-Matrix row and column names must be unique and identical in the same order;
-all steps must use the same names. A step's <code>entry</code> must be <code>NULL</code> or one
-finite, non-negative number.</p></dd>
+trigger a warning. A missing coefficient can make its output row missing.
+If that missing enrollment remains after entry replacement, the next
+matrix multiplication spreads missingness to all grade results because zero
+times a missing value is still missing. A non-<code>NULL</code> entry value then
+restores only the entry grade. Matrix row and column names must be unique
+and identical in the same order; all steps must use the same names. A
+step's <code>entry</code> must be <code>NULL</code> or one finite, non-negative number.</p></dd>
 
 
 <dt id="arg-start-year">start_year<a class="anchor" aria-label="anchor" href="#arg-start-year"></a></dt>

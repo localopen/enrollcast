@@ -249,10 +249,13 @@ run_projection <- function(steps, base_vec, out_years) {
 #'   `ratios` and `entry` must be `NULL` and `horizon` defaults to the schedule
 #'   length. Each matrix must be numeric and square; non-missing coefficients
 #'   must be finite and non-negative. `NA`/`NaN` coefficients are preserved and
-#'   trigger a warning because they may propagate into later grades and years.
-#'   Matrix row and column names must be unique and identical in the same order;
-#'   all steps must use the same names. A step's `entry` must be `NULL` or one
-#'   finite, non-negative number.
+#'   trigger a warning. A missing coefficient can make its output row missing.
+#'   If that missing enrollment remains after entry replacement, the next
+#'   matrix multiplication spreads missingness to all grade results because zero
+#'   times a missing value is still missing. A non-`NULL` entry value then
+#'   restores only the entry grade. Matrix row and column names must be unique
+#'   and identical in the same order; all steps must use the same names. A
+#'   step's `entry` must be `NULL` or one finite, non-negative number.
 #' @param start_year Optional integer label for the base year; output years run
 #'   from `start_year + 1`. An explicit value and all resulting years must be
 #'   within the R integer range. If `NULL`, the year is derived from `base$year`

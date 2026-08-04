@@ -112,6 +112,16 @@
       Error in `project_enrollment()`:
       ! Each `schedule` step matrix must contain non-negative numeric values or NA/NaN, without infinite values.
 
+# schedule matrices allow NA coefficients
+
+    Code
+      invisible(project_enrollment(proj_base(), schedule = schedule))
+    Condition
+      Warning:
+      1 missing matrix coefficient was found in `schedule`.
+      ! Affected step: 1.
+      i Missing coefficients are preserved and may propagate into later grades and years.
+
 # schedule matrices allow missing coefficients with one warning
 
     Code
