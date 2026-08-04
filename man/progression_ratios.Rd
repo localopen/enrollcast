@@ -16,10 +16,11 @@ progression_ratios(
 )
 }
 \arguments{
-\item{data}{A long data frame of historical enrollment with one row per
-grade per year. Enrollment may be \code{NA}, but non-missing values must be
-finite and non-negative; \code{NaN} and infinite values are rejected. Year
-values must be coercible to finite integers and must not be missing.}
+\item{data}{A long data frame or data-frame subclass of historical enrollment
+with one row per grade per year. Enrollment may be \code{NA}, but non-missing
+values must be finite and non-negative; \code{NaN} and infinite values are
+rejected. Year values must be coercible to finite integers and must not be
+missing.}
 
 \item{year, grade, enrollment}{Distinct, non-missing character scalars naming
 columns in \code{data}. Defaults are \code{"year"}, \code{"grade"}, and \code{"enrollment"}.}
@@ -28,8 +29,9 @@ columns in \code{data}. Defaults are \code{"year"}, \code{"grade"}, and \code{"e
 \code{"mean"} (default), \code{"geometric"}, \code{"median"}, \code{"last"} (most recent
 transition only), or \code{"weighted"}.}
 
-\item{n_years}{Optional. Use only the most recent \code{n_years} transitions. If
-\code{n_years} exceeds the number of available transitions, all are used.}
+\item{n_years}{Optional. Use only the most recent \code{n_years} available
+adjacent-year transitions. If \code{n_years} exceeds the number of available
+transitions, all are used.}
 
 \item{weights}{For \code{method = "weighted"}, a finite, non-missing,
 non-negative numeric vector aligned most-recent to oldest, with one weight
@@ -49,6 +51,14 @@ Calculates cohort survival / grade progression ratios from historical
 grade-level enrollment. For each non-entry grade, the ratio is enrollment
 in that grade divided by enrollment in the grade below one year earlier,
 summarised across the available year-to-year transitions.
+}
+\details{
+Only transitions between observed consecutive calendar years are used. If
+the history has one or more calendar-year gaps but still contains an adjacent
+year pair, the gaps are reported in a warning and are not bridged. Histories
+with no adjacent year pair are rejected. Gap detection examines the complete
+supplied history before \code{n_years} selects recent adjacent transitions, so an
+older gap still warns even when it lies outside the selected transitions.
 }
 \examples{
 history <- data.frame(

@@ -46,6 +46,16 @@ ratios
 #> 2          1        2 0.9678363
 ```
 
+Ratios are calculated only from observed adjacent calendar-year pairs.
+If the history contains a gap,
+[`progression_ratios()`](https://github.com/localopen/enrollcast/reference/progression_ratios.md)
+warns and uses the adjacent pairs on either side without constructing a
+transition across the missing period. A history with no adjacent year
+pair cannot produce progression ratios and is rejected. Gap detection
+examines the complete supplied history before `n_years` selects the most
+recent adjacent transitions, so an older gap still warns even when it
+lies outside the selected transitions.
+
 The ratios sit on the sub-diagonal of the projection matrix; the
 entry-grade row is zero because entry is supplied exogenously.
 
@@ -117,6 +127,14 @@ depressed enrollment that recovers after it returns.
 builds a per-year projection schedule: enrollment is held flat during
 the swing, scaled by recovery multipliers for a few years, then
 projected normally.
+
+Schedules may contain `NA` or `NaN` matrix coefficients. These values
+are preserved and warned about rather than imputed. A missing
+coefficient can make its output grade missing. If that missing
+enrollment remains after the entry grade is replaced, the next matrix
+multiplication spreads missingness to all grade results because zero
+times a missing value is still missing. A non-`NULL` entry value then
+restores only the entry grade.
 
 ``` r
 

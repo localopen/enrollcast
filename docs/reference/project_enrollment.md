@@ -31,8 +31,8 @@ project_enrollment(
 
 - ratios:
 
-  A data frame with columns `grade_from`, `grade_to`, and `ratio`, as
-  returned by
+  A data frame or data-frame subclass with columns `grade_from`,
+  `grade_to`, and `ratio`, as returned by
   [`progression_ratios()`](https://github.com/localopen/enrollcast/reference/progression_ratios.md).
   `grade_from` and `grade_to` must not be missing. `ratio` must be
   numeric, non-negative, and finite; an infinite ratio (from a
@@ -58,11 +58,17 @@ project_enrollment(
   as produced by
   [`swing_schedule()`](https://github.com/localopen/enrollcast/reference/swing_schedule.md).
   When supplied, `ratios` and `entry` must be `NULL` and `horizon`
-  defaults to the schedule length. Each matrix must be numeric, square,
-  and contain only finite, non-missing, non-negative coefficients. Its
-  row and column names must be unique and identical in the same order;
-  all steps must use the same names. A step's `entry` must be `NULL` or
-  one finite, non-negative number.
+  defaults to the schedule length. Each matrix must be numeric and
+  square; non-missing coefficients must be finite and non-negative.
+  `NA`/`NaN` coefficients are preserved and trigger a warning. A missing
+  coefficient can make its output row missing. If that missing
+  enrollment remains after entry replacement, the next matrix
+  multiplication spreads missingness to all grade results because zero
+  times a missing value is still missing. A non-`NULL` entry value then
+  restores only the entry grade. Matrix row and column names must be
+  unique and identical in the same order; all steps must use the same
+  names. A step's `entry` must be `NULL` or one finite, non-negative
+  number.
 
 - start_year:
 

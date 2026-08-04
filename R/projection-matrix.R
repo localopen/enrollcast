@@ -210,11 +210,12 @@ warn_na_ratios <- function(ratio) {
 #' low-to-high chain: each `grade_to` must be the grade immediately above its
 #' `grade_from` in the resolved order.
 #'
-#' @param ratios A data frame with columns `grade_from`, `grade_to`, and
-#'   `ratio`, as returned by [progression_ratios()]. `grade_from` and `grade_to`
-#'   must not be missing. `ratio` must be numeric, non-negative, and finite; an
-#'   infinite ratio (from a zero-enrollment feeder) is rejected, while `NA`/`NaN`
-#'   ratios (e.g. from sparse history) are kept in the matrix with a warning.
+#' @param ratios A data frame or data-frame subclass with columns `grade_from`,
+#'   `grade_to`, and `ratio`, as returned by [progression_ratios()]. `grade_from`
+#'   and `grade_to` must not be missing. `ratio` must be numeric, non-negative,
+#'   and finite; an infinite ratio (from a zero-enrollment feeder) is rejected,
+#'   while `NA`/`NaN` ratios (e.g. from sparse history) are kept in the matrix
+#'   with a warning.
 #' @param grade_order Optional character vector giving the low-to-high grade
 #'   order. If omitted, the order is reconstructed from the transition chain.
 #'   Every non-entry grade in `grade_order` must appear as a `grade_to` in
@@ -231,6 +232,11 @@ warn_na_ratios <- function(ratio) {
 #' )
 #' projection_matrix(ratios)
 projection_matrix <- function(ratios, grade_order = NULL) {
+  check_data_frame(
+    ratios,
+    "ratios",
+    "enrollcast_error_ratios_type"
+  )
   check_columns(ratios, c("grade_from", "grade_to", "ratio"), "ratios")
   check_ratio_values(ratios$ratio)
   from <- as.character(ratios$grade_from)

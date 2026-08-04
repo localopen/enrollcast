@@ -74,11 +74,12 @@ must be finite, non-missing, and non-negative.</p></dd>
 
 
 <dt id="arg-ratios">ratios<a class="anchor" aria-label="anchor" href="#arg-ratios"></a></dt>
-<dd><p>A data frame with columns <code>grade_from</code>, <code>grade_to</code>, and
-<code>ratio</code>, as returned by <code><a href="progression_ratios.html">progression_ratios()</a></code>. <code>grade_from</code> and <code>grade_to</code>
-must not be missing. <code>ratio</code> must be numeric, non-negative, and finite; an
-infinite ratio (from a zero-enrollment feeder) is rejected, while <code>NA</code>/<code>NaN</code>
-ratios (e.g. from sparse history) are kept in the matrix with a warning.</p></dd>
+<dd><p>A data frame or data-frame subclass with columns <code>grade_from</code>,
+<code>grade_to</code>, and <code>ratio</code>, as returned by <code><a href="progression_ratios.html">progression_ratios()</a></code>. <code>grade_from</code>
+and <code>grade_to</code> must not be missing. <code>ratio</code> must be numeric, non-negative,
+and finite; an infinite ratio (from a zero-enrollment feeder) is rejected,
+while <code>NA</code>/<code>NaN</code> ratios (e.g. from sparse history) are kept in the matrix
+with a warning.</p></dd>
 
 
 <dt id="arg-horizon">horizon<a class="anchor" aria-label="anchor" href="#arg-horizon"></a></dt>
@@ -97,10 +98,15 @@ issued.</p></dd>
 <dd><p>Optional prebuilt projection schedule: a list of per-year
 steps, each <code>list(matrix = &lt;square projection matrix&gt;, entry = &lt;NULL or a single number&gt;)</code>, as produced by <code><a href="swing_schedule.html">swing_schedule()</a></code>. When supplied,
 <code>ratios</code> and <code>entry</code> must be <code>NULL</code> and <code>horizon</code> defaults to the schedule
-length. Each matrix must be numeric, square, and contain only finite,
-non-missing, non-negative coefficients. Its row and column names must be
-unique and identical in the same order; all steps must use the same names.
-A step's <code>entry</code> must be <code>NULL</code> or one finite, non-negative number.</p></dd>
+length. Each matrix must be numeric and square; non-missing coefficients
+must be finite and non-negative. <code>NA</code>/<code>NaN</code> coefficients are preserved and
+trigger a warning. A missing coefficient can make its output row missing.
+If that missing enrollment remains after entry replacement, the next
+matrix multiplication spreads missingness to all grade results because zero
+times a missing value is still missing. A non-<code>NULL</code> entry value then
+restores only the entry grade. Matrix row and column names must be unique
+and identical in the same order; all steps must use the same names. A
+step's <code>entry</code> must be <code>NULL</code> or one finite, non-negative number.</p></dd>
 
 
 <dt id="arg-start-year">start_year<a class="anchor" aria-label="anchor" href="#arg-start-year"></a></dt>

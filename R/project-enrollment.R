@@ -105,12 +105,11 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
 check_step_matrix_values <- function(m, call = rlang::caller_env()) {
   if (
     !is.numeric(m) ||
-      anyNA(m) ||
-      !all(is.finite(m)) ||
-      any(m < 0)
+      any(is.infinite(m)) ||
+      any(m < 0, na.rm = TRUE)
   ) {
     cli::cli_abort(
-      "Each {.arg schedule} step {.field matrix} must contain finite, non-missing, non-negative numeric values.",
+      "Each {.arg schedule} step {.field matrix} must contain non-negative numeric values or {.val {NA}}/{.val {NaN}}, without infinite values.",
       class = "enrollcast_error_step_values",
       call = call
     )
@@ -184,6 +183,24 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
       call = call
     )
   }
+
+  missing_by_step <- vapply(
+    schedule,
+    function(step) sum(is.na(step$matrix)),
+    numeric(1)
+  )
+  affected <- which(missing_by_step > 0)
+  n_missing <- sum(missing_by_step)
+  if (n_missing > 0) {
+    cli::cli_warn(
+      c(
+        "{cli::qty(n_missing)}{n_missing} missing matrix coefficient{?s} {?was/were} found in {.arg schedule}.",
+        "!" = "{cli::qty(length(affected))}Affected step{?s}: {.val {affected}}.",
+        "i" = "Missing coefficients are preserved and may propagate into later grades and years."
+      ),
+      class = "enrollcast_warning_schedule_na"
+    )
+  }
   go
 }
 
@@ -230,10 +247,15 @@ run_projection <- function(steps, base_vec, out_years) {
 #'   steps, each `list(matrix = <square projection matrix>, entry = <NULL or a
 #'   single number>)`, as produced by [swing_schedule()]. When supplied,
 #'   `ratios` and `entry` must be `NULL` and `horizon` defaults to the schedule
-#'   length. Each matrix must be numeric, square, and contain only finite,
-#'   non-missing, non-negative coefficients. Its row and column names must be
-#'   unique and identical in the same order; all steps must use the same names.
-#'   A step's `entry` must be `NULL` or one finite, non-negative number.
+#'   length. Each matrix must be numeric and square; non-missing coefficients
+#'   must be finite and non-negative. `NA`/`NaN` coefficients are preserved and
+#'   trigger a warning. A missing coefficient can make its output row missing.
+#'   If that missing enrollment remains after entry replacement, the next
+#'   matrix multiplication spreads missingness to all grade results because zero
+#'   times a missing value is still missing. A non-`NULL` entry value then
+#'   restores only the entry grade. Matrix row and column names must be unique
+#'   and identical in the same order; all steps must use the same names. A
+#'   step's `entry` must be `NULL` or one finite, non-negative number.
 #' @param start_year Optional integer label for the base year; output years run
 #'   from `start_year + 1`. An explicit value and all resulting years must be
 #'   within the R integer range. If `NULL`, the year is derived from `base$year`

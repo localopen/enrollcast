@@ -19,11 +19,12 @@ columns \code{grade} and \code{enrollment} (optionally \code{year}), or a named 
 vector. Grade values or vector names must be present and unique. Enrollment
 must be finite, non-missing, and non-negative.}
 
-\item{ratios}{A data frame with columns \code{grade_from}, \code{grade_to}, and
-\code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}. \code{grade_from} and \code{grade_to}
-must not be missing. \code{ratio} must be numeric, non-negative, and finite; an
-infinite ratio (from a zero-enrollment feeder) is rejected, while \code{NA}/\code{NaN}
-ratios (e.g. from sparse history) are kept in the matrix with a warning.}
+\item{ratios}{A data frame or data-frame subclass with columns \code{grade_from},
+\code{grade_to}, and \code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}. \code{grade_from}
+and \code{grade_to} must not be missing. \code{ratio} must be numeric, non-negative,
+and finite; an infinite ratio (from a zero-enrollment feeder) is rejected,
+while \code{NA}/\code{NaN} ratios (e.g. from sparse history) are kept in the matrix
+with a warning.}
 
 \item{horizon}{Number of years to project (a positive integer).}
 
@@ -36,10 +37,15 @@ issued.}
 \item{schedule}{Optional prebuilt projection schedule: a list of per-year
 steps, each \verb{list(matrix = <square projection matrix>, entry = <NULL or a single number>)}, as produced by \code{\link[=swing_schedule]{swing_schedule()}}. When supplied,
 \code{ratios} and \code{entry} must be \code{NULL} and \code{horizon} defaults to the schedule
-length. Each matrix must be numeric, square, and contain only finite,
-non-missing, non-negative coefficients. Its row and column names must be
-unique and identical in the same order; all steps must use the same names.
-A step's \code{entry} must be \code{NULL} or one finite, non-negative number.}
+length. Each matrix must be numeric and square; non-missing coefficients
+must be finite and non-negative. \code{NA}/\code{NaN} coefficients are preserved and
+trigger a warning. A missing coefficient can make its output row missing.
+If that missing enrollment remains after entry replacement, the next
+matrix multiplication spreads missingness to all grade results because zero
+times a missing value is still missing. A non-\code{NULL} entry value then
+restores only the entry grade. Matrix row and column names must be unique
+and identical in the same order; all steps must use the same names. A
+step's \code{entry} must be \code{NULL} or one finite, non-negative number.}
 
 \item{start_year}{Optional integer label for the base year; output years run
 from \code{start_year + 1}. An explicit value and all resulting years must be

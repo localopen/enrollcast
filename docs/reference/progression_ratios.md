@@ -24,10 +24,11 @@ progression_ratios(
 
 - data:
 
-  A long data frame of historical enrollment with one row per grade per
-  year. Enrollment may be `NA`, but non-missing values must be finite
-  and non-negative; `NaN` and infinite values are rejected. Year values
-  must be coercible to finite integers and must not be missing.
+  A long data frame or data-frame subclass of historical enrollment with
+  one row per grade per year. Enrollment may be `NA`, but non-missing
+  values must be finite and non-negative; `NaN` and infinite values are
+  rejected. Year values must be coercible to finite integers and must
+  not be missing.
 
 - year, grade, enrollment:
 
@@ -42,8 +43,9 @@ progression_ratios(
 
 - n_years:
 
-  Optional. Use only the most recent `n_years` transitions. If `n_years`
-  exceeds the number of available transitions, all are used.
+  Optional. Use only the most recent `n_years` available adjacent-year
+  transitions. If `n_years` exceeds the number of available transitions,
+  all are used.
 
 - weights:
 
@@ -61,6 +63,16 @@ progression_ratios(
 
 A data frame with columns `grade_from`, `grade_to`, and `ratio`, one row
 per non-entry grade.
+
+## Details
+
+Only transitions between observed consecutive calendar years are used.
+If the history has one or more calendar-year gaps but still contains an
+adjacent year pair, the gaps are reported in a warning and are not
+bridged. Histories with no adjacent year pair are rejected. Gap
+detection examines the complete supplied history before `n_years`
+selects recent adjacent transitions, so an older gap still warns even
+when it lies outside the selected transitions.
 
 ## Examples
 

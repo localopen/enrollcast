@@ -14,6 +14,29 @@ test_that("progression_ratios returns the canonical ordered structure", {
   expect_equal(r$ratio, c(0.925, (88 / 90 + 91 / 95) / 2))
 })
 
+test_that("data must be a data frame or subclass", {
+  fx <- enrollcast_fixture()
+  invalid <- list(
+    as.list(fx),
+    as.matrix(fx),
+    c(year = 2021, grade = 1, enrollment = 100),
+    NULL
+  )
+  for (data in invalid) {
+    expect_error(
+      progression_ratios(data),
+      class = "enrollcast_error_data_type"
+    )
+  }
+  expect_snapshot(progression_ratios(as.list(fx)), error = TRUE)
+
+  subclass <- structure(fx, class = c("enrollcast_test_df", "data.frame"))
+  expect_equal(
+    progression_ratios(subclass),
+    progression_ratios(fx)
+  )
+})
+
 test_that("geometric, median, and last methods work", {
   fx <- enrollcast_fixture()
   expect_equal(
@@ -91,6 +114,64 @@ test_that("non-consecutive years yield no transitions", {
     progression_ratios(fx),
     class = "enrollcast_error_no_transitions"
   )
+})
+
+test_that("partial year gaps warn and use only adjacent transitions", {
+  history <- data.frame(
+    year = rep(c(2020, 2021, 2023, 2024), each = 3),
+    grade = factor(
+      rep(c("K", "1", "2"), times = 4),
+      levels = c("K", "1", "2")
+    ),
+    enrollment = c(
+      100,
+      80,
+      60,
+      110,
+      90,
+      70,
+      200,
+      150,
+      100,
+      220,
+      165,
+      120
+    )
+  )
+
+  expect_snapshot(invisible(progression_ratios(history)))
+  expect_warning(
+    ratios <- progression_ratios(history),
+    class = "enrollcast_warning_year_gaps"
+  )
+  expect_equal(ratios$ratio, c((0.9 + 0.825) / 2, (0.875 + 0.8) / 2))
+
+  recent <- suppressWarnings(progression_ratios(history, n_years = 1))
+  expect_equal(recent$ratio, c(0.825, 0.8))
+  expect_no_warning(progression_ratios(enrollcast_fixture()))
+})
+
+test_that("multiple year gaps are reported in one warning", {
+  history <- data.frame(
+    year = rep(c(2020, 2022, 2023, 2025, 2026), each = 3),
+    grade = factor(
+      rep(c("K", "1", "2"), times = 5),
+      levels = c("K", "1", "2")
+    ),
+    enrollment = seq_len(15) + 100
+  )
+
+  warnings <- list()
+  withCallingHandlers(
+    progression_ratios(history),
+    warning = function(cnd) {
+      warnings[[length(warnings) + 1]] <<- cnd
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_length(warnings, 1)
+  expect_s3_class(warnings[[1]], "enrollcast_warning_year_gaps")
+  expect_snapshot(invisible(progression_ratios(history)))
 })
 
 test_that("duplicate grade-year rows are rejected", {

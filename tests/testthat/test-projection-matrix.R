@@ -17,6 +17,29 @@ test_that("projection_matrix builds the canonical sub-diagonal matrix", {
   )
 })
 
+test_that("ratios must be a data frame or subclass", {
+  ratios <- ratios_fixture()
+  invalid <- list(
+    as.list(ratios),
+    as.matrix(ratios),
+    c(grade_from = "K", grade_to = "1", ratio = 0.9),
+    NULL
+  )
+  for (x in invalid) {
+    expect_error(
+      projection_matrix(x),
+      class = "enrollcast_error_ratios_type"
+    )
+  }
+  expect_snapshot(projection_matrix(as.list(ratios)), error = TRUE)
+
+  subclass <- structure(
+    ratios,
+    class = c("enrollcast_test_df", "data.frame")
+  )
+  expect_equal(projection_matrix(subclass), projection_matrix(ratios))
+})
+
 test_that("a ratio of zero is kept, not treated as missing", {
   r <- ratios_fixture()
   r$ratio[2] <- 0
