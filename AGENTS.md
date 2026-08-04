@@ -19,8 +19,12 @@ and map when projecting multiple schools or sectors.
 - Full package check: `Rscript -e 'devtools::check(cran = TRUE)'`.
 - Format with `air format .`; if `air` is not on `PATH`, use
   `/Users/rory/.local/bin/air format .`.
-- GitHub CI only publishes `docs/` from `main`; it does not run tests or R CMD
-  check. Verify locally.
+- GitHub Actions runs `R-CMD-check.yaml` (full `R CMD check` across macOS and
+  Windows on R release plus Ubuntu on R devel, release, and `oldrel-1`) and
+  `test-coverage.yaml` (covr to Codecov). Both fire on every pull request and on
+  pushes to `main`, and failing snapshots upload as artifacts. Still verify
+  locally first: the matrix is slow, and Windows and `oldrel-1` are where
+  surprises land. No workflow builds or publishes the pkgdown site.
 
 ## Projection invariants
 
@@ -43,6 +47,12 @@ and map when projecting multiple schools or sectors.
 - Grade order is semantic. Prefer an ordered factor or explicit `grade_order`;
   mixed labels such as `K`, `1`, `2` otherwise fall back to alphabetical order
   with a warning.
+- Missingness spreads. A missing ratio makes its output row missing, and because
+  `0 * NA` is `NA`, the next matrix product carries that missingness into every
+  grade. A non-`NULL` `entry` restores only the entry grade.
+- `progression_ratios()` scans the complete supplied history for calendar-year
+  gaps before `n_years` selects recent transitions, so an older gap still warns
+  even when it falls outside the selected window.
 
 ## Generated sources
 
@@ -52,6 +62,10 @@ and map when projecting multiple schools or sectors.
   edit generated `README.md` directly.
 - `data-raw/synthetic_enrollment.R` generates
   `inst/extdata/synthetic_enrollment.csv`.
+- `docs/` is a checked-in pkgdown site built from `_pkgdown.yml`. Nothing in CI
+  rebuilds it, so after changing roxygen, `README.Rmd`, or the vignette, run
+  `Rscript -e 'pkgdown::build_site()'` or the site goes stale. pkgdown is in the
+  renv library but is deliberately not a `DESCRIPTION` dependency.
 
 ## Code and tests
 
@@ -66,5 +80,9 @@ and map when projecting multiple schools or sectors.
   weakening either assertion.
 - Use `expect_identical()` for exact structure, integers, and characters;
   retain `expect_equal()` for floating-point ratios and enrollments.
+- Assert missing projection results by missingness, not by `NA` versus `NaN`
+  payload identity; that distinction is not portable across the CI matrix.
+- `Depends: R (>= 4.0)` and the `oldrel-1` CI leg rule out the native pipe `|>`
+  and `\(x)` lambdas (both R 4.1+). The codebase currently uses neither.
 - `enrollcast_fixture()` in `tests/testthat/helper-enrollcast.R` is the shared
   ordered K-2, 2021-2023 fixture.
