@@ -1,6 +1,6 @@
 [lint]
-select = ["DPLYR", "CORR", "SUSP", "PERF", "READ", "TESTTHAT"]
-fixable = ["DPLYR", "CORR", "SUSP", "PERF", "READ", "TESTTHAT"]
+select = ["CORR", "SUSP", "PERF", "READ", "TESTTHAT", "COMM"]
+fixable = ["CORR", "SUSP", "PERF", "READ", "TESTTHAT", "COMM"]
 default-exclude = true
 
 [lint.assignment]

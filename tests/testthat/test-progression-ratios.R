@@ -399,7 +399,9 @@ test_that("year is ordered numerically, not lexically, for character/factor year
 test_that("an ordered grade factor is honoured without re-resolving order", {
   fx <- enrollcast_fixture()
   fx$grade <- ordered(as.character(fx$grade), levels = c("K", "1", "2"))
-  expect_no_warning(r <- progression_ratios(fx))
+  expect_no_warning({
+    r <- progression_ratios(fx)
+  })
   expect_identical(r$grade_from, c("K", "1"))
   expect_equal(r$ratio[1], 0.925)
 })
@@ -418,7 +420,9 @@ test_that("unused levels in an ordered grade factor are dropped", {
     as.character(fx$grade),
     levels = c("K", "1", "2", "3", "4")
   )
-  expect_no_warning(r <- progression_ratios(fx))
+  expect_no_warning({
+    r <- progression_ratios(fx)
+  })
   expect_identical(r$grade_from, c("K", "1"))
   expect_identical(r$grade_to, c("1", "2"))
 })

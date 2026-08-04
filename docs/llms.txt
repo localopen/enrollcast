@@ -74,30 +74,13 @@ LEAs, split and map:
 
 ``` r
 
+# fmt: skip
 school_history <- data.frame(
   school = rep(c("North", "South"), each = 9),
   year = rep(2021:2023, each = 3, times = 2),
   grade = factor(rep(c("K", "1", "2"), times = 6), levels = c("K", "1", "2")),
-  enrollment = c(
-    100,
-    90,
-    80,
-    110,
-    95,
-    88,
-    120,
-    99,
-    91,
-    120,
-    110,
-    100,
-    130,
-    115,
-    108,
-    140,
-    119,
-    111
-  )
+  enrollment = c(100, 90, 80, 110, 95, 88, 120, 99, 91, 120, 
+                 110, 100, 130, 115, 108, 140, 119, 111)
 )
 
 projections <- lapply(
