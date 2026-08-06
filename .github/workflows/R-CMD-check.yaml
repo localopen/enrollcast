@@ -3,11 +3,38 @@
 on:
   push:
     branches: [main, master]
+    paths-ignore: # keep in sync with the pull_request list below
+      - ".claude/**"
+      - ".vscode/**"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - "_pkgdown.yml"
+      - "CITATION.cff"
+      - "LICENSE.md"
+      - ".gitignore"
+      - "air.toml"
+      - "**/*.Rproj"
   pull_request:
+    paths-ignore: # keep in sync with the push list above
+      - ".claude/**"
+      - ".vscode/**"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - "_pkgdown.yml"
+      - "CITATION.cff"
+      - "LICENSE.md"
+      - ".gitignore"
+      - "air.toml"
+      - "**/*.Rproj"
+  workflow_dispatch: # manual escape hatch if a filter skips something it shouldn't
 
 name: R-CMD-check.yaml
 
 permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   R-CMD-check:

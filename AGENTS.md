@@ -6,10 +6,13 @@ and map when projecting multiple schools or sectors.
 
 ## Setup and verification
 
-- Run R commands from the package root. `.Rprofile` activates the project renv;
-  running elsewhere can silently use the wrong library.
-- On a fresh checkout run `Rscript -e 'renv::restore()'`. Do not run
-  `renv::snapshot()` merely to install optional development tools.
+- Run R commands from the package root so package-relative tooling resolves the
+  correct `DESCRIPTION`, tests, vignettes, and generated files.
+- Runtime and test dependencies are declared in `DESCRIPTION`. On a fresh
+  checkout, install them with
+  `Rscript -e 'devtools::install_deps(dependencies = TRUE)'`; install optional
+  development tools such as `pkgdown`, `covr`, and `air` in the normal user
+  library as needed.
 - This machine needs
   `export RSTUDIO_PANDOC=/Applications/quarto/bin/tools/aarch64` before devtools
   commands that load the vignette.
@@ -21,11 +24,14 @@ and map when projecting multiple schools or sectors.
   `/Users/rory/.local/bin/air format .`.
 - GitHub Actions runs `R-CMD-check.yaml` (full `R CMD check` across macOS and
   Windows on R release plus Ubuntu on R devel, release, and `oldrel-1`) and
-  `test-coverage.yaml` (covr to Codecov). Both fire on every pull request and on
-  pushes to `main`, and failing snapshots upload as artifacts. Still verify
-  locally first: the matrix is slow, and Windows and `oldrel-1` are where
-  surprises land. `pkgdown.yaml` builds the site on the same triggers and, on
-  non-PR runs, deploys it to the `gh-pages` branch.
+  `test-coverage.yaml` (covr to Codecov). On pull requests and pushes to `main`,
+  path filters skip these workflows when every changed file is irrelevant to
+  the check; failing snapshots upload as artifacts. Still verify locally first:
+  the matrix is slow, and Windows and `oldrel-1` are where surprises land.
+  `pkgdown.yaml` similarly skips changes that cannot affect the site, always
+  runs for published releases, and deploys non-PR runs to the `gh-pages`
+  branch. All three workflows support manual dispatch when a filtered change
+  needs explicit verification.
 
 ## Projection invariants
 

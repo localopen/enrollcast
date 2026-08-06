@@ -3,7 +3,33 @@
 on:
   push:
     branches: [main, master]
+    # NB: _pkgdown.yml is deliberately absent — a url or theme change must
+    # rebuild. tests/ is present because pkgdown never runs the test suite.
+    paths-ignore: # keep in sync with the pull_request list below
+      - ".claude/**"
+      - ".vscode/**"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - "CITATION.cff"
+      - ".gitignore"
+      - "air.toml"
+      - "jarl.toml"
+      - "**/*.Rproj"
+      - "tests/**"
+      - "codecov.yml"
   pull_request:
+    paths-ignore: # keep in sync with the push list above
+      - ".claude/**"
+      - ".vscode/**"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - "CITATION.cff"
+      - ".gitignore"
+      - "air.toml"
+      - "jarl.toml"
+      - "**/*.Rproj"
+      - "tests/**"
+      - "codecov.yml"
   release:
     types: [published]
   workflow_dispatch:
