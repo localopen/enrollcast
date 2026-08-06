@@ -356,3 +356,5 @@ as_entry_vector <- function(entry, horizon, call = rlang::caller_env()) {
   }
   vals
 }
+
+# ci-trigger probe: throwaway change to a non-ignored path
