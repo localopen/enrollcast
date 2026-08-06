@@ -1,7 +1,7 @@
 # Validate horizon and return it as an integer.
 check_horizon <- function(horizon, call = rlang::caller_env()) {
   if (!is_count(horizon) || horizon > .Machine$integer.max) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg horizon} must be a single positive integer.",
         "x" = "You supplied {.obj_type_friendly {horizon}} of length {length(horizon)}."
@@ -20,14 +20,14 @@ check_start_year <- function(start_year, call = rlang::caller_env()) {
       !is.finite(start_year) ||
       start_year %% 1 != 0
   ) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg start_year} must be one finite integer.",
       class = "enrollcast_error_start_year",
       call = call
     )
   }
   if (abs(start_year) > .Machine$integer.max) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg start_year} must be within the R integer range.",
       class = "enrollcast_error_start_year",
       call = call
@@ -45,7 +45,7 @@ entry_values <- function(
   call = rlang::caller_env()
 ) {
   if (is.null(entry)) {
-    cli::cli_warn(
+    ec_warn(
       c(
         "{.arg entry} not supplied.",
         "i" = "Holding entry grade {.field {entry_grade}} constant at {.val {base_vec[[entry_grade]]}} for all {horizon} projected year{?s}."
@@ -66,7 +66,7 @@ check_step_entry <- function(entry, call = rlang::caller_env()) {
         is.finite(entry) &&
         entry >= 0)
   ) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "Each {.arg schedule} step {.field entry} must be {.code NULL} or one finite, non-negative number.",
         "x" = "Got {.obj_type_friendly {entry}} of length {length(entry)}."
@@ -79,7 +79,7 @@ check_step_entry <- function(entry, call = rlang::caller_env()) {
 
 check_step_matrix <- function(step, call = rlang::caller_env()) {
   if (!is.list(step) || is.null(step$matrix)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "Each {.arg schedule} step must be a {.cls list} with a {.field matrix} element.",
         "x" = "Got {.obj_type_friendly {step}}."
@@ -90,7 +90,7 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   }
   m <- step$matrix
   if (!is.matrix(m) || nrow(m) != ncol(m)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "Each {.arg schedule} step {.field matrix} must be square.",
         "x" = "This matrix is {nrow(m)}x{ncol(m)}."
@@ -108,7 +108,7 @@ check_step_matrix_values <- function(m, call = rlang::caller_env()) {
       any(is.infinite(m)) ||
       any(m < 0, na.rm = TRUE)
   ) {
-    cli::cli_abort(
+    ec_abort(
       "Each {.arg schedule} step {.field matrix} must contain non-negative numeric values or {.val {NA}}/{.val {NaN}}, without infinite values.",
       class = "enrollcast_error_step_values",
       call = call
@@ -120,7 +120,7 @@ check_step_dimnames <- function(m, call = rlang::caller_env()) {
   rn <- rownames(m)
   cn <- colnames(m)
   if (is.null(rn) || is.null(cn)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "Each {.arg schedule} step {.field matrix} must have present, unique, identical row and column names in the same order.",
         "x" = "This matrix is missing row or column names."
@@ -132,7 +132,7 @@ check_step_dimnames <- function(m, call = rlang::caller_env()) {
   if (
     anyNA(rn) || !all(nzchar(rn)) || anyDuplicated(rn) || !identical(rn, cn)
   ) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "Each {.arg schedule} step {.field matrix} must have present, unique, identical row and column names in the same order.",
         "x" = "Row names {.val {rn}} and column names {.val {cn}} are invalid or do not match."
@@ -156,7 +156,7 @@ check_step <- function(step, call = rlang::caller_env()) {
 # Validate a user-supplied projection schedule; return its grade order.
 check_schedule <- function(schedule, call = rlang::caller_env()) {
   if (!is.list(schedule) || length(schedule) == 0) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg schedule} must be a non-empty {.cls list} of projection steps.",
         "x" = if (is.list(schedule)) {
@@ -173,7 +173,7 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
   go <- orders[[1]]
   differing <- which(!vapply(orders, identical, logical(1), go))
   if (length(differing) > 0) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "All {.arg schedule} step matrices must share the same grade dimnames in the same order.",
         "i" = "Step 1 grades: {.val {go}}.",
@@ -192,7 +192,7 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
   affected <- which(missing_by_step > 0)
   n_missing <- sum(missing_by_step)
   if (n_missing > 0) {
-    cli::cli_warn(
+    ec_warn(
       c(
         "{cli::qty(n_missing)}{n_missing} missing matrix coefficient{?s} {?was/were} found in {.arg schedule}.",
         "!" = "{cli::qty(length(affected))}Affected step{?s}: {.val {affected}}.",
@@ -288,7 +288,7 @@ project_enrollment <- function(
 ) {
   if (!is.null(schedule)) {
     if (!is.null(ratios) || !is.null(entry)) {
-      cli::cli_abort(
+      ec_abort(
         c(
           "Supply either {.arg ratios}/{.arg entry} or {.arg schedule}, not both.",
           "x" = "You also supplied {.arg {c('ratios', 'entry')[c(!is.null(ratios), !is.null(entry))]}}."
@@ -303,7 +303,7 @@ project_enrollment <- function(
       horizon <- check_horizon(horizon)
     }
     if (horizon != length(schedule)) {
-      cli::cli_abort(
+      ec_abort(
         c(
           "{.arg horizon} must equal the {.arg schedule} length.",
           "x" = "{.arg horizon} is {.val {horizon}} but {.arg schedule} has {length(schedule)} step{?s}."
@@ -315,7 +315,7 @@ project_enrollment <- function(
     steps <- schedule
   } else {
     if (is.null(ratios)) {
-      cli::cli_abort(
+      ec_abort(
         c(
           "Supply {.arg ratios} (or a {.arg schedule}).",
           "i" = "{.arg ratios} comes from {.fn progression_ratios}."
@@ -340,12 +340,12 @@ project_enrollment <- function(
   }
   if (!is.null(start_year) && start_year > .Machine$integer.max - horizon) {
     if (derived_year) {
-      cli::cli_abort(
+      ec_abort(
         "{.arg base} year and {.arg horizon} must produce years within the R integer range.",
         class = "enrollcast_error_base_year"
       )
     }
-    cli::cli_abort(
+    ec_abort(
       "{.arg start_year} and {.arg horizon} must produce years within the R integer range.",
       class = "enrollcast_error_start_year"
     )

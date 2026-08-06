@@ -3,7 +3,7 @@ chain_order <- function(from, to, call = rlang::caller_env()) {
   from <- as.character(from)
   to <- as.character(to)
   if (anyDuplicated(from)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "A grade feeds more than one grade in {.arg ratios} (branching transitions).",
         "i" = "Pass {.arg grade_order} explicitly."
@@ -14,7 +14,7 @@ chain_order <- function(from, to, call = rlang::caller_env()) {
   }
   entry <- setdiff(from, to)
   if (length(entry) != 1) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "Could not determine a unique entry grade from {.arg ratios}.",
         "i" = "Pass {.arg grade_order} explicitly."
@@ -30,7 +30,7 @@ chain_order <- function(from, to, call = rlang::caller_env()) {
   while (cur %in% names(nxt)) {
     steps <- steps + 1L
     if (steps > length(from)) {
-      cli::cli_abort(
+      ec_abort(
         c(
           "Cycle detected in grade transitions in {.arg ratios}.",
           "i" = "Pass {.arg grade_order} explicitly."
@@ -48,7 +48,7 @@ chain_order <- function(from, to, call = rlang::caller_env()) {
 # Validate ratio values: must be numeric and non-negative.
 check_ratio_values <- function(ratio, call = rlang::caller_env()) {
   if (!is.numeric(ratio)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "The {.field ratio} column of {.arg ratios} must be numeric.",
         "x" = "{.field ratio} is {.cls {class(ratio)}}."
@@ -58,7 +58,7 @@ check_ratio_values <- function(ratio, call = rlang::caller_env()) {
     )
   }
   if (any(ratio < 0, na.rm = TRUE)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "The {.field ratio} column of {.arg ratios} must be non-negative.",
         "x" = "Found {sum(ratio < 0, na.rm = TRUE)} negative value{?s}."
@@ -68,7 +68,7 @@ check_ratio_values <- function(ratio, call = rlang::caller_env()) {
     )
   }
   if (any(ratio == Inf, na.rm = TRUE)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "The {.field ratio} column of {.arg ratios} must be finite.",
         "x" = "Found {sum(ratio == Inf, na.rm = TRUE)} infinite value{?s}.",
@@ -85,7 +85,7 @@ check_ratio_values <- function(ratio, call = rlang::caller_env()) {
 check_grade_labels <- function(from, to, call = rlang::caller_env()) {
   n_na <- sum(is.na(from)) + sum(is.na(to))
   if (n_na > 0) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.field grade_from} and {.field grade_to} in {.arg ratios} must not be missing.",
         "x" = "Found {n_na} missing grade label{?s}."
@@ -100,7 +100,7 @@ check_grade_labels <- function(from, to, call = rlang::caller_env()) {
 # Abort when any grade is fed by more than one ratio row.
 check_duplicate_feeder <- function(to, call = rlang::caller_env()) {
   if (anyDuplicated(to)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "Each grade in {.arg ratios} may be fed by only one progression ratio.",
         "x" = "Grade{?s} fed more than once: {.field {unique(to[duplicated(to)])}}.",
@@ -122,7 +122,7 @@ check_projection_grades <- function(
 ) {
   G <- length(grade_order)
   if (G < 2) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "A projection matrix needs at least 2 grades.",
         "x" = "Found {.val {G}} grade{?s}.",
@@ -137,7 +137,7 @@ check_projection_grades <- function(
   jj <- match(from, grade_order)
   if (anyNA(ii) || anyNA(jj)) {
     unknown <- setdiff(unique(c(from, to)), grade_order)
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg ratios} references {cli::qty(unknown)} grade{?s} not in {.arg grade_order}.",
         "x" = "Unknown grade{?s}: {.field {unknown}}.",
@@ -150,7 +150,7 @@ check_projection_grades <- function(
 
   missing_in <- setdiff(grade_order[-1], to)
   if (length(missing_in)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "Every non-entry grade must be fed by a progression ratio.",
         "x" = "Missing ratio{?s} feeding grade{?s}: {.field {missing_in}}.",
@@ -173,7 +173,7 @@ check_subdiagonal <- function(
   bad <- which(match(to, grade_order) != match(from, grade_order) + 1L)
   if (length(bad)) {
     pairs <- paste0(from[bad], " -> ", to[bad])
-    cli::cli_abort(
+    ec_abort(
       c(
         "Each ratio in {.arg ratios} must feed the next grade up in {.arg grade_order}.",
         "x" = "Non-adjacent transition{?s}: {.val {pairs}}.",
@@ -190,7 +190,7 @@ check_subdiagonal <- function(
 warn_na_ratios <- function(ratio) {
   n_na <- sum(is.na(ratio))
   if (n_na > 0) {
-    cli::cli_warn(
+    ec_warn(
       c(
         "{n_na} ratio{?s} in {.arg ratios} {?is/are} {.val {NA}} or {.val {NaN}}.",
         "!" = "{cli::qty(n_na)}Grade{?s} fed by {?this/these} ratio{?s} will project as {.val {NA}}."

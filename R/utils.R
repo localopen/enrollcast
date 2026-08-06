@@ -12,7 +12,7 @@ check_data_frame <- function(
   call = rlang::caller_env()
 ) {
   if (!is.data.frame(x)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg {arg}} must be a data frame.",
         "x" = "You supplied {.obj_type_friendly {x}}."
@@ -32,7 +32,7 @@ check_columns <- function(
 ) {
   missing <- setdiff(cols, names(data))
   if (length(missing)) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg {arg}} is missing required column{?s}: {.field {missing}}.",
       class = "enrollcast_error_missing_columns",
       call = call
@@ -44,7 +44,7 @@ check_columns <- function(
 # Validate an explicit grade_order argument (no missing values, no duplicates).
 check_grade_order_arg <- function(grade_order, call = rlang::caller_env()) {
   if (anyNA(grade_order)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg grade_order} must not contain missing values.",
         "x" = "Found {sum(is.na(grade_order))} missing value{?s}."
@@ -54,7 +54,7 @@ check_grade_order_arg <- function(grade_order, call = rlang::caller_env()) {
     )
   }
   if (anyDuplicated(grade_order)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg grade_order} must not contain duplicate grades.",
         "x" = "Duplicated grade{?s}: {.field {unique(grade_order[duplicated(grade_order)])}}."
@@ -78,7 +78,7 @@ resolve_grade_order <- function(
     check_grade_order_arg(grade_order, call = call)
     missing_g <- setdiff(u, grade_order)
     if (length(missing_g)) {
-      cli::cli_abort(
+      ec_abort(
         "{.arg grade_order} is missing grade{?s}: {.field {missing_g}}.",
         class = "enrollcast_error_grade_order_incomplete",
         call = call
@@ -87,7 +87,7 @@ resolve_grade_order <- function(
 
     missing_go <- setdiff(grade_order, u)
     if (length(missing_go)) {
-      cli::cli_warn(
+      ec_warn(
         "{.arg grade_order} contains grade{?s} missing from data: {.field {missing_go}}.",
         class = "enrollcast_warning_grade_order_extra"
       )
@@ -105,7 +105,7 @@ resolve_grade_order <- function(
     return(u[order(num)])
   }
   # Mixed alpha/numeric labels (e.g. "K", "1", "2") always reach this path.
-  cli::cli_warn(
+  ec_warn(
     c(
       "Grade order guessed by sorting labels alphabetically.",
       "i" = "Pass {.arg grade_order} or a factor {.arg grade} to set it explicitly."
@@ -122,7 +122,7 @@ check_ratio_weights <- function(
   call = rlang::caller_env()
 ) {
   if (method != "weighted" && !is.null(weights)) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg weights} may only be supplied for {.code method = \"weighted\"}.",
       class = "enrollcast_error_weights_unused",
       call = call
@@ -132,7 +132,7 @@ check_ratio_weights <- function(
     return(invisible())
   }
   if (is.null(weights)) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg weights} is required for {.code method = \"weighted\"}.",
       class = "enrollcast_error_weights_missing",
       call = call
@@ -144,14 +144,14 @@ check_ratio_weights <- function(
       !all(is.finite(weights)) ||
       any(weights < 0)
   ) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg weights} must be numeric, finite, non-missing, and non-negative.",
       class = "enrollcast_error_weights_values",
       call = call
     )
   }
   if (length(weights) != ncol(R)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg weights} length must equal the number of transition years used.",
         "x" = "{.arg weights} has length {length(weights)}.",
@@ -162,7 +162,7 @@ check_ratio_weights <- function(
     )
   }
   if (sum(weights) <= 0) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg weights} must have a positive sum.",
       class = "enrollcast_error_weights_sum",
       call = call
@@ -209,7 +209,7 @@ coerce_base_vector <- function(base, call = rlang::caller_env()) {
     check_columns(base, c("grade", "enrollment"), "base", call = call)
     grade <- as.character(base$grade)
     if (!is.numeric(base$enrollment)) {
-      cli::cli_abort(
+      ec_abort(
         "{.arg base} enrollment must be numeric, finite, and non-missing.",
         class = "enrollcast_error_base_values",
         call = call
@@ -219,7 +219,7 @@ coerce_base_vector <- function(base, call = rlang::caller_env()) {
   } else if (is.numeric(base) && !is.null(names(base))) {
     v <- base
   } else {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg base} must be a data frame (grade, enrollment) or a named numeric vector.",
         "x" = "You supplied {.obj_type_friendly {base}}."
@@ -233,14 +233,14 @@ coerce_base_vector <- function(base, call = rlang::caller_env()) {
 
 check_base_values <- function(v, call = rlang::caller_env()) {
   if (anyNA(v) || !all(is.finite(v))) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg base} enrollment must be numeric, finite, and non-missing.",
       class = "enrollcast_error_base_values",
       call = call
     )
   }
   if (any(v < 0)) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg base} enrollment must be non-negative.",
       class = "enrollcast_error_base_negative",
       call = call
@@ -250,7 +250,7 @@ check_base_values <- function(v, call = rlang::caller_env()) {
 
 align_base_grades <- function(v, go, call = rlang::caller_env()) {
   if (anyNA(names(v)) || !all(nzchar(names(v))) || anyDuplicated(names(v))) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg base} grade names must be present and unique.",
       class = "enrollcast_error_base_grade_names",
       call = call
@@ -258,7 +258,7 @@ align_base_grades <- function(v, go, call = rlang::caller_env()) {
   }
   missing <- setdiff(go, names(v))
   if (length(missing)) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg base} is missing enrollment for grade{?s}: {.field {missing}}.",
       class = "enrollcast_error_base_incomplete",
       call = call
@@ -266,7 +266,7 @@ align_base_grades <- function(v, go, call = rlang::caller_env()) {
   }
   extra <- setdiff(names(v), go)
   if (length(extra)) {
-    cli::cli_warn(
+    ec_warn(
       "{.arg base} contains grade{?s} not in {.arg ratios} that will be ignored: {.field {extra}}.",
       class = "enrollcast_warning_base_extra"
     )
@@ -290,14 +290,14 @@ base_year <- function(base, call = rlang::caller_env()) {
   uy <- unique(base$year)
   y <- suppressWarnings(as.numeric(as.character(uy)))
   if (length(y) != 1 || !is.finite(y) || y %% 1 != 0) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg base} year must contain one finite integer value.",
       class = "enrollcast_error_base_year",
       call = call
     )
   }
   if (abs(y) > .Machine$integer.max) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg base} year must be within the R integer range.",
       class = "enrollcast_error_base_year",
       call = call
@@ -311,7 +311,7 @@ as_entry_vector <- function(entry, horizon, call = rlang::caller_env()) {
   if (is.data.frame(entry)) {
     valcol <- intersect(c("enrollment", "value"), names(entry))
     if (length(valcol) == 0) {
-      cli::cli_abort(
+      ec_abort(
         "{.arg entry} data frame must have an {.field enrollment} or {.field value} column.",
         class = "enrollcast_error_entry_no_value_col",
         call = call
@@ -321,7 +321,7 @@ as_entry_vector <- function(entry, horizon, call = rlang::caller_env()) {
   } else if (is.numeric(entry)) {
     vals <- entry
   } else {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg entry} must be a numeric vector or a data frame with a value column.",
         "x" = "You supplied {.obj_type_friendly {entry}}."
@@ -331,14 +331,14 @@ as_entry_vector <- function(entry, horizon, call = rlang::caller_env()) {
     )
   }
   if (!is.numeric(vals) || anyNA(vals) || !all(is.finite(vals))) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg entry} values must be numeric, finite, and non-missing.",
       class = "enrollcast_error_entry_values",
       call = call
     )
   }
   if (length(vals) != horizon) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg entry} length must equal {.arg horizon}.",
         "x" = "{.arg entry} has length {length(vals)} but {.arg horizon} is {horizon}."
@@ -348,7 +348,7 @@ as_entry_vector <- function(entry, horizon, call = rlang::caller_env()) {
     )
   }
   if (any(vals < 0)) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg entry} values must be non-negative.",
       class = "enrollcast_error_entry_negative",
       call = call

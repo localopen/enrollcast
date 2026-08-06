@@ -1,6 +1,6 @@
 check_recovery_values <- function(recovery, call = rlang::caller_env()) {
   if (anyNA(recovery) || !all(is.finite(recovery)) || any(recovery < 0)) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg recovery} values must be numeric, finite, non-missing, and non-negative.",
       class = "enrollcast_error_recovery_values",
       call = call
@@ -11,7 +11,7 @@ check_recovery_values <- function(recovery, call = rlang::caller_env()) {
 align_recovery_matrix <- function(recovery, go, call = rlang::caller_env()) {
   G <- length(go)
   if (nrow(recovery) != G) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg recovery} matrix must have one row per grade.",
         "x" = "Expected {G} row{?s} but got {nrow(recovery)}."
@@ -25,7 +25,7 @@ align_recovery_matrix <- function(recovery, go, call = rlang::caller_env()) {
     return(recovery)
   }
   if (anyNA(rn) || !all(nzchar(rn)) || anyDuplicated(rn) || !setequal(rn, go)) {
-    cli::cli_abort(
+    ec_abort(
       "Named {.arg recovery} matrix rows must be unique and exactly match the projection grades.",
       class = "enrollcast_error_recovery_names",
       call = call
@@ -41,7 +41,7 @@ recovery_diagonals <- function(recovery, go, call = rlang::caller_env()) {
   if (is.matrix(recovery)) {
     recovery <- align_recovery_matrix(recovery, go, call = call)
     if (!is.numeric(recovery)) {
-      cli::cli_abort(
+      ec_abort(
         "{.arg recovery} values must be numeric, finite, non-missing, and non-negative.",
         class = "enrollcast_error_recovery_values",
         call = call
@@ -53,7 +53,7 @@ recovery_diagonals <- function(recovery, go, call = rlang::caller_env()) {
     }))
   }
   if (!is.numeric(recovery)) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg recovery} must be a numeric vector or a grade-by-year matrix.",
         "x" = "You supplied {.obj_type_friendly {recovery}}."
@@ -78,7 +78,7 @@ check_swing <- function(
   call = rlang::caller_env()
 ) {
   if (!is_nonnegative_integer(swing_years)) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg swing_years} must be a non-negative integer.",
       class = "enrollcast_error_swing_years",
       call = call
@@ -86,7 +86,7 @@ check_swing <- function(
   }
   n_normal <- horizon - swing_years - n_recovery
   if (n_normal < 0) {
-    cli::cli_abort(
+    ec_abort(
       c(
         "{.arg swing_years} plus recovery length must not exceed {.arg horizon}.",
         "x" = "{swing_years} + {n_recovery} > {horizon}."
@@ -102,7 +102,7 @@ check_swing <- function(
 normal_entry <- function(entry, n_normal, call = rlang::caller_env()) {
   if (n_normal == 0) {
     if (length(entry) > 0) {
-      cli::cli_abort(
+      ec_abort(
         "{.arg entry} must be empty when there are no normal (GPR) years.",
         class = "enrollcast_error_entry_unexpected",
         call = call
@@ -111,7 +111,7 @@ normal_entry <- function(entry, n_normal, call = rlang::caller_env()) {
     return(numeric(0))
   }
   if (is.null(entry)) {
-    cli::cli_abort(
+    ec_abort(
       "{.arg entry} is required for the {n_normal} normal year{?s} after recovery.",
       class = "enrollcast_error_entry_required",
       call = call
