@@ -86,8 +86,10 @@ and map when projecting multiple schools or sectors.
   the only imports); do not add a dependency without maintainer approval.
 - User-facing conditions use `cli::cli_abort()`, `cli::cli_warn()`, or
   `cli::cli_inform()` and carry a stable `enrollcast_error_*` or
-  `enrollcast_warning_*` class. Reuse shared validators in `R/utils.R`, notably
-  `is_count()` and `resolve_grade_order()`.
+  `enrollcast_warning_*` class; raise them through the `ec_abort()`/`ec_warn()`
+  helpers in `R/conditions.R`. Reuse shared validators: `is_count()` and
+  `check_columns()` live in `R/utils.R`, `resolve_grade_order()` in
+  `R/checks-grades.R`, and `base`/`entry` coercion in `R/checks-base-entry.R`.
 - Tests pair class assertions with snapshots of rendered cli messages. When a
   message changes, update and review `tests/testthat/_snaps/*.md` rather than
   weakening either assertion.
