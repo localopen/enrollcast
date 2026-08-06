@@ -60,33 +60,21 @@ test_that("explicit grade_order controls dimnames and ratio placement", {
 test_that("projection_matrix errors on a missing feeding ratio", {
   r <- ratios_fixture()
   r <- r[r$grade_to != "2", ]
-  expect_snapshot(
-    projection_matrix(r, grade_order = c("K", "1", "2")),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     projection_matrix(r, grade_order = c("K", "1", "2")),
     class = "enrollcast_error_missing_ratio"
   )
 })
 
 test_that("projection_matrix errors with fewer than two grades", {
-  expect_snapshot(
-    projection_matrix(ratios_fixture(), grade_order = "K"),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     projection_matrix(ratios_fixture(), grade_order = "K"),
     class = "enrollcast_error_too_few_grades"
   )
 })
 
 test_that("projection_matrix errors when ratios reference an unknown grade", {
-  expect_snapshot(
-    projection_matrix(ratios_fixture(), grade_order = c("K", "1")),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     projection_matrix(ratios_fixture(), grade_order = c("K", "1")),
     class = "enrollcast_error_unknown_grade"
   )
@@ -98,8 +86,10 @@ test_that("projection_matrix errors on ambiguous entry grade", {
     grade_to = c("1", "2"),
     ratio = c(0.9, 0.9)
   )
-  expect_snapshot(projection_matrix(r), error = TRUE)
-  expect_error(projection_matrix(r), class = "enrollcast_error_ambiguous_entry")
+  expect_enrollcast_error(
+    projection_matrix(r),
+    class = "enrollcast_error_ambiguous_entry"
+  )
 })
 
 test_that("projection_matrix errors on duplicate feeding ratios", {
@@ -108,11 +98,7 @@ test_that("projection_matrix errors on duplicate feeding ratios", {
     grade_to = c("1", "1", "2"),
     ratio = c(0.9, 0.5, 0.95)
   )
-  expect_snapshot(
-    projection_matrix(r, grade_order = c("K", "1", "2")),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     projection_matrix(r, grade_order = c("K", "1", "2")),
     class = "enrollcast_error_duplicate_feeder"
   )
@@ -124,30 +110,21 @@ test_that("projection_matrix reports duplicate feeders when grade_order is omitt
     grade_to = c("1", "1"),
     ratio = c(0.9, 0.9)
   )
-  expect_snapshot(projection_matrix(r), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     projection_matrix(r),
     class = "enrollcast_error_duplicate_feeder"
   )
 })
 
 test_that("projection_matrix rejects a grade_order containing missing values", {
-  expect_snapshot(
-    projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", NA)),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", NA)),
     class = "enrollcast_error_grade_order_na"
   )
 })
 
 test_that("projection_matrix rejects a grade_order containing duplicates", {
-  expect_snapshot(
-    projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", "2")),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", "2")),
     class = "enrollcast_error_grade_order_duplicate"
   )
@@ -159,22 +136,28 @@ test_that("projection_matrix rejects missing grade labels on the inferred path",
     grade_to = c("1", NA),
     ratio = c(0.9, 0.9)
   )
-  expect_snapshot(projection_matrix(r), error = TRUE)
-  expect_error(projection_matrix(r), class = "enrollcast_error_grade_na")
+  expect_enrollcast_error(
+    projection_matrix(r),
+    class = "enrollcast_error_grade_na"
+  )
 })
 
 test_that("projection_matrix rejects a non-numeric ratio column", {
   r <- ratios_fixture()
   r$ratio <- as.character(r$ratio)
-  expect_snapshot(projection_matrix(r), error = TRUE)
-  expect_error(projection_matrix(r), class = "enrollcast_error_ratio_type")
+  expect_enrollcast_error(
+    projection_matrix(r),
+    class = "enrollcast_error_ratio_type"
+  )
 })
 
 test_that("an all-NA (logical) ratio column is rejected as non-numeric", {
   r <- ratios_fixture()
   r$ratio <- c(NA, NA)
-  expect_snapshot(projection_matrix(r), error = TRUE)
-  expect_error(projection_matrix(r), class = "enrollcast_error_ratio_type")
+  expect_enrollcast_error(
+    projection_matrix(r),
+    class = "enrollcast_error_ratio_type"
+  )
 })
 
 test_that("a structural error pre-empts the NA-ratio warning", {
@@ -192,15 +175,19 @@ test_that("a structural error pre-empts the NA-ratio warning", {
 test_that("projection_matrix rejects negative ratios", {
   r <- ratios_fixture()
   r$ratio[1] <- -0.5
-  expect_snapshot(projection_matrix(r), error = TRUE)
-  expect_error(projection_matrix(r), class = "enrollcast_error_ratio_negative")
+  expect_enrollcast_error(
+    projection_matrix(r),
+    class = "enrollcast_error_ratio_negative"
+  )
 })
 
 test_that("projection_matrix rejects an infinite ratio", {
   r <- ratios_fixture()
   r$ratio[1] <- Inf
-  expect_snapshot(projection_matrix(r), error = TRUE)
-  expect_error(projection_matrix(r), class = "enrollcast_error_ratio_infinite")
+  expect_enrollcast_error(
+    projection_matrix(r),
+    class = "enrollcast_error_ratio_infinite"
+  )
 })
 
 test_that("projection_matrix warns on NA ratios and keeps them in the matrix", {
@@ -227,11 +214,7 @@ test_that("projection_matrix rejects a transition feeding the entry grade", {
     grade_to = c("1", "2", "K"),
     ratio = c(0.9, 0.9, 0.5)
   )
-  expect_snapshot(
-    projection_matrix(r, grade_order = c("K", "1", "2")),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     projection_matrix(r, grade_order = c("K", "1", "2")),
     class = "enrollcast_error_nonadjacent_transition"
   )
@@ -243,11 +226,7 @@ test_that("projection_matrix rejects skipped and backward transitions", {
     grade_to = c("2", "1"),
     ratio = c(0.9, 0.9)
   )
-  expect_snapshot(
-    projection_matrix(r, grade_order = c("K", "1", "2")),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     projection_matrix(r, grade_order = c("K", "1", "2")),
     class = "enrollcast_error_nonadjacent_transition"
   )
@@ -259,11 +238,7 @@ test_that("projection_matrix rejects branching transitions under an explicit gra
     grade_to = c("1", "2"),
     ratio = c(0.9, 0.8)
   )
-  expect_snapshot(
-    projection_matrix(r, grade_order = c("K", "1", "2")),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     projection_matrix(r, grade_order = c("K", "1", "2")),
     class = "enrollcast_error_nonadjacent_transition"
   )
@@ -272,8 +247,7 @@ test_that("projection_matrix rejects branching transitions under an explicit gra
 test_that("chain_order reports branching transitions", {
   from <- c("K", "K", "1")
   to <- c("1", "2", "3")
-  expect_snapshot(chain_order(from, to), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     chain_order(from, to),
     class = "enrollcast_error_branching_transitions"
   )
@@ -282,8 +256,7 @@ test_that("chain_order reports branching transitions", {
 test_that("chain_order reports cyclic transitions", {
   from <- c("K", "1", "2", "3")
   to <- c("1", "2", "3", "2")
-  expect_snapshot(chain_order(from, to), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     chain_order(from, to),
     class = "enrollcast_error_cyclic_transitions"
   )

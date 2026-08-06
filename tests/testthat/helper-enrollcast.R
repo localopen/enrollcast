@@ -24,3 +24,17 @@ collect_warnings <- function(expr) {
   )
   store$warnings
 }
+
+# House-style pair: snapshot the rendered condition AND assert its stable
+# class. `bquote()` injection keeps the real call in the snapshot Code lines.
+expect_enrollcast_error <- function(expr, class) {
+  expr <- substitute(expr)
+  eval.parent(bquote(testthat::expect_error(.(expr), class = .(class))))
+  eval.parent(bquote(testthat::expect_snapshot(.(expr), error = TRUE)))
+}
+
+expect_enrollcast_warning <- function(expr, class) {
+  expr <- substitute(expr)
+  eval.parent(bquote(testthat::expect_warning(.(expr), class = .(class))))
+  eval.parent(bquote(testthat::expect_snapshot(.(expr))))
+}

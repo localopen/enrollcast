@@ -102,17 +102,7 @@ test_that("zero swing years starts with the recovery diagonal", {
 })
 
 test_that("swing_schedule rejects an over-long swing+recovery", {
-  expect_snapshot(
-    swing_schedule(
-      ss_ratios(),
-      horizon = 2,
-      swing_years = 2,
-      recovery = 1.1,
-      entry = NULL
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     swing_schedule(
       ss_ratios(),
       horizon = 2,
@@ -125,17 +115,7 @@ test_that("swing_schedule rejects an over-long swing+recovery", {
 })
 
 test_that("swing_schedule needs entry for normal years", {
-  expect_snapshot(
-    swing_schedule(
-      ss_ratios(),
-      horizon = 4,
-      swing_years = 1,
-      recovery = c(1.1, 1.05),
-      entry = NULL
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     swing_schedule(
       ss_ratios(),
       horizon = 4,
@@ -148,17 +128,7 @@ test_that("swing_schedule needs entry for normal years", {
 })
 
 test_that("entry length must match the number of normal years", {
-  expect_snapshot(
-    swing_schedule(
-      ss_ratios(),
-      horizon = 5,
-      swing_years = 1,
-      recovery = 1.1,
-      entry = c(130, 140)
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     swing_schedule(
       ss_ratios(),
       horizon = 5,
@@ -171,17 +141,7 @@ test_that("entry length must match the number of normal years", {
 })
 
 test_that("swing_years must be a non-negative integer", {
-  expect_snapshot(
-    swing_schedule(
-      ss_ratios(),
-      horizon = 3,
-      swing_years = -1,
-      recovery = 1.1,
-      entry = 130
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     swing_schedule(
       ss_ratios(),
       horizon = 3,
@@ -209,17 +169,7 @@ test_that("swing_years rejects non-finite and missing values cleanly", {
 })
 
 test_that("recovery matrix must have one row per grade", {
-  expect_snapshot(
-    swing_schedule(
-      ss_ratios(),
-      horizon = 2,
-      swing_years = 1,
-      recovery = matrix(c(1.1, 1.2), nrow = 2),
-      entry = NULL
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     swing_schedule(
       ss_ratios(),
       horizon = 2,
@@ -242,17 +192,7 @@ test_that("recovery matrix must have one row per grade", {
 })
 
 test_that("recovery must be numeric or a matrix", {
-  expect_snapshot(
-    swing_schedule(
-      ss_ratios(),
-      horizon = 3,
-      swing_years = 1,
-      recovery = "oops",
-      entry = 130
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     swing_schedule(
       ss_ratios(),
       horizon = 3,
@@ -338,17 +278,7 @@ test_that("named recovery matrix grades must uniquely match projection grades", 
 })
 
 test_that("entry must be empty when there are no normal years", {
-  expect_snapshot(
-    swing_schedule(
-      ss_ratios(),
-      horizon = 3,
-      swing_years = 1,
-      recovery = c(1.1, 1.05),
-      entry = 130
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     swing_schedule(
       ss_ratios(),
       horizon = 3,

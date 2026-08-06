@@ -81,16 +81,7 @@ test_that("omitting entry warns", {
 })
 
 test_that("entry length must equal horizon", {
-  expect_snapshot(
-    project_enrollment(
-      proj_base(),
-      proj_ratios(),
-      horizon = 3,
-      entry = c(130, 140)
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(
       proj_base(),
       proj_ratios(),
@@ -102,19 +93,11 @@ test_that("entry length must equal horizon", {
 })
 
 test_that("horizon must be a positive integer", {
-  expect_snapshot(
-    project_enrollment(proj_base(), proj_ratios(), horizon = 0, entry = 1),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(proj_base(), proj_ratios(), horizon = 0, entry = 1),
     class = "enrollcast_error_horizon"
   )
-  expect_snapshot(
-    project_enrollment(proj_base(), proj_ratios(), horizon = 1.5, entry = 1),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(proj_base(), proj_ratios(), horizon = 1.5, entry = 1),
     class = "enrollcast_error_horizon"
   )
@@ -155,11 +138,7 @@ test_that("projection carries state across three years", {
 
 test_that("base enrollment cannot contain NA", {
   v <- c(K = NA_real_, `1` = 99, `2` = 91)
-  expect_snapshot(
-    project_enrollment(v, proj_ratios(), horizon = 1, entry = 130),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(v, proj_ratios(), horizon = 1, entry = 130),
     class = "enrollcast_error_base_values"
   )
@@ -193,17 +172,7 @@ test_that("start_year must be one finite integer", {
 })
 
 test_that("start_year must be within the R integer range", {
-  expect_snapshot(
-    project_enrollment(
-      proj_base(),
-      proj_ratios(),
-      horizon = 1,
-      entry = 130,
-      start_year = .Machine$integer.max + 1
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(
       proj_base(),
       proj_ratios(),
@@ -232,11 +201,7 @@ test_that("start_year must be within the R integer range", {
   )
 
   base <- transform(proj_base(), year = .Machine$integer.max)
-  expect_snapshot(
-    project_enrollment(base, proj_ratios(), horizon = 1, entry = 130),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(base, proj_ratios(), horizon = 1, entry = 130),
     class = "enrollcast_error_base_year"
   )
@@ -244,11 +209,7 @@ test_that("start_year must be within the R integer range", {
 
 test_that("invalid base years do not fall back to relative years", {
   base <- transform(proj_base(), year = "spring")
-  expect_snapshot(
-    project_enrollment(base, proj_ratios(), horizon = 1, entry = 130),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(base, proj_ratios(), horizon = 1, entry = 130),
     class = "enrollcast_error_base_year"
   )
@@ -300,19 +261,14 @@ test_that("hand-built identity+diag schedule runs", {
 test_that("schedule and ratios are mutually exclusive", {
   m <- projection_matrix(proj_ratios())
   sched <- list(list(matrix = m, entry = 130))
-  expect_snapshot(
-    project_enrollment(proj_base(), ratios = proj_ratios(), schedule = sched),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(proj_base(), ratios = proj_ratios(), schedule = sched),
     class = "enrollcast_error_conflicting_args"
   )
 })
 
 test_that("project_enrollment needs ratios or a schedule", {
-  expect_snapshot(project_enrollment(proj_base(), horizon = 2), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(proj_base(), horizon = 2),
     class = "enrollcast_error_missing_input"
   )
@@ -321,11 +277,7 @@ test_that("project_enrollment needs ratios or a schedule", {
 test_that("horizon must match schedule length when both are given", {
   m <- projection_matrix(proj_ratios())
   sched <- list(list(matrix = m, entry = 130))
-  expect_snapshot(
-    project_enrollment(proj_base(), schedule = sched, horizon = 2),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(proj_base(), schedule = sched, horizon = 2),
     class = "enrollcast_error_horizon_schedule_mismatch"
   )
@@ -506,17 +458,15 @@ test_that("schedule accepts list subclasses", {
 # --- Internal helper tests ---
 
 test_that("check_step rejects a non-list step", {
-  expect_snapshot(check_step("not a list"), error = TRUE)
-  expect_error(check_step("not a list"), class = "enrollcast_error_step_shape")
+  expect_enrollcast_error(
+    check_step("not a list"),
+    class = "enrollcast_error_step_shape"
+  )
 })
 
 test_that("check_step rejects a non-square matrix", {
   m <- projection_matrix(proj_ratios())
-  expect_snapshot(
-    check_step(list(matrix = m[, 1, drop = FALSE])),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     check_step(list(matrix = m[, 1, drop = FALSE])),
     class = "enrollcast_error_step_not_square"
   )
@@ -525,8 +475,7 @@ test_that("check_step rejects a non-square matrix", {
 test_that("check_step rejects a matrix with no row names", {
   m <- matrix(c(1, 0, 0.9, 0), nrow = 2, ncol = 2)
   colnames(m) <- c("K", "1")
-  expect_snapshot(check_step(list(matrix = m)), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     check_step(list(matrix = m)),
     class = "enrollcast_error_step_dimnames"
   )
@@ -536,8 +485,7 @@ test_that("check_step rejects a matrix with mismatched row and col names", {
   m <- matrix(c(1, 0, 0.9, 0), nrow = 2, ncol = 2)
   rownames(m) <- c("K", "1")
   colnames(m) <- c("K", "2")
-  expect_snapshot(check_step(list(matrix = m)), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     check_step(list(matrix = m)),
     class = "enrollcast_error_step_dimnames"
   )
@@ -545,11 +493,7 @@ test_that("check_step rejects a matrix with mismatched row and col names", {
 
 test_that("check_step rejects an invalid step entry", {
   m <- projection_matrix(proj_ratios())
-  expect_snapshot(
-    check_step(list(matrix = m, entry = c(1, 2))),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     check_step(list(matrix = m, entry = c(1, 2))),
     class = "enrollcast_error_step_entry"
   )
@@ -562,13 +506,14 @@ test_that("check_step rejects an invalid step entry", {
 })
 
 test_that("check_schedule rejects a non-list schedule", {
-  expect_snapshot(check_schedule(42), error = TRUE)
-  expect_error(check_schedule(42), class = "enrollcast_error_schedule_shape")
+  expect_enrollcast_error(
+    check_schedule(42),
+    class = "enrollcast_error_schedule_shape"
+  )
 })
 
 test_that("check_schedule rejects an empty list", {
-  expect_snapshot(check_schedule(list()), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     check_schedule(list()),
     class = "enrollcast_error_schedule_shape"
   )
@@ -587,8 +532,7 @@ test_that("check_schedule rejects inconsistent grade dimnames", {
     list(matrix = m1, entry = NULL),
     list(matrix = m2, entry = NULL)
   )
-  expect_snapshot(check_schedule(sched), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     check_schedule(sched),
     class = "enrollcast_error_schedule_inconsistent"
   )
