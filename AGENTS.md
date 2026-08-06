@@ -36,7 +36,7 @@ and map when projecting multiple schools or sectors.
 ## Projection invariants
 
 - Pipeline: `progression_ratios()` computes `grade_from`, `grade_to`, `ratio`;
-  `projection_matrix()` places ratios on the sub-diagonal;
+  `progression_matrix()` places ratios on the sub-diagonal;
   `project_enrollment()` advances the vector; `swing_schedule()` builds
   per-year matrix/entry steps.
 - A progression ratio is destination-grade enrollment at `t + 1` divided by
@@ -86,8 +86,10 @@ and map when projecting multiple schools or sectors.
   the only imports); do not add a dependency without maintainer approval.
 - User-facing conditions use `cli::cli_abort()`, `cli::cli_warn()`, or
   `cli::cli_inform()` and carry a stable `enrollcast_error_*` or
-  `enrollcast_warning_*` class. Reuse shared validators in `R/utils.R`, notably
-  `is_count()` and `resolve_grade_order()`.
+  `enrollcast_warning_*` class; raise them through the `ec_abort()`/`ec_warn()`
+  helpers in `R/conditions.R`. Reuse shared validators: `is_count()` and
+  `check_columns()` live in `R/utils.R`, `resolve_grade_order()` in
+  `R/checks-grades.R`, and `base`/`entry` coercion in `R/checks-base-entry.R`.
 - Tests pair class assertions with snapshots of rendered cli messages. When a
   message changes, update and review `tests/testthat/_snaps/*.md` rather than
   weakening either assertion.
@@ -97,5 +99,9 @@ and map when projecting multiple schools or sectors.
   payload identity; that distinction is not portable across the CI matrix.
 - `Depends: R (>= 4.0)` and the `oldrel-1` CI leg rule out the native pipe `|>`
   and `\(x)` lambdas (both R 4.1+). The codebase currently uses neither.
-- `enrollcast_fixture()` in `tests/testthat/helper-enrollcast.R` is the shared
-  ordered K-2, 2021-2023 fixture.
+- `tests/testthat/helper-enrollcast.R` holds the shared fixtures and
+  expectations: `enrollcast_fixture()` (ordered K-2, 2021-2023 history),
+  `fixture_ratios()` / `proj_ratios()` / `proj_base()`, the
+  `expect_enrollcast_error()` / `expect_enrollcast_warning()` pair (snapshot +
+  class in one call), and `collect_warnings()`. Use these instead of re-rolling
+  snapshot/class two-liners or `withCallingHandlers` collectors.

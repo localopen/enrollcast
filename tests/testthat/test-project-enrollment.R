@@ -1,11 +1,3 @@
-proj_ratios <- function() progression_ratios(enrollcast_fixture())
-proj_base <- function() {
-  data.frame(
-    grade = c("K", "1", "2"),
-    enrollment = c(120, 99, 91)
-  )
-}
-
 test_that("project_enrollment returns the canonical ordered projection", {
   base <- proj_base()[c(3, 1, 2), ]
   p <- project_enrollment(
@@ -81,16 +73,7 @@ test_that("omitting entry warns", {
 })
 
 test_that("entry length must equal horizon", {
-  expect_snapshot(
-    project_enrollment(
-      proj_base(),
-      proj_ratios(),
-      horizon = 3,
-      entry = c(130, 140)
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(
       proj_base(),
       proj_ratios(),
@@ -102,19 +85,11 @@ test_that("entry length must equal horizon", {
 })
 
 test_that("horizon must be a positive integer", {
-  expect_snapshot(
-    project_enrollment(proj_base(), proj_ratios(), horizon = 0, entry = 1),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(proj_base(), proj_ratios(), horizon = 0, entry = 1),
     class = "enrollcast_error_horizon"
   )
-  expect_snapshot(
-    project_enrollment(proj_base(), proj_ratios(), horizon = 1.5, entry = 1),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(proj_base(), proj_ratios(), horizon = 1.5, entry = 1),
     class = "enrollcast_error_horizon"
   )
@@ -155,11 +130,7 @@ test_that("projection carries state across three years", {
 
 test_that("base enrollment cannot contain NA", {
   v <- c(K = NA_real_, `1` = 99, `2` = 91)
-  expect_snapshot(
-    project_enrollment(v, proj_ratios(), horizon = 1, entry = 130),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(v, proj_ratios(), horizon = 1, entry = 130),
     class = "enrollcast_error_base_values"
   )
@@ -193,17 +164,7 @@ test_that("start_year must be one finite integer", {
 })
 
 test_that("start_year must be within the R integer range", {
-  expect_snapshot(
-    project_enrollment(
-      proj_base(),
-      proj_ratios(),
-      horizon = 1,
-      entry = 130,
-      start_year = .Machine$integer.max + 1
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(
       proj_base(),
       proj_ratios(),
@@ -232,11 +193,7 @@ test_that("start_year must be within the R integer range", {
   )
 
   base <- transform(proj_base(), year = .Machine$integer.max)
-  expect_snapshot(
-    project_enrollment(base, proj_ratios(), horizon = 1, entry = 130),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(base, proj_ratios(), horizon = 1, entry = 130),
     class = "enrollcast_error_base_year"
   )
@@ -244,11 +201,7 @@ test_that("start_year must be within the R integer range", {
 
 test_that("invalid base years do not fall back to relative years", {
   base <- transform(proj_base(), year = "spring")
-  expect_snapshot(
-    project_enrollment(base, proj_ratios(), horizon = 1, entry = 130),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(base, proj_ratios(), horizon = 1, entry = 130),
     class = "enrollcast_error_base_year"
   )
@@ -256,7 +209,7 @@ test_that("invalid base years do not fall back to relative years", {
 
 test_that("a constant schedule reproduces the ratios path", {
   r <- proj_ratios()
-  m <- projection_matrix(r)
+  m <- progression_matrix(r)
   entry <- c(130, 140)
   sched <- lapply(entry, function(e) list(matrix = m, entry = e))
   p_sched <- project_enrollment(
@@ -275,15 +228,16 @@ test_that("a constant schedule reproduces the ratios path", {
 })
 
 test_that("schedule path realigns a reordered base", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   sched <- list(list(matrix = m, entry = 130))
   reordered <- c(`2` = 91, K = 120, `1` = 99)
   p <- project_enrollment(reordered, schedule = sched, start_year = 2023)
-  expect_equal(p$enrollment[p$grade == "1"], 111) # 0.925 * 120, correctly aligned
+  # 0.925 * 120, correctly aligned
+  expect_equal(p$enrollment[p$grade == "1"], 111)
 })
 
 test_that("hand-built identity+diag schedule runs", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   ident <- diag(3)
   dimnames(ident) <- dimnames(m)
   scale <- diag(rep(1.1, 3))
@@ -298,41 +252,32 @@ test_that("hand-built identity+diag schedule runs", {
 })
 
 test_that("schedule and ratios are mutually exclusive", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   sched <- list(list(matrix = m, entry = 130))
-  expect_snapshot(
-    project_enrollment(proj_base(), ratios = proj_ratios(), schedule = sched),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(proj_base(), ratios = proj_ratios(), schedule = sched),
     class = "enrollcast_error_conflicting_args"
   )
 })
 
 test_that("project_enrollment needs ratios or a schedule", {
-  expect_snapshot(project_enrollment(proj_base(), horizon = 2), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(proj_base(), horizon = 2),
     class = "enrollcast_error_missing_input"
   )
 })
 
 test_that("horizon must match schedule length when both are given", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   sched <- list(list(matrix = m, entry = 130))
-  expect_snapshot(
-    project_enrollment(proj_base(), schedule = sched, horizon = 2),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     project_enrollment(proj_base(), schedule = sched, horizon = 2),
     class = "enrollcast_error_horizon_schedule_mismatch"
   )
 })
 
 test_that("explicit schedule horizon is validated before comparison", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   sched <- list(list(matrix = m, entry = 130))
   for (horizon in list(NA_real_, Inf, 1.5, "1")) {
     expect_error(
@@ -343,7 +288,7 @@ test_that("explicit schedule horizon is validated before comparison", {
 })
 
 test_that("schedule matrices must contain valid numeric values", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   expect_snapshot(
     project_enrollment(
       proj_base(),
@@ -367,14 +312,17 @@ test_that("schedule matrices must contain valid numeric values", {
 })
 
 test_that("schedule matrices allow NA coefficients", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   missing <- valid
   missing["2", "1"] <- NA_real_
   schedule <- list(list(matrix = missing, entry = 130))
 
   expect_warning(
-    result <- project_enrollment(proj_base(), schedule = schedule),
+    project_enrollment(proj_base(), schedule = schedule),
     class = "enrollcast_warning_schedule_na"
+  )
+  result <- suppressWarnings(
+    project_enrollment(proj_base(), schedule = schedule)
   )
 
   expect_true(is.na(result$enrollment[result$grade == "2"]))
@@ -384,23 +332,27 @@ test_that("schedule matrices allow NA coefficients", {
 })
 
 test_that("schedule matrices allow NaN coefficients", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   undefined <- valid
   undefined["2", "1"] <- NaN
 
   expect_warning(
-    result <- project_enrollment(
+    project_enrollment(
       proj_base(),
       schedule = list(list(matrix = undefined, entry = 130))
     ),
     class = "enrollcast_warning_schedule_na"
   )
+  result <- suppressWarnings(project_enrollment(
+    proj_base(),
+    schedule = list(list(matrix = undefined, entry = 130))
+  ))
 
   expect_true(is.na(result$enrollment[result$grade == "2"]))
 })
 
 test_that("schedule matrices allow missing coefficients with one warning", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   missing <- valid
   missing["2", "1"] <- NA_real_
   undefined <- valid
@@ -410,13 +362,8 @@ test_that("schedule matrices allow missing coefficients with one warning", {
     list(matrix = undefined, entry = 140)
   )
 
-  warnings <- list()
-  withCallingHandlers(
-    project_enrollment(proj_base(), schedule = schedule),
-    warning = function(cnd) {
-      warnings[[length(warnings) + 1]] <<- cnd
-      invokeRestart("muffleWarning")
-    }
+  warnings <- collect_warnings(
+    project_enrollment(proj_base(), schedule = schedule)
   )
 
   expect_length(warnings, 1)
@@ -427,7 +374,7 @@ test_that("schedule matrices allow missing coefficients with one warning", {
 })
 
 test_that("schedule structural errors pre-empt missing-value warnings", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   missing <- valid
   missing["2", "1"] <- NA_real_
   inconsistent <- valid
@@ -440,17 +387,12 @@ test_that("schedule structural errors pre-empt missing-value warnings", {
     list(matrix = inconsistent, entry = 140)
   )
 
-  warnings <- list()
-  expect_error(
-    withCallingHandlers(
+  expect_no_warning(
+    expect_error(
       check_schedule(schedule),
-      warning = function(cnd) {
-        warnings[[length(warnings) + 1]] <<- cnd
-      }
-    ),
-    class = "enrollcast_error_schedule_inconsistent"
+      class = "enrollcast_error_schedule_inconsistent"
+    )
   )
-  expect_length(warnings, 0)
 })
 
 test_that("swing schedules preserve missing ratios through projection", {
@@ -466,7 +408,7 @@ test_that("swing schedules preserve missing ratios through projection", {
   )
 
   expect_warning(
-    schedule <- swing_schedule(
+    swing_schedule(
       ratios,
       horizon = 2,
       swing_years = 0,
@@ -475,9 +417,19 @@ test_that("swing schedules preserve missing ratios through projection", {
     ),
     class = "enrollcast_warning_ratio_na"
   )
+  schedule <- suppressWarnings(swing_schedule(
+    ratios,
+    horizon = 2,
+    swing_years = 0,
+    recovery = numeric(0),
+    entry = c(130, 140)
+  ))
   expect_warning(
-    scheduled <- project_enrollment(proj_base(), schedule = schedule),
+    project_enrollment(proj_base(), schedule = schedule),
     class = "enrollcast_warning_schedule_na"
+  )
+  scheduled <- suppressWarnings(
+    project_enrollment(proj_base(), schedule = schedule)
   )
 
   expect_equal(scheduled, direct)
@@ -485,7 +437,7 @@ test_that("swing schedules preserve missing ratios through projection", {
 })
 
 test_that("schedule matrix grade names must be present and unique", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   missing_colnames <- valid
   colnames(missing_colnames) <- NULL
   duplicate <- valid
@@ -501,7 +453,7 @@ test_that("schedule matrix grade names must be present and unique", {
 })
 
 test_that("schedule accepts list subclasses", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   ordinary <- list(list(matrix = m, entry = 130))
   subclassed <- structure(
     list(structure(list(matrix = m, entry = 130), class = "schedule_step")),
@@ -516,17 +468,15 @@ test_that("schedule accepts list subclasses", {
 # --- Internal helper tests ---
 
 test_that("check_step rejects a non-list step", {
-  expect_snapshot(check_step("not a list"), error = TRUE)
-  expect_error(check_step("not a list"), class = "enrollcast_error_step_shape")
+  expect_enrollcast_error(
+    check_step("not a list"),
+    class = "enrollcast_error_step_shape"
+  )
 })
 
 test_that("check_step rejects a non-square matrix", {
-  m <- projection_matrix(proj_ratios())
-  expect_snapshot(
-    check_step(list(matrix = m[, 1, drop = FALSE])),
-    error = TRUE
-  )
-  expect_error(
+  m <- progression_matrix(proj_ratios())
+  expect_enrollcast_error(
     check_step(list(matrix = m[, 1, drop = FALSE])),
     class = "enrollcast_error_step_not_square"
   )
@@ -535,8 +485,7 @@ test_that("check_step rejects a non-square matrix", {
 test_that("check_step rejects a matrix with no row names", {
   m <- matrix(c(1, 0, 0.9, 0), nrow = 2, ncol = 2)
   colnames(m) <- c("K", "1")
-  expect_snapshot(check_step(list(matrix = m)), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     check_step(list(matrix = m)),
     class = "enrollcast_error_step_dimnames"
   )
@@ -546,20 +495,15 @@ test_that("check_step rejects a matrix with mismatched row and col names", {
   m <- matrix(c(1, 0, 0.9, 0), nrow = 2, ncol = 2)
   rownames(m) <- c("K", "1")
   colnames(m) <- c("K", "2")
-  expect_snapshot(check_step(list(matrix = m)), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     check_step(list(matrix = m)),
     class = "enrollcast_error_step_dimnames"
   )
 })
 
 test_that("check_step rejects an invalid step entry", {
-  m <- projection_matrix(proj_ratios())
-  expect_snapshot(
-    check_step(list(matrix = m, entry = c(1, 2))),
-    error = TRUE
-  )
-  expect_error(
+  m <- progression_matrix(proj_ratios())
+  expect_enrollcast_error(
     check_step(list(matrix = m, entry = c(1, 2))),
     class = "enrollcast_error_step_entry"
   )
@@ -572,20 +516,21 @@ test_that("check_step rejects an invalid step entry", {
 })
 
 test_that("check_schedule rejects a non-list schedule", {
-  expect_snapshot(check_schedule(42), error = TRUE)
-  expect_error(check_schedule(42), class = "enrollcast_error_schedule_shape")
+  expect_enrollcast_error(
+    check_schedule(42),
+    class = "enrollcast_error_schedule_shape"
+  )
 })
 
 test_that("check_schedule rejects an empty list", {
-  expect_snapshot(check_schedule(list()), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     check_schedule(list()),
     class = "enrollcast_error_schedule_shape"
   )
 })
 
 test_that("check_schedule rejects inconsistent grade dimnames", {
-  m1 <- projection_matrix(proj_ratios())
+  m1 <- progression_matrix(proj_ratios())
   m2 <- matrix(
     c(0, 0, 0.9, 0, 0, 0.95, 0, 0, 0),
     nrow = 3,
@@ -597,8 +542,7 @@ test_that("check_schedule rejects inconsistent grade dimnames", {
     list(matrix = m1, entry = NULL),
     list(matrix = m2, entry = NULL)
   )
-  expect_snapshot(check_schedule(sched), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     check_schedule(sched),
     class = "enrollcast_error_schedule_inconsistent"
   )

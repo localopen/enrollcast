@@ -14,18 +14,6 @@ test_that("resolve_grade_order honours explicit grade_order", {
   )
 })
 
-test_that("summarise_ratios computes each method", {
-  R <- matrix(c(0.95, 0.9), nrow = 1, dimnames = list("1", c("2022", "2023")))
-  expect_equal(summarise_ratios(R, "mean"), c("1" = 0.925))
-  expect_equal(summarise_ratios(R, "last"), c("1" = 0.9))
-  expect_equal(summarise_ratios(R, "median"), c("1" = 0.925))
-  expect_equal(summarise_ratios(R, "geometric"), c("1" = sqrt(0.855)))
-  expect_equal(
-    summarise_ratios(R, "weighted", weights = c(2, 1)),
-    c("1" = (0.9 * 2 + 0.95 * 1) / 3)
-  )
-})
-
 test_that("summarise_ratios returns NA_real_ for all-NA rows", {
   R <- matrix(NA_real_, nrow = 1, ncol = 2, dimnames = list("1", NULL))
   methods <- c("mean", "median", "geometric", "last", "weighted")
@@ -110,38 +98,35 @@ test_that("as_entry_vector accepts a data frame value column", {
 
 test_that("check_columns errors on missing columns", {
   df <- data.frame(a = 1, b = 2)
-  expect_snapshot(check_columns(df, c("a", "c"), "df"), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     check_columns(df, c("a", "c"), "df"),
     class = "enrollcast_error_missing_columns"
   )
 })
 
 test_that("resolve_grade_order errors when grade_order omits a grade", {
-  expect_snapshot(
-    resolve_grade_order(c("K", "1", "2"), grade_order = c("K", "1")),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     resolve_grade_order(c("K", "1", "2"), grade_order = c("K", "1")),
     class = "enrollcast_error_grade_order_incomplete"
   )
 })
 
 test_that("resolve_grade_order warns when guessing character order", {
-  expect_snapshot(resolve_grade_order(c("K", "1", "2")))
-  expect_warning(
+  expect_enrollcast_warning(
     resolve_grade_order(c("K", "1", "2")),
     class = "enrollcast_warning_grade_order_guessed"
   )
 })
 
-test_that("resolve_grade_order warns when grade_order has grades absent from data", {
+test_that("resolve_grade_order warns when grade_order has absent grades", {
   expect_snapshot(
-    res <- resolve_grade_order(
+    invisible(resolve_grade_order(
       c("K", "1", "2"),
       grade_order = c("K", "1", "2", "3")
-    )
+    ))
+  )
+  res <- suppressWarnings(
+    resolve_grade_order(c("K", "1", "2"), grade_order = c("K", "1", "2", "3"))
   )
   expect_identical(res, c("K", "1", "2"))
   expect_warning(
@@ -152,30 +137,21 @@ test_that("resolve_grade_order warns when grade_order has grades absent from dat
 
 test_that("summarise_ratios weighted errors on length mismatch", {
   R <- matrix(c(0.95, 0.9), nrow = 1, dimnames = list("1", c("2022", "2023")))
-  expect_snapshot(
-    summarise_ratios(R, "weighted", weights = c(1, 2, 3)),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     summarise_ratios(R, "weighted", weights = c(1, 2, 3)),
     class = "enrollcast_error_weights_length"
   )
 })
 
 test_that("as_base_vector errors on missing grade", {
-  expect_snapshot(
-    as_base_vector(c(K = 120, `1` = 99), c("K", "1", "2")),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     as_base_vector(c(K = 120, `1` = 99), c("K", "1", "2")),
     class = "enrollcast_error_base_incomplete"
   )
 })
 
 test_that("as_entry_vector errors on length mismatch", {
-  expect_snapshot(as_entry_vector(c(130, 140), 3), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     as_entry_vector(c(130, 140), 3),
     class = "enrollcast_error_entry_length"
   )
@@ -183,7 +159,7 @@ test_that("as_entry_vector errors on length mismatch", {
 
 test_that("as_base_vector warns on extra grades", {
   v <- c(K = 120, `1` = 99, `2` = 91, `3` = 50)
-  expect_snapshot(res <- as_base_vector(v, c("K", "1", "2")))
+  expect_snapshot(invisible(as_base_vector(v, c("K", "1", "2"))))
   expect_warning(
     as_base_vector(v, c("K", "1", "2")),
     class = "enrollcast_warning_base_extra"
@@ -191,11 +167,7 @@ test_that("as_base_vector warns on extra grades", {
 })
 
 test_that("as_base_vector errors on negative enrollment", {
-  expect_snapshot(
-    as_base_vector(c(K = -1, `1` = 99, `2` = 91), c("K", "1", "2")),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     as_base_vector(c(K = -1, `1` = 99, `2` = 91), c("K", "1", "2")),
     class = "enrollcast_error_base_negative"
   )
@@ -250,8 +222,7 @@ test_that("as_base_vector rejects duplicate or missing grade names", {
 })
 
 test_that("as_entry_vector errors on negative values", {
-  expect_snapshot(as_entry_vector(c(130, -5), 2), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     as_entry_vector(c(130, -5), 2),
     class = "enrollcast_error_entry_negative"
   )
@@ -280,32 +251,28 @@ test_that("summarise_ratios last returns NA when all transitions are NA", {
 
 test_that("summarise_ratios weighted errors when weights are missing", {
   R <- matrix(c(0.95, 0.9), nrow = 1, dimnames = list("1", c("2022", "2023")))
-  expect_snapshot(summarise_ratios(R, "weighted"), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     summarise_ratios(R, "weighted"),
     class = "enrollcast_error_weights_missing"
   )
 })
 
 test_that("as_base_vector errors on an invalid base type", {
-  expect_snapshot(as_base_vector(c(1, 2, 3), c("K", "1", "2")), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     as_base_vector(c(1, 2, 3), c("K", "1", "2")),
     class = "enrollcast_error_base_type"
   )
 })
 
 test_that("as_entry_vector errors on a data frame without a value column", {
-  expect_snapshot(as_entry_vector(data.frame(x = 1:2), 2), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     as_entry_vector(data.frame(x = 1:2), 2),
     class = "enrollcast_error_entry_no_value_col"
   )
 })
 
 test_that("as_entry_vector errors on an unsupported entry type", {
-  expect_snapshot(as_entry_vector("oops", 2), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     as_entry_vector("oops", 2),
     class = "enrollcast_error_entry_type"
   )

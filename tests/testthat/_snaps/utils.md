@@ -34,10 +34,11 @@
     Output
       [1] "1" "2" "K"
 
-# resolve_grade_order warns when grade_order has grades absent from data
+# resolve_grade_order warns when grade_order has absent grades
 
     Code
-      res <- resolve_grade_order(c("K", "1", "2"), grade_order = c("K", "1", "2", "3"))
+      invisible(resolve_grade_order(c("K", "1", "2"), grade_order = c("K", "1", "2",
+        "3")))
     Condition
       Warning:
       `grade_order` contains grade missing from data: 3.
@@ -72,7 +73,7 @@
 # as_base_vector warns on extra grades
 
     Code
-      res <- as_base_vector(v, c("K", "1", "2"))
+      invisible(as_base_vector(v, c("K", "1", "2")))
     Condition
       Warning:
       `base` contains grade not in `ratios` that will be ignored: 3.

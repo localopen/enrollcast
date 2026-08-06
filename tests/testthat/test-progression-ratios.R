@@ -91,16 +91,14 @@ test_that("column selectors are distinct non-missing character scalars", {
 test_that("non-numeric enrollment is rejected", {
   fx <- enrollcast_fixture()
   fx$enrollment <- as.character(fx$enrollment)
-  expect_snapshot(progression_ratios(fx), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     progression_ratios(fx),
     class = "enrollcast_error_enrollment_type"
   )
 })
 
 test_that("missing columns are reported", {
-  expect_snapshot(progression_ratios(data.frame(a = 1)), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     progression_ratios(data.frame(a = 1)),
     class = "enrollcast_error_missing_columns"
   )
@@ -109,8 +107,7 @@ test_that("missing columns are reported", {
 test_that("non-consecutive years yield no transitions", {
   fx <- enrollcast_fixture()
   fx <- fx[fx$year != 2022, ]
-  expect_snapshot(progression_ratios(fx), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     progression_ratios(fx),
     class = "enrollcast_error_no_transitions"
   )
@@ -141,9 +138,10 @@ test_that("partial year gaps warn and use only adjacent transitions", {
 
   expect_snapshot(invisible(progression_ratios(history)))
   expect_warning(
-    ratios <- progression_ratios(history),
+    progression_ratios(history),
     class = "enrollcast_warning_year_gaps"
   )
+  ratios <- suppressWarnings(progression_ratios(history))
   expect_equal(ratios$ratio, c((0.9 + 0.825) / 2, (0.875 + 0.8) / 2))
 
   recent <- suppressWarnings(progression_ratios(history, n_years = 1))
@@ -161,14 +159,7 @@ test_that("multiple year gaps are reported in one warning", {
     enrollment = seq_len(15) + 100
   )
 
-  warnings <- list()
-  withCallingHandlers(
-    progression_ratios(history),
-    warning = function(cnd) {
-      warnings[[length(warnings) + 1]] <<- cnd
-      invokeRestart("muffleWarning")
-    }
-  )
+  warnings <- collect_warnings(progression_ratios(history))
   expect_length(warnings, 1)
   expect_s3_class(warnings[[1]], "enrollcast_warning_year_gaps")
   expect_snapshot(invisible(progression_ratios(history)))
@@ -176,8 +167,7 @@ test_that("multiple year gaps are reported in one warning", {
 
 test_that("duplicate grade-year rows are rejected", {
   fx <- rbind(enrollcast_fixture(), enrollcast_fixture()[1, ])
-  expect_snapshot(progression_ratios(fx), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     progression_ratios(fx),
     class = "enrollcast_error_duplicate_rows"
   )
@@ -186,8 +176,7 @@ test_that("duplicate grade-year rows are rejected", {
 test_that("negative enrollment is rejected", {
   fx <- enrollcast_fixture()
   fx$enrollment[1] <- -5
-  expect_snapshot(progression_ratios(fx), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     progression_ratios(fx),
     class = "enrollcast_error_enrollment_negative"
   )
@@ -213,8 +202,7 @@ test_that("non-finite historical enrollment is rejected but NA is allowed", {
 test_that("fewer than two grades is rejected", {
   fx <- enrollcast_fixture()
   fx <- fx[fx$grade == "K", ]
-  expect_snapshot(progression_ratios(fx), error = TRUE)
-  expect_error(
+  expect_enrollcast_error(
     progression_ratios(fx),
     class = "enrollcast_error_too_few_grades"
   )
@@ -223,16 +211,20 @@ test_that("fewer than two grades is rejected", {
 test_that("all-missing grades are rejected as missing", {
   fx <- enrollcast_fixture()
   fx$grade <- NA_character_
-  expect_snapshot(progression_ratios(fx), error = TRUE)
-  expect_error(progression_ratios(fx), class = "enrollcast_error_grade_na")
+  expect_enrollcast_error(
+    progression_ratios(fx),
+    class = "enrollcast_error_grade_na"
+  )
 })
 
 test_that("non-numeric year is rejected", {
   fx <- enrollcast_fixture()
   fx$year <- as.character(fx$year)
   fx$year[1] <- "spring"
-  expect_snapshot(progression_ratios(fx), error = TRUE)
-  expect_error(progression_ratios(fx), class = "enrollcast_error_year_type")
+  expect_enrollcast_error(
+    progression_ratios(fx),
+    class = "enrollcast_error_year_type"
+  )
 })
 
 test_that("years must coerce to finite integers", {
@@ -282,11 +274,7 @@ test_that("grade_order rejects missing and duplicate grades", {
 })
 
 test_that("weights are accepted only by the weighted method", {
-  expect_snapshot(
-    progression_ratios(enrollcast_fixture(), method = "mean", weights = 1:2),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     progression_ratios(enrollcast_fixture(), method = "mean", weights = 1:2),
     class = "enrollcast_error_weights_unused"
   )
@@ -316,15 +304,7 @@ test_that("weighted method validates weight values", {
 })
 
 test_that("weighted method requires a positive weight sum", {
-  expect_snapshot(
-    progression_ratios(
-      enrollcast_fixture(),
-      method = "weighted",
-      weights = c(0, 0)
-    ),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     progression_ratios(
       enrollcast_fixture(),
       method = "weighted",
@@ -351,11 +331,7 @@ test_that("last method skips a missing most-recent transition", {
 })
 
 test_that("n_years must be a positive integer", {
-  expect_snapshot(
-    progression_ratios(enrollcast_fixture(), n_years = 0),
-    error = TRUE
-  )
-  expect_error(
+  expect_enrollcast_error(
     progression_ratios(enrollcast_fixture(), n_years = 0),
     class = "enrollcast_error_n_years"
   )
@@ -364,8 +340,7 @@ test_that("n_years must be a positive integer", {
 test_that("zero feeder enrollment warns about non-finite ratios", {
   fx <- enrollcast_fixture()
   fx$enrollment[fx$grade == "K" & fx$year == 2022] <- 0
-  expect_snapshot(progression_ratios(fx))
-  expect_warning(
+  expect_enrollcast_warning(
     progression_ratios(fx),
     class = "enrollcast_warning_undefined_ratios"
   )
@@ -375,11 +350,13 @@ test_that("progression_ratios errors on an unmatched (NA) grade", {
   fx <- enrollcast_fixture()
   fx$grade <- as.character(fx$grade)
   fx$grade[1] <- NA
-  expect_snapshot(progression_ratios(fx), error = TRUE)
-  expect_error(progression_ratios(fx), class = "enrollcast_error_grade_na")
+  expect_enrollcast_error(
+    progression_ratios(fx),
+    class = "enrollcast_error_grade_na"
+  )
 })
 
-test_that("year is ordered numerically, not lexically, for character/factor years", {
+test_that("character and factor years are ordered numerically", {
   ref <- progression_ratios(enrollcast_fixture())$ratio
   # Relabel years so lexical order ("10", "11", "9") differs from numeric order.
   remap <- c("2021" = "9", "2022" = "10", "2023" = "11")
