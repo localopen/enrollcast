@@ -96,7 +96,7 @@ test_that("projection_matrix errors on duplicate feeding ratios", {
   )
 })
 
-test_that("projection_matrix reports duplicate feeders when grade_order is omitted", {
+test_that("duplicate feeders are reported when grade_order is omitted", {
   r <- data.frame(
     grade_from = c("K", "1"),
     grade_to = c("1", "1"),
@@ -108,7 +108,7 @@ test_that("projection_matrix reports duplicate feeders when grade_order is omitt
   )
 })
 
-test_that("projection_matrix rejects missing grade labels on the inferred path", {
+test_that("missing grade labels are rejected on the inferred path", {
   r <- data.frame(
     grade_from = c("K", "1"),
     grade_to = c("1", NA),
@@ -210,7 +210,7 @@ test_that("projection_matrix rejects skipped and backward transitions", {
   )
 })
 
-test_that("projection_matrix rejects branching transitions under an explicit grade_order", {
+test_that("branching transitions are rejected with explicit grade_order", {
   r <- data.frame(
     grade_from = c("K", "K"),
     grade_to = c("1", "2"),

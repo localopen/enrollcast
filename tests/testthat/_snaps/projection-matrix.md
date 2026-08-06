@@ -56,7 +56,7 @@
       x Grade fed more than once: 1.
       i Check grade_to in `ratios` for duplicate rows.
 
-# projection_matrix reports duplicate feeders when grade_order is omitted
+# duplicate feeders are reported when grade_order is omitted
 
     Code
       projection_matrix(r)
@@ -66,7 +66,7 @@
       x Grade fed more than once: 1.
       i Check grade_to in `ratios` for duplicate rows.
 
-# projection_matrix rejects missing grade labels on the inferred path
+# missing grade labels are rejected on the inferred path
 
     Code
       projection_matrix(r)
@@ -141,7 +141,7 @@
       x Non-adjacent transitions: "K -> 2" and "2 -> 1".
       i Grade order: K, 1, and 2.
 
-# projection_matrix rejects branching transitions under an explicit grade_order
+# branching transitions are rejected with explicit grade_order
 
     Code
       projection_matrix(r, grade_order = c("K", "1", "2"))

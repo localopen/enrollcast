@@ -34,7 +34,7 @@
     Output
       [1] "1" "2" "K"
 
-# resolve_grade_order warns when grade_order has grades absent from data
+# resolve_grade_order warns when grade_order has absent grades
 
     Code
       invisible(resolve_grade_order(c("K", "1", "2"), grade_order = c("K", "1", "2",

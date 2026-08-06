@@ -232,7 +232,8 @@ test_that("schedule path realigns a reordered base", {
   sched <- list(list(matrix = m, entry = 130))
   reordered <- c(`2` = 91, K = 120, `1` = 99)
   p <- project_enrollment(reordered, schedule = sched, start_year = 2023)
-  expect_equal(p$enrollment[p$grade == "1"], 111) # 0.925 * 120, correctly aligned
+  # 0.925 * 120, correctly aligned
+  expect_equal(p$enrollment[p$grade == "1"], 111)
 })
 
 test_that("hand-built identity+diag schedule runs", {

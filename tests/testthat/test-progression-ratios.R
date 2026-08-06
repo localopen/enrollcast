@@ -356,7 +356,7 @@ test_that("progression_ratios errors on an unmatched (NA) grade", {
   )
 })
 
-test_that("year is ordered numerically, not lexically, for character/factor years", {
+test_that("character and factor years are ordered numerically", {
   ref <- progression_ratios(enrollcast_fixture())$ratio
   # Relabel years so lexical order ("10", "11", "9") differs from numeric order.
   remap <- c("2021" = "9", "2022" = "10", "2023" = "11")

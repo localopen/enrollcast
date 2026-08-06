@@ -118,7 +118,7 @@ test_that("resolve_grade_order warns when guessing character order", {
   )
 })
 
-test_that("resolve_grade_order warns when grade_order has grades absent from data", {
+test_that("resolve_grade_order warns when grade_order has absent grades", {
   expect_snapshot(
     invisible(resolve_grade_order(
       c("K", "1", "2"),

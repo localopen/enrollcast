@@ -30,7 +30,8 @@ test_that("swing_schedule reproduces the worked trajectory", {
 })
 
 test_that("grade-specific recovery uses a matrix of multipliers", {
-  rec <- matrix(c(1.2, 1.1, 1.0), nrow = 3) # G x 1: one recovery year, per-grade
+  # G x 1: one recovery year, per-grade
+  rec <- matrix(c(1.2, 1.1, 1.0), nrow = 3)
   s <- swing_schedule(
     fixture_ratios(),
     horizon = 2,
@@ -218,7 +219,7 @@ test_that("recovery values must be finite non-missing and non-negative", {
   }
 })
 
-test_that("named recovery matrix grades must uniquely match projection grades", {
+test_that("named recovery grades must uniquely match projection grades", {
   expect_snapshot(
     swing_schedule(
       fixture_ratios(),

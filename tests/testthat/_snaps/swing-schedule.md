@@ -55,7 +55,7 @@
       Error in `swing_schedule()`:
       ! `recovery` values must be numeric, finite, non-missing, and non-negative.
 
-# named recovery matrix grades must uniquely match projection grades
+# named recovery grades must uniquely match projection grades
 
     Code
       swing_schedule(fixture_ratios(), horizon = 1, swing_years = 0, recovery = matrix(
