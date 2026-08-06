@@ -254,8 +254,8 @@ warn_na_ratios <- function(ratio) {
 #'   grade_to = c("1", "2"),
 #'   ratio = c(0.92, 0.97)
 #' )
-#' projection_matrix(ratios)
-projection_matrix <- function(ratios, grade_order = NULL) {
+#' progression_matrix(ratios)
+progression_matrix <- function(ratios, grade_order = NULL) {
   check_data_frame(
     ratios,
     "ratios",

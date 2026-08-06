@@ -36,7 +36,7 @@ and map when projecting multiple schools or sectors.
 ## Projection invariants
 
 - Pipeline: `progression_ratios()` computes `grade_from`, `grade_to`, `ratio`;
-  `projection_matrix()` places ratios on the sub-diagonal;
+  `progression_matrix()` places ratios on the sub-diagonal;
   `project_enrollment()` advances the vector; `swing_schedule()` builds
   per-year matrix/entry steps.
 - A progression ratio is destination-grade enrollment at `t + 1` divided by

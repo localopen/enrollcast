@@ -30,7 +30,7 @@ grades, because it operates on a single grade-by-year enrollment series.
 
 ## Installation
 
-```{r installation, message = FALSE}
+```{r installation, eval = FALSE}
 # install.packages("pak")
 pak::pak("localopen/enrollcast")
 ```
@@ -66,7 +66,7 @@ projection
 Inspect the underlying projection matrix at any time:
 
 ```{r example-matrix}
-projection_matrix(ratios)
+progression_matrix(ratios)
 ```
 
 ### Multiple aggregation units

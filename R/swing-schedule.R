@@ -142,7 +142,7 @@ diag_step <- function(d, go) {
 #' projection matrix) for the remaining years.
 #'
 #' @inheritParams project_enrollment
-#' @inheritParams projection_matrix
+#' @inheritParams progression_matrix
 #' @param swing_years Number of leading years the school is swinging (a
 #'   non-negative integer); enrollment is held flat at `base`.
 #' @param recovery Recovery multipliers applied for one year each, immediately
@@ -179,7 +179,7 @@ swing_schedule <- function(
   grade_order = NULL
 ) {
   horizon <- check_horizon(horizon)
-  m <- projection_matrix(ratios, grade_order)
+  m <- progression_matrix(ratios, grade_order)
   go <- rownames(m)
   diags <- recovery_diagonals(recovery, go)
   n_normal <- check_swing(swing_years, length(diags), horizon)

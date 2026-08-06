@@ -305,7 +305,7 @@ prepare_ratio_projection <- function(
     )
   }
   horizon <- check_horizon(horizon, call = call)
-  m <- projection_matrix(ratios)
+  m <- progression_matrix(ratios)
   go <- rownames(m)
   n <- as_base_vector(base, go, call = call)
   entry_vals <- entry_values(entry, horizon, n, go[1], call = call)
@@ -379,7 +379,7 @@ run_projection <- function(steps, base_vec, out_years) {
 #' projected year), overwriting the entry grade with the supplied exogenous
 #' value each year. `ratios` is optional when a `schedule` is supplied.
 #'
-#' @inheritParams projection_matrix
+#' @inheritParams progression_matrix
 #' @param base Most recent observed enrollment: either a data frame with
 #'   columns `grade` and `enrollment` (optionally `year`), or a named numeric
 #'   vector. Grade values or vector names must be present and unique. Enrollment

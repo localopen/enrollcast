@@ -17,6 +17,16 @@
       Error in `swing_schedule()`:
       ! `entry` is required for the 1 normal year after recovery.
 
+# entry length matches the number of normal years
+
+    Code
+      swing_schedule(fixture_ratios(), horizon = 5, swing_years = 1, recovery = 1.1,
+      entry = c(130, 140))
+    Condition
+      Error in `swing_schedule()`:
+      ! `entry` length must equal `horizon`.
+      x `entry` has length 2 but `horizon` is 3.
+
 # swing_years must be a non-negative integer
 
     Code

@@ -209,7 +209,7 @@ test_that("invalid base years do not fall back to relative years", {
 
 test_that("a constant schedule reproduces the ratios path", {
   r <- proj_ratios()
-  m <- projection_matrix(r)
+  m <- progression_matrix(r)
   entry <- c(130, 140)
   sched <- lapply(entry, function(e) list(matrix = m, entry = e))
   p_sched <- project_enrollment(
@@ -228,7 +228,7 @@ test_that("a constant schedule reproduces the ratios path", {
 })
 
 test_that("schedule path realigns a reordered base", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   sched <- list(list(matrix = m, entry = 130))
   reordered <- c(`2` = 91, K = 120, `1` = 99)
   p <- project_enrollment(reordered, schedule = sched, start_year = 2023)
@@ -237,7 +237,7 @@ test_that("schedule path realigns a reordered base", {
 })
 
 test_that("hand-built identity+diag schedule runs", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   ident <- diag(3)
   dimnames(ident) <- dimnames(m)
   scale <- diag(rep(1.1, 3))
@@ -252,7 +252,7 @@ test_that("hand-built identity+diag schedule runs", {
 })
 
 test_that("schedule and ratios are mutually exclusive", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   sched <- list(list(matrix = m, entry = 130))
   expect_enrollcast_error(
     project_enrollment(proj_base(), ratios = proj_ratios(), schedule = sched),
@@ -268,7 +268,7 @@ test_that("project_enrollment needs ratios or a schedule", {
 })
 
 test_that("horizon must match schedule length when both are given", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   sched <- list(list(matrix = m, entry = 130))
   expect_enrollcast_error(
     project_enrollment(proj_base(), schedule = sched, horizon = 2),
@@ -277,7 +277,7 @@ test_that("horizon must match schedule length when both are given", {
 })
 
 test_that("explicit schedule horizon is validated before comparison", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   sched <- list(list(matrix = m, entry = 130))
   for (horizon in list(NA_real_, Inf, 1.5, "1")) {
     expect_error(
@@ -288,7 +288,7 @@ test_that("explicit schedule horizon is validated before comparison", {
 })
 
 test_that("schedule matrices must contain valid numeric values", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   expect_snapshot(
     project_enrollment(
       proj_base(),
@@ -312,7 +312,7 @@ test_that("schedule matrices must contain valid numeric values", {
 })
 
 test_that("schedule matrices allow NA coefficients", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   missing <- valid
   missing["2", "1"] <- NA_real_
   schedule <- list(list(matrix = missing, entry = 130))
@@ -332,7 +332,7 @@ test_that("schedule matrices allow NA coefficients", {
 })
 
 test_that("schedule matrices allow NaN coefficients", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   undefined <- valid
   undefined["2", "1"] <- NaN
 
@@ -352,7 +352,7 @@ test_that("schedule matrices allow NaN coefficients", {
 })
 
 test_that("schedule matrices allow missing coefficients with one warning", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   missing <- valid
   missing["2", "1"] <- NA_real_
   undefined <- valid
@@ -374,7 +374,7 @@ test_that("schedule matrices allow missing coefficients with one warning", {
 })
 
 test_that("schedule structural errors pre-empt missing-value warnings", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   missing <- valid
   missing["2", "1"] <- NA_real_
   inconsistent <- valid
@@ -437,7 +437,7 @@ test_that("swing schedules preserve missing ratios through projection", {
 })
 
 test_that("schedule matrix grade names must be present and unique", {
-  valid <- projection_matrix(proj_ratios())
+  valid <- progression_matrix(proj_ratios())
   missing_colnames <- valid
   colnames(missing_colnames) <- NULL
   duplicate <- valid
@@ -453,7 +453,7 @@ test_that("schedule matrix grade names must be present and unique", {
 })
 
 test_that("schedule accepts list subclasses", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   ordinary <- list(list(matrix = m, entry = 130))
   subclassed <- structure(
     list(structure(list(matrix = m, entry = 130), class = "schedule_step")),
@@ -475,7 +475,7 @@ test_that("check_step rejects a non-list step", {
 })
 
 test_that("check_step rejects a non-square matrix", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   expect_enrollcast_error(
     check_step(list(matrix = m[, 1, drop = FALSE])),
     class = "enrollcast_error_step_not_square"
@@ -502,7 +502,7 @@ test_that("check_step rejects a matrix with mismatched row and col names", {
 })
 
 test_that("check_step rejects an invalid step entry", {
-  m <- projection_matrix(proj_ratios())
+  m <- progression_matrix(proj_ratios())
   expect_enrollcast_error(
     check_step(list(matrix = m, entry = c(1, 2))),
     class = "enrollcast_error_step_entry"
@@ -530,7 +530,7 @@ test_that("check_schedule rejects an empty list", {
 })
 
 test_that("check_schedule rejects inconsistent grade dimnames", {
-  m1 <- projection_matrix(proj_ratios())
+  m1 <- progression_matrix(proj_ratios())
   m2 <- matrix(
     c(0, 0, 0.9, 0, 0, 0.95, 0, 0, 0),
     nrow = 3,

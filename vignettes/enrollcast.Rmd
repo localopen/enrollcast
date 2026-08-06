@@ -53,7 +53,7 @@ The ratios sit on the sub-diagonal of the projection matrix; the entry-grade row
 is zero because entry is supplied exogenously.
 
 ```{r}
-projection_matrix(ratios)
+progression_matrix(ratios)
 ```
 
 ## Step 2: project forward

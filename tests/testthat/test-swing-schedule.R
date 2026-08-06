@@ -120,6 +120,19 @@ test_that("swing_schedule needs entry for normal years", {
   )
 })
 
+test_that("entry length matches the number of normal years", {
+  expect_enrollcast_error(
+    swing_schedule(
+      fixture_ratios(),
+      horizon = 5,
+      swing_years = 1,
+      recovery = 1.1,
+      entry = c(130, 140)
+    ),
+    class = "enrollcast_error_entry_length"
+  )
+})
+
 test_that("swing_years must be a non-negative integer", {
   expect_enrollcast_error(
     swing_schedule(
