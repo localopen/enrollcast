@@ -1,6 +1,10 @@
 # enrollcast 0.0.0.9000
 
 * Initial development version.
+* Internal refactor with no user-facing changes: conditions are raised through
+  shared `ec_abort()`/`ec_warn()` helpers, validators are consolidated, and the
+  `utils` package is no longer imported. All exported behavior, condition
+  classes, and messages are unchanged.
 * `progression_ratios()` validates column selectors, historical enrollment and
   years, warns about gaps across the complete history before `n_years` selects
   recent transitions, and supports mean, geometric, median, last, and strictly

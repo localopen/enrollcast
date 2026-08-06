@@ -99,5 +99,9 @@ and map when projecting multiple schools or sectors.
   payload identity; that distinction is not portable across the CI matrix.
 - `Depends: R (>= 4.0)` and the `oldrel-1` CI leg rule out the native pipe `|>`
   and `\(x)` lambdas (both R 4.1+). The codebase currently uses neither.
-- `enrollcast_fixture()` in `tests/testthat/helper-enrollcast.R` is the shared
-  ordered K-2, 2021-2023 fixture.
+- `tests/testthat/helper-enrollcast.R` holds the shared fixtures and
+  expectations: `enrollcast_fixture()` (ordered K-2, 2021-2023 history),
+  `fixture_ratios()` / `proj_ratios()` / `proj_base()`, the
+  `expect_enrollcast_error()` / `expect_enrollcast_warning()` pair (snapshot +
+  class in one call), and `collect_warnings()`. Use these instead of re-rolling
+  snapshot/class two-liners or `withCallingHandlers` collectors.
