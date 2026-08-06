@@ -68,6 +68,11 @@ and map when projecting multiple schools or sectors.
   git-ignored local build output: run `Rscript -e 'pkgdown::build_site()'` only
   to preview, and never commit it. Keep the `url` in `_pkgdown.yml` identical to
   the GitHub Pages URL in `DESCRIPTION`.
+- pkgdown publishes every root-level `*.md` (and `.github/*.md`) except its own
+  hardcoded skip list, and `.Rbuildignore` does not prevent this. `pkgdown.yaml`
+  therefore deletes `AGENTS.md` and `CLAUDE.md` from the checkout before
+  building, which keeps them out of the pages, the sitemap, and `search.json`.
+  A new root-level `*.md` will be published unless it is added to that step.
 
 ## Code and tests
 
