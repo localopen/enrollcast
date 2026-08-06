@@ -171,7 +171,7 @@ test_that("projection_matrix rejects an infinite ratio", {
 test_that("projection_matrix warns on NA ratios and keeps them in the matrix", {
   r <- fixture_ratios()
   r$ratio[2] <- NA
-  expect_snapshot(M <- projection_matrix(r))
+  expect_snapshot(invisible(projection_matrix(r)))
   expect_warning(projection_matrix(r), class = "enrollcast_warning_ratio_na")
   M <- suppressWarnings(projection_matrix(r))
   expect_identical(M["2", "1"], NA_real_)

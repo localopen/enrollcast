@@ -138,9 +138,10 @@ test_that("partial year gaps warn and use only adjacent transitions", {
 
   expect_snapshot(invisible(progression_ratios(history)))
   expect_warning(
-    ratios <- progression_ratios(history),
+    progression_ratios(history),
     class = "enrollcast_warning_year_gaps"
   )
+  ratios <- suppressWarnings(progression_ratios(history))
   expect_equal(ratios$ratio, c((0.9 + 0.825) / 2, (0.875 + 0.8) / 2))
 
   recent <- suppressWarnings(progression_ratios(history, n_years = 1))

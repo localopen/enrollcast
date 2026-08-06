@@ -317,8 +317,11 @@ test_that("schedule matrices allow NA coefficients", {
   schedule <- list(list(matrix = missing, entry = 130))
 
   expect_warning(
-    result <- project_enrollment(proj_base(), schedule = schedule),
+    project_enrollment(proj_base(), schedule = schedule),
     class = "enrollcast_warning_schedule_na"
+  )
+  result <- suppressWarnings(
+    project_enrollment(proj_base(), schedule = schedule)
   )
 
   expect_true(is.na(result$enrollment[result$grade == "2"]))
@@ -333,12 +336,16 @@ test_that("schedule matrices allow NaN coefficients", {
   undefined["2", "1"] <- NaN
 
   expect_warning(
-    result <- project_enrollment(
+    project_enrollment(
       proj_base(),
       schedule = list(list(matrix = undefined, entry = 130))
     ),
     class = "enrollcast_warning_schedule_na"
   )
+  result <- suppressWarnings(project_enrollment(
+    proj_base(),
+    schedule = list(list(matrix = undefined, entry = 130))
+  ))
 
   expect_true(is.na(result$enrollment[result$grade == "2"]))
 })
@@ -400,7 +407,7 @@ test_that("swing schedules preserve missing ratios through projection", {
   )
 
   expect_warning(
-    schedule <- swing_schedule(
+    swing_schedule(
       ratios,
       horizon = 2,
       swing_years = 0,
@@ -409,9 +416,19 @@ test_that("swing schedules preserve missing ratios through projection", {
     ),
     class = "enrollcast_warning_ratio_na"
   )
+  schedule <- suppressWarnings(swing_schedule(
+    ratios,
+    horizon = 2,
+    swing_years = 0,
+    recovery = numeric(0),
+    entry = c(130, 140)
+  ))
   expect_warning(
-    scheduled <- project_enrollment(proj_base(), schedule = schedule),
+    project_enrollment(proj_base(), schedule = schedule),
     class = "enrollcast_warning_schedule_na"
+  )
+  scheduled <- suppressWarnings(
+    project_enrollment(proj_base(), schedule = schedule)
   )
 
   expect_equal(scheduled, direct)

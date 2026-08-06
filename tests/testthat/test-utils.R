@@ -120,10 +120,13 @@ test_that("resolve_grade_order warns when guessing character order", {
 
 test_that("resolve_grade_order warns when grade_order has grades absent from data", {
   expect_snapshot(
-    res <- resolve_grade_order(
+    invisible(resolve_grade_order(
       c("K", "1", "2"),
       grade_order = c("K", "1", "2", "3")
-    )
+    ))
+  )
+  res <- suppressWarnings(
+    resolve_grade_order(c("K", "1", "2"), grade_order = c("K", "1", "2", "3"))
   )
   expect_identical(res, c("K", "1", "2"))
   expect_warning(
@@ -156,7 +159,7 @@ test_that("as_entry_vector errors on length mismatch", {
 
 test_that("as_base_vector warns on extra grades", {
   v <- c(K = 120, `1` = 99, `2` = 91, `3` = 50)
-  expect_snapshot(res <- as_base_vector(v, c("K", "1", "2")))
+  expect_snapshot(invisible(as_base_vector(v, c("K", "1", "2"))))
   expect_warning(
     as_base_vector(v, c("K", "1", "2")),
     class = "enrollcast_warning_base_extra"

@@ -115,7 +115,7 @@
 # projection_matrix warns on NA ratios and keeps them in the matrix
 
     Code
-      M <- projection_matrix(r)
+      invisible(projection_matrix(r))
     Condition
       Warning:
       1 ratio in `ratios` is NA or NaN.
