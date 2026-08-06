@@ -15,9 +15,10 @@ swing_schedule(
 }
 \arguments{
 \item{ratios}{A data frame or data-frame subclass with columns \code{grade_from},
-\code{grade_to}, and \code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}. \code{grade_from}
-and \code{grade_to} must not be missing. \code{ratio} must be numeric, non-negative,
-and finite; an infinite ratio (from a zero-enrollment feeder) is rejected,
+\code{grade_to}, and \code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}.
+\code{grade_from} and \code{grade_to} must not be missing. \code{ratio} must be numeric,
+non-negative, and finite; an infinite ratio (from a zero-enrollment
+feeder) is rejected,
 while \code{NA}/\code{NaN} ratios (e.g. from sparse history) are kept in the matrix
 with a warning.}
 

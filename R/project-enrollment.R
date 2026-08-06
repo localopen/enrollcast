@@ -4,7 +4,10 @@ check_horizon <- function(horizon, call = rlang::caller_env()) {
     ec_abort(
       c(
         "{.arg horizon} must be a single positive integer.",
-        "x" = "You supplied {.obj_type_friendly {horizon}} of length {length(horizon)}."
+        "x" = paste0(
+          "You supplied {.obj_type_friendly {horizon}} ",
+          "of length {length(horizon)}."
+        )
       ),
       class = "enrollcast_error_horizon",
       call = call
@@ -43,7 +46,11 @@ entry_values <- function(
     ec_warn(
       c(
         "{.arg entry} not supplied.",
-        "i" = "Holding entry grade {.field {entry_grade}} constant at {.val {base_vec[[entry_grade]]}} for all {horizon} projected year{?s}."
+        "i" = paste0(
+          "Holding entry grade {.field {entry_grade}} constant at ",
+          "{.val {base_vec[[entry_grade]]}} for all {horizon} ",
+          "projected year{?s}."
+        )
       ),
       class = "enrollcast_warning_entry_missing"
     )
@@ -63,7 +70,10 @@ check_step_entry <- function(entry, call = rlang::caller_env()) {
   ) {
     ec_abort(
       c(
-        "Each {.arg schedule} step {.field entry} must be {.code NULL} or one finite, non-negative number.",
+        paste0(
+          "Each {.arg schedule} step {.field entry} must be ",
+          "{.code NULL} or one finite, non-negative number."
+        ),
         "x" = "Got {.obj_type_friendly {entry}} of length {length(entry)}."
       ),
       class = "enrollcast_error_step_entry",
@@ -76,7 +86,10 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   if (!is.list(step) || is.null(step$matrix)) {
     ec_abort(
       c(
-        "Each {.arg schedule} step must be a {.cls list} with a {.field matrix} element.",
+        paste0(
+          "Each {.arg schedule} step must be a ",
+          "{.cls list} with a {.field matrix} element."
+        ),
         "x" = "Got {.obj_type_friendly {step}}."
       ),
       class = "enrollcast_error_step_shape",
@@ -100,7 +113,10 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
       any(m < 0, na.rm = TRUE)
   ) {
     ec_abort(
-      "Each {.arg schedule} step {.field matrix} must contain non-negative numeric values or {.val {NA}}/{.val {NaN}}, without infinite values.",
+      paste0(
+        "Each {.arg schedule} step {.field matrix} must contain non-negative ",
+        "numeric values or {.val {NA}}/{.val {NaN}}, without infinite values."
+      ),
       class = "enrollcast_error_step_values",
       call = call
     )
@@ -114,7 +130,10 @@ check_step_dimnames <- function(m, call = rlang::caller_env()) {
   if (is.null(rn) || is.null(cn)) {
     ec_abort(
       c(
-        "Each {.arg schedule} step {.field matrix} must have present, unique, identical row and column names in the same order.",
+        paste0(
+          "Each {.arg schedule} step {.field matrix} must have present, ",
+          "unique, identical row and column names in the same order."
+        ),
         "x" = "This matrix is missing row or column names."
       ),
       class = "enrollcast_error_step_dimnames",
@@ -126,8 +145,14 @@ check_step_dimnames <- function(m, call = rlang::caller_env()) {
   ) {
     ec_abort(
       c(
-        "Each {.arg schedule} step {.field matrix} must have present, unique, identical row and column names in the same order.",
-        "x" = "Row names {.val {rn}} and column names {.val {cn}} are invalid or do not match."
+        paste0(
+          "Each {.arg schedule} step {.field matrix} must have present, ",
+          "unique, identical row and column names in the same order."
+        ),
+        "x" = paste0(
+          "Row names {.val {rn}} and column names ",
+          "{.val {cn}} are invalid or do not match."
+        )
       ),
       class = "enrollcast_error_step_dimnames",
       call = call
@@ -166,9 +191,15 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
   if (length(differing) > 0) {
     ec_abort(
       c(
-        "All {.arg schedule} step matrices must share the same grade dimnames in the same order.",
+        paste0(
+          "All {.arg schedule} step matrices must share ",
+          "the same grade dimnames in the same order."
+        ),
         "i" = "Step 1 grades: {.val {go}}.",
-        "x" = "{cli::qty(length(differing))}Differing step{?s}: {.val {differing}}."
+        "x" = paste0(
+          "{cli::qty(length(differing))}Differing ",
+          "step{?s}: {.val {differing}}."
+        )
       ),
       class = "enrollcast_error_schedule_inconsistent",
       call = call
@@ -185,9 +216,18 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
   if (n_missing > 0) {
     ec_warn(
       c(
-        "{cli::qty(n_missing)}{n_missing} missing matrix coefficient{?s} {?was/were} found in {.arg schedule}.",
-        "!" = "{cli::qty(length(affected))}Affected step{?s}: {.val {affected}}.",
-        "i" = "Missing coefficients are preserved and may propagate into later grades and years."
+        paste0(
+          "{cli::qty(n_missing)}{n_missing} missing matrix ",
+          "coefficient{?s} {?was/were} found in {.arg schedule}."
+        ),
+        "!" = paste0(
+          "{cli::qty(length(affected))}Affected ",
+          "step{?s}: {.val {affected}}."
+        ),
+        "i" = paste0(
+          "Missing coefficients are preserved and may ",
+          "propagate into later grades and years."
+        )
       ),
       class = "enrollcast_warning_schedule_na"
     )
@@ -207,8 +247,14 @@ prepare_schedule_projection <- function(
   if (!is.null(ratios) || !is.null(entry)) {
     ec_abort(
       c(
-        "Supply either {.arg ratios}/{.arg entry} or {.arg schedule}, not both.",
-        "x" = "You also supplied {.arg {c('ratios', 'entry')[c(!is.null(ratios), !is.null(entry))]}}."
+        paste0(
+          "Supply either {.arg ratios}/{.arg entry} ",
+          "or {.arg schedule}, not both."
+        ),
+        "x" = paste0(
+          "You also supplied ",
+          "{.arg {c('ratios', 'entry')[c(!is.null(ratios), !is.null(entry))]}}."
+        )
       ),
       class = "enrollcast_error_conflicting_args",
       call = call
@@ -224,7 +270,10 @@ prepare_schedule_projection <- function(
     ec_abort(
       c(
         "{.arg horizon} must equal the {.arg schedule} length.",
-        "x" = "{.arg horizon} is {.val {horizon}} but {.arg schedule} has {length(schedule)} step{?s}."
+        "x" = paste0(
+          "{.arg horizon} is {.val {horizon}} but ",
+          "{.arg schedule} has {length(schedule)} step{?s}."
+        )
       ),
       class = "enrollcast_error_horizon_schedule_mismatch",
       call = call
@@ -282,13 +331,19 @@ resolve_out_years <- function(
   if (!is.null(start_year) && start_year > .Machine$integer.max - horizon) {
     if (derived_year) {
       ec_abort(
-        "{.arg base} year and {.arg horizon} must produce years within the R integer range.",
+        paste0(
+          "{.arg base} year and {.arg horizon} must ",
+          "produce years within the R integer range."
+        ),
         class = "enrollcast_error_base_year",
         call = call
       )
     }
     ec_abort(
-      "{.arg start_year} and {.arg horizon} must produce years within the R integer range.",
+      paste0(
+        "{.arg start_year} and {.arg horizon} must ",
+        "produce years within the R integer range."
+      ),
       class = "enrollcast_error_start_year",
       call = call
     )

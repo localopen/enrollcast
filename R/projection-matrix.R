@@ -5,7 +5,10 @@ chain_order <- function(from, to, call = rlang::caller_env()) {
   if (anyDuplicated(from)) {
     ec_abort(
       c(
-        "A grade feeds more than one grade in {.arg ratios} (branching transitions).",
+        paste0(
+          "A grade feeds more than one grade in ",
+          "{.arg ratios} (branching transitions)."
+        ),
         "i" = "Pass {.arg grade_order} explicitly."
       ),
       class = "enrollcast_error_branching_transitions",
@@ -72,7 +75,10 @@ check_ratio_values <- function(ratio, call = rlang::caller_env()) {
       c(
         "The {.field ratio} column of {.arg ratios} must be finite.",
         "x" = "Found {sum(ratio == Inf, na.rm = TRUE)} infinite value{?s}.",
-        "i" = "An infinite ratio comes from a zero-enrollment feeder grade; drop or adjust it before building the matrix."
+        "i" = paste0(
+          "An infinite ratio comes from a zero-enrollment feeder ",
+          "grade; drop or adjust it before building the matrix."
+        )
       ),
       class = "enrollcast_error_ratio_infinite",
       call = call
@@ -88,7 +94,10 @@ check_ratio_labels <- function(from, to, call = rlang::caller_env()) {
   if (n_na > 0) {
     ec_abort(
       c(
-        "{.field grade_from} and {.field grade_to} in {.arg ratios} must not be missing.",
+        paste0(
+          "{.field grade_from} and {.field grade_to} ",
+          "in {.arg ratios} must not be missing."
+        ),
         "x" = "Found {n_na} missing grade label{?s}."
       ),
       class = "enrollcast_error_grade_na",
@@ -99,7 +108,10 @@ check_ratio_labels <- function(from, to, call = rlang::caller_env()) {
     ec_abort(
       c(
         "Each grade in {.arg ratios} may be fed by only one progression ratio.",
-        "x" = "Grade{?s} fed more than once: {.field {unique(to[duplicated(to)])}}.",
+        "x" = paste0(
+          "Grade{?s} fed more than once: ",
+          "{.field {unique(to[duplicated(to)])}}."
+        ),
         "i" = "Check {.field grade_to} in {.arg ratios} for duplicate rows."
       ),
       class = "enrollcast_error_duplicate_feeder",
@@ -135,7 +147,10 @@ check_projection_grades <- function(
     unknown <- setdiff(unique(c(from, to)), grade_order)
     ec_abort(
       c(
-        "{.arg ratios} references {cli::qty(unknown)} grade{?s} not in {.arg grade_order}.",
+        paste0(
+          "{.arg ratios} references {cli::qty(unknown)} ",
+          "grade{?s} not in {.arg grade_order}."
+        ),
         "x" = "Unknown grade{?s}: {.field {unknown}}.",
         "i" = "Known grades: {.field {grade_order}}."
       ),
@@ -150,7 +165,10 @@ check_projection_grades <- function(
       c(
         "Every non-entry grade must be fed by a progression ratio.",
         "x" = "Missing ratio{?s} feeding grade{?s}: {.field {missing_in}}.",
-        "i" = "{cli::qty(missing_in)}Add row{?s} to {.arg ratios} with {.field grade_to} set to {?this/these} grade{?s}."
+        "i" = paste0(
+          "{cli::qty(missing_in)}Add row{?s} to {.arg ratios} ",
+          "with {.field grade_to} set to {?this/these} grade{?s}."
+        )
       ),
       class = "enrollcast_error_missing_ratio",
       call = call
@@ -171,7 +189,10 @@ check_subdiagonal <- function(
     pairs <- paste0(from[bad], " -> ", to[bad])
     ec_abort(
       c(
-        "Each ratio in {.arg ratios} must feed the next grade up in {.arg grade_order}.",
+        paste0(
+          "Each ratio in {.arg ratios} must feed ",
+          "the next grade up in {.arg grade_order}."
+        ),
         "x" = "Non-adjacent transition{?s}: {.val {pairs}}.",
         "i" = "Grade order: {.field {grade_order}}."
       ),
@@ -188,8 +209,14 @@ warn_na_ratios <- function(ratio) {
   if (n_na > 0) {
     ec_warn(
       c(
-        "{n_na} ratio{?s} in {.arg ratios} {?is/are} {.val {NA}} or {.val {NaN}}.",
-        "!" = "{cli::qty(n_na)}Grade{?s} fed by {?this/these} ratio{?s} will project as {.val {NA}}."
+        paste0(
+          "{n_na} ratio{?s} in {.arg ratios} ",
+          "{?is/are} {.val {NA}} or {.val {NaN}}."
+        ),
+        "!" = paste0(
+          "{cli::qty(n_na)}Grade{?s} fed by {?this/these} ",
+          "ratio{?s} will project as {.val {NA}}."
+        )
       ),
       class = "enrollcast_warning_ratio_na"
     )
@@ -199,17 +226,18 @@ warn_na_ratios <- function(ratio) {
 
 #' Build the projection matrix
 #'
-#' Assembles the projection matrix used to advance enrollment. Progression ratios
-#' are placed on the sub-diagonal (each non-entry grade is fed by the grade
-#' below); the entry-grade row is left at zero because entry enrollment is
+#' Assembles the projection matrix used to advance enrollment. Progression
+#' ratios are placed on the sub-diagonal (each non-entry grade is fed by the
+#' grade below); the entry-grade row is left at zero because entry enrollment is
 #' supplied exogenously to [project_enrollment()]. The ratios must form a single
 #' low-to-high chain: each `grade_to` must be the grade immediately above its
 #' `grade_from` in the resolved order.
 #'
 #' @param ratios A data frame or data-frame subclass with columns `grade_from`,
-#'   `grade_to`, and `ratio`, as returned by [progression_ratios()]. `grade_from`
-#'   and `grade_to` must not be missing. `ratio` must be numeric, non-negative,
-#'   and finite; an infinite ratio (from a zero-enrollment feeder) is rejected,
+#'   `grade_to`, and `ratio`, as returned by [progression_ratios()].
+#'   `grade_from` and `grade_to` must not be missing. `ratio` must be numeric,
+#'   non-negative, and finite; an infinite ratio (from a zero-enrollment
+#'   feeder) is rejected,
 #'   while `NA`/`NaN` ratios (e.g. from sparse history) are kept in the matrix
 #'   with a warning.
 #' @param grade_order Optional character vector giving the low-to-high grade

@@ -5,7 +5,10 @@ check_recovery_values <- function(recovery, call = rlang::caller_env()) {
     any(recovery < 0)
   if (bad) {
     ec_abort(
-      "{.arg recovery} values must be numeric, finite, non-missing, and non-negative.",
+      paste0(
+        "{.arg recovery} values must be numeric, ",
+        "finite, non-missing, and non-negative."
+      ),
       class = "enrollcast_error_recovery_values",
       call = call
     )
@@ -30,7 +33,10 @@ align_recovery_matrix <- function(recovery, go, call = rlang::caller_env()) {
   }
   if (anyNA(rn) || !all(nzchar(rn)) || anyDuplicated(rn) || !setequal(rn, go)) {
     ec_abort(
-      "Named {.arg recovery} matrix rows must be unique and exactly match the projection grades.",
+      paste0(
+        "Named {.arg recovery} matrix rows must be ",
+        "unique and exactly match the projection grades."
+      ),
       class = "enrollcast_error_recovery_names",
       call = call
     )
@@ -81,7 +87,10 @@ check_swing <- function(
   if (n_normal < 0) {
     ec_abort(
       c(
-        "{.arg swing_years} plus recovery length must not exceed {.arg horizon}.",
+        paste0(
+          "{.arg swing_years} plus recovery ",
+          "length must not exceed {.arg horizon}."
+        ),
         "x" = "{swing_years} + {n_recovery} > {horizon}."
       ),
       class = "enrollcast_error_swing_too_long",
@@ -105,7 +114,10 @@ normal_entry <- function(entry, n_normal, call = rlang::caller_env()) {
   }
   if (is.null(entry)) {
     ec_abort(
-      "{.arg entry} is required for the {n_normal} normal year{?s} after recovery.",
+      paste0(
+        "{.arg entry} is required for the ",
+        "{n_normal} normal year{?s} after recovery."
+      ),
       class = "enrollcast_error_entry_required",
       call = call
     )

@@ -14,8 +14,14 @@ check_enrollment_selectors <- function(
   if (!all(valid_selectors) || anyDuplicated(unlist(selectors))) {
     ec_abort(
       c(
-        "{.arg year}, {.arg grade}, and {.arg enrollment} must be distinct non-missing character scalars.",
-        "x" = "Each argument must select exactly one different column in {.arg data}."
+        paste0(
+          "{.arg year}, {.arg grade}, and {.arg enrollment} ",
+          "must be distinct non-missing character scalars."
+        ),
+        "x" = paste0(
+          "Each argument must select exactly ",
+          "one different column in {.arg data}."
+        )
       ),
       class = "enrollcast_error_column_selector",
       call = call
@@ -45,7 +51,10 @@ check_enrollment_values <- function(
   if (any(invalid_enrollment)) {
     ec_abort(
       c(
-        "The {.field {enrollment}} column of {.arg data} must contain finite values or {.val {NA}}.",
+        paste0(
+          "The {.field {enrollment}} column of {.arg data} ",
+          "must contain finite values or {.val {NA}}."
+        ),
         "x" = "Found {sum(invalid_enrollment)} non-finite value{?s}."
       ),
       class = "enrollcast_error_enrollment_nonfinite",
@@ -57,7 +66,10 @@ check_enrollment_values <- function(
     ec_abort(
       c(
         "The {.field {enrollment}} column of {.arg data} must be non-negative.",
-        "x" = "Found {sum(data[[enrollment]] < 0, na.rm = TRUE)} negative value{?s}."
+        "x" = paste0(
+          "Found {sum(data[[enrollment]] < 0, na.rm = TRUE)} ",
+          "negative value{?s}."
+        )
       ),
       class = "enrollcast_error_enrollment_negative",
       call = call
@@ -69,7 +81,10 @@ check_enrollment_grades <- function(data, grade, call = rlang::caller_env()) {
   if (anyNA(data[[grade]])) {
     ec_abort(
       c(
-        "The {.field {grade}} column of {.arg data} must not contain missing values.",
+        paste0(
+          "The {.field {grade}} column of {.arg data} ",
+          "must not contain missing values."
+        ),
         "x" = "Found {sum(is.na(data[[grade]]))} missing value{?s}."
       ),
       class = "enrollcast_error_grade_na",
@@ -80,8 +95,14 @@ check_enrollment_grades <- function(data, grade, call = rlang::caller_env()) {
   if (length(unique(as.character(data[[grade]]))) < 2) {
     ec_abort(
       c(
-        "{.arg data} must contain at least 2 grades to compute progression ratios.",
-        "x" = "The {.field {grade}} column has {length(unique(as.character(data[[grade]])))} grade{?s}."
+        paste0(
+          "{.arg data} must contain at least 2 ",
+          "grades to compute progression ratios."
+        ),
+        "x" = paste0(
+          "The {.field {grade}} column has ",
+          "{length(unique(as.character(data[[grade]])))} grade{?s}."
+        )
       ),
       class = "enrollcast_error_too_few_grades",
       call = call
@@ -97,7 +118,10 @@ coerce_enrollment_year <- function(data, year, call = rlang::caller_env()) {
   if (any(invalid_year)) {
     ec_abort(
       c(
-        "The {.field {year}} column of {.arg data} must be coercible to finite integers.",
+        paste0(
+          "The {.field {year}} column of {.arg data} ",
+          "must be coercible to finite integers."
+        ),
         "x" = "Found {sum(invalid_year)} invalid value{?s}."
       ),
       class = "enrollcast_error_year_type",
@@ -159,7 +183,10 @@ enrollment_matrix <- function(
       c(
         "{.arg data} must have one row per grade per year.",
         "x" = "Found duplicate ({.field {grade}}, {.field {year}}) row{?s}.",
-        "i" = "Aggregate or de-duplicate before calling {.fn progression_ratios}."
+        "i" = paste0(
+          "Aggregate or de-duplicate before ",
+          "calling {.fn progression_ratios}."
+        )
       ),
       class = "enrollcast_error_duplicate_rows",
       call = call
@@ -208,7 +235,10 @@ transition_ratios <- function(w, call = rlang::caller_env()) {
       c(
         "Historical years are not consecutive.",
         "i" = "Only adjacent-year transitions will be used.",
-        "!" = "{cli::qty(length(gaps))}Gap{?s} between observed years: {.val {gap_pairs}}."
+        "!" = paste0(
+          "{cli::qty(length(gaps))}Gap{?s} between ",
+          "observed years: {.val {gap_pairs}}."
+        )
       ),
       class = "enrollcast_warning_year_gaps"
     )
@@ -315,7 +345,10 @@ progression_ratios <- function(
   if (any(is.infinite(r)) || any(is.nan(r))) {
     ec_warn(
       c(
-        "{sum(is.infinite(r) | is.nan(r))} progression ratio{?s} {?is/are} infinite or {.val {NaN}}.",
+        paste0(
+          "{sum(is.infinite(r) | is.nan(r))} progression ",
+          "ratio{?s} {?is/are} infinite or {.val {NaN}}."
+        ),
         "!" = "A feeder grade had zero enrollment in at least one transition."
       ),
       class = "enrollcast_warning_undefined_ratios"

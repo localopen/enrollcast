@@ -62,7 +62,10 @@ check_grade_order_arg <- function(grade_order, call = rlang::caller_env()) {
     ec_abort(
       c(
         "{.arg grade_order} must not contain duplicate grades.",
-        "x" = "Duplicated grade{?s}: {.field {unique(grade_order[duplicated(grade_order)])}}."
+        "x" = paste0(
+          "Duplicated grade{?s}: ",
+          "{.field {unique(grade_order[duplicated(grade_order)])}}."
+        )
       ),
       class = "enrollcast_error_grade_order_duplicate",
       call = call
@@ -93,7 +96,10 @@ resolve_grade_order <- function(
     missing_go <- setdiff(grade_order, u)
     if (length(missing_go)) {
       ec_warn(
-        "{.arg grade_order} contains grade{?s} missing from data: {.field {missing_go}}.",
+        paste0(
+          "{.arg grade_order} contains grade{?s} ",
+          "missing from data: {.field {missing_go}}."
+        ),
         class = "enrollcast_warning_grade_order_extra"
       )
     }
@@ -113,7 +119,10 @@ resolve_grade_order <- function(
   ec_warn(
     c(
       "Grade order guessed by sorting labels alphabetically.",
-      "i" = "Pass {.arg grade_order} or a factor {.arg grade} to set it explicitly."
+      "i" = paste0(
+        "Pass {.arg grade_order} or a factor ",
+        "{.arg grade} to set it explicitly."
+      )
     ),
     class = "enrollcast_warning_grade_order_guessed"
   )
@@ -161,7 +170,10 @@ check_weights_shape <- function(weights, R, call = rlang::caller_env()) {
       c(
         "{.arg weights} length must equal the number of transition years used.",
         "x" = "{.arg weights} has length {length(weights)}.",
-        "i" = "There {cli::qty(ncol(R))}{?is/are} {ncol(R)} transition year{?s}."
+        "i" = paste0(
+          "There {cli::qty(ncol(R))}{?is/are} ",
+          "{ncol(R)} transition year{?s}."
+        )
       ),
       class = "enrollcast_error_weights_length",
       call = call
@@ -241,7 +253,10 @@ coerce_base_vector <- function(base, call = rlang::caller_env()) {
   } else {
     ec_abort(
       c(
-        "{.arg base} must be a data frame (grade, enrollment) or a named numeric vector.",
+        paste0(
+          "{.arg base} must be a data frame (grade, ",
+          "enrollment) or a named numeric vector."
+        ),
         "x" = "You supplied {.obj_type_friendly {base}}."
       ),
       class = "enrollcast_error_base_type",
@@ -287,7 +302,10 @@ align_base_grades <- function(v, go, call = rlang::caller_env()) {
   extra <- setdiff(names(v), go)
   if (length(extra)) {
     ec_warn(
-      "{.arg base} contains grade{?s} not in {.arg ratios} that will be ignored: {.field {extra}}.",
+      paste0(
+        "{.arg base} contains grade{?s} not in {.arg ratios} ",
+        "that will be ignored: {.field {extra}}."
+      ),
       class = "enrollcast_warning_base_extra"
     )
   }
@@ -332,7 +350,10 @@ as_entry_vector <- function(entry, horizon, call = rlang::caller_env()) {
     valcol <- intersect(c("enrollment", "value"), names(entry))
     if (length(valcol) == 0) {
       ec_abort(
-        "{.arg entry} data frame must have an {.field enrollment} or {.field value} column.",
+        paste0(
+          "{.arg entry} data frame must have an ",
+          "{.field enrollment} or {.field value} column."
+        ),
         class = "enrollcast_error_entry_no_value_col",
         call = call
       )
@@ -343,7 +364,10 @@ as_entry_vector <- function(entry, horizon, call = rlang::caller_env()) {
   } else {
     ec_abort(
       c(
-        "{.arg entry} must be a numeric vector or a data frame with a value column.",
+        paste0(
+          "{.arg entry} must be a numeric vector ",
+          "or a data frame with a value column."
+        ),
         "x" = "You supplied {.obj_type_friendly {entry}}."
       ),
       class = "enrollcast_error_entry_type",
@@ -361,7 +385,10 @@ as_entry_vector <- function(entry, horizon, call = rlang::caller_env()) {
     ec_abort(
       c(
         "{.arg entry} length must equal {.arg horizon}.",
-        "x" = "{.arg entry} has length {length(vals)} but {.arg horizon} is {horizon}."
+        "x" = paste0(
+          "{.arg entry} has length {length(vals)} ",
+          "but {.arg horizon} is {horizon}."
+        )
       ),
       class = "enrollcast_error_entry_length",
       call = call
