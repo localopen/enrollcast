@@ -1,4 +1,4 @@
-url: https://github.com/localopen/enrollcast
+url: https://localopen.github.io/enrollcast/
 template:
   bootstrap: 5
-  bootswatch: minty
+  bootswatch: pulse

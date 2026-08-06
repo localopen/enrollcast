@@ -13,6 +13,7 @@ Useful links:
 \itemize{
   \item \url{https://rorylawless.r-universe.dev/enrollcast}
   \item \url{https://github.com/localopen/enrollcast}
+  \item \url{https://localopen.github.io/enrollcast/}
   \item Report bugs at \url{https://github.com/localopen/enrollcast/issues}
 }
 

@@ -24,7 +24,8 @@ and map when projecting multiple schools or sectors.
   `test-coverage.yaml` (covr to Codecov). Both fire on every pull request and on
   pushes to `main`, and failing snapshots upload as artifacts. Still verify
   locally first: the matrix is slow, and Windows and `oldrel-1` are where
-  surprises land. No workflow builds or publishes the pkgdown site.
+  surprises land. `pkgdown.yaml` builds the site on the same triggers and, on
+  non-PR runs, deploys it to the `gh-pages` branch.
 
 ## Projection invariants
 
@@ -62,10 +63,11 @@ and map when projecting multiple schools or sectors.
   edit generated `README.md` directly.
 - `data-raw/synthetic_enrollment.R` generates
   `inst/extdata/synthetic_enrollment.csv`.
-- `docs/` is a checked-in pkgdown site built from `_pkgdown.yml`. Nothing in CI
-  rebuilds it, so after changing roxygen, `README.Rmd`, or the vignette, run
-  `Rscript -e 'pkgdown::build_site()'` or the site goes stale. pkgdown is in the
-  renv library but is deliberately not a `DESCRIPTION` dependency.
+- The pkgdown site is built and deployed by CI (`pkgdown.yaml` to the `gh-pages`
+  branch, served at <https://localopen.github.io/enrollcast/>). `docs/` is
+  git-ignored local build output: run `Rscript -e 'pkgdown::build_site()'` only
+  to preview, and never commit it. Keep the `url` in `_pkgdown.yml` identical to
+  the GitHub Pages URL in `DESCRIPTION`.
 
 ## Code and tests
 
