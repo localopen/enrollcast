@@ -195,6 +195,107 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
   go
 }
 
+# Resolve the per-year steps, base vector, and horizon for a schedule call.
+prepare_schedule_projection <- function(
+  base,
+  ratios,
+  entry,
+  schedule,
+  horizon,
+  call = rlang::caller_env()
+) {
+  if (!is.null(ratios) || !is.null(entry)) {
+    ec_abort(
+      c(
+        "Supply either {.arg ratios}/{.arg entry} or {.arg schedule}, not both.",
+        "x" = "You also supplied {.arg {c('ratios', 'entry')[c(!is.null(ratios), !is.null(entry))]}}."
+      ),
+      class = "enrollcast_error_conflicting_args",
+      call = call
+    )
+  }
+  go <- check_schedule(schedule, call = call)
+  if (is.null(horizon)) {
+    horizon <- length(schedule)
+  } else {
+    horizon <- check_horizon(horizon, call = call)
+  }
+  if (horizon != length(schedule)) {
+    ec_abort(
+      c(
+        "{.arg horizon} must equal the {.arg schedule} length.",
+        "x" = "{.arg horizon} is {.val {horizon}} but {.arg schedule} has {length(schedule)} step{?s}."
+      ),
+      class = "enrollcast_error_horizon_schedule_mismatch",
+      call = call
+    )
+  }
+  list(
+    steps = schedule,
+    n = as_base_vector(base, go, call = call),
+    horizon = horizon
+  )
+}
+
+# Resolve the per-year steps, base vector, and horizon for a ratios call.
+prepare_ratio_projection <- function(
+  base,
+  ratios,
+  entry,
+  horizon,
+  call = rlang::caller_env()
+) {
+  if (is.null(ratios)) {
+    ec_abort(
+      c(
+        "Supply {.arg ratios} (or a {.arg schedule}).",
+        "i" = "{.arg ratios} comes from {.fn progression_ratios}."
+      ),
+      class = "enrollcast_error_missing_input",
+      call = call
+    )
+  }
+  horizon <- check_horizon(horizon, call = call)
+  m <- projection_matrix(ratios)
+  go <- rownames(m)
+  n <- as_base_vector(base, go, call = call)
+  entry_vals <- entry_values(entry, horizon, n, go[1], call = call)
+  steps <- lapply(seq_len(horizon), function(h) {
+    list(matrix = m, entry = entry_vals[[h]])
+  })
+  list(steps = steps, n = n, horizon = horizon)
+}
+
+# Output-year labels: derived from start_year or base$year, else 1..horizon.
+resolve_out_years <- function(
+  base,
+  start_year,
+  horizon,
+  call = rlang::caller_env()
+) {
+  derived_year <- is.null(start_year)
+  if (derived_year) {
+    start_year <- base_year(base, call = call)
+  } else {
+    start_year <- check_start_year(start_year, call = call)
+  }
+  if (!is.null(start_year) && start_year > .Machine$integer.max - horizon) {
+    if (derived_year) {
+      ec_abort(
+        "{.arg base} year and {.arg horizon} must produce years within the R integer range.",
+        class = "enrollcast_error_base_year",
+        call = call
+      )
+    }
+    ec_abort(
+      "{.arg start_year} and {.arg horizon} must produce years within the R integer range.",
+      class = "enrollcast_error_start_year",
+      call = call
+    )
+  }
+  if (is.null(start_year)) seq_len(horizon) else start_year + seq_len(horizon)
+}
+
 # Advance enrollment through a per-year sequence of projection steps.
 run_projection <- function(steps, base_vec, out_years) {
   go <- names(base_vec)
@@ -277,74 +378,11 @@ project_enrollment <- function(
   schedule = NULL,
   start_year = NULL
 ) {
-  if (!is.null(schedule)) {
-    if (!is.null(ratios) || !is.null(entry)) {
-      ec_abort(
-        c(
-          "Supply either {.arg ratios}/{.arg entry} or {.arg schedule}, not both.",
-          "x" = "You also supplied {.arg {c('ratios', 'entry')[c(!is.null(ratios), !is.null(entry))]}}."
-        ),
-        class = "enrollcast_error_conflicting_args"
-      )
-    }
-    go <- check_schedule(schedule)
-    if (is.null(horizon)) {
-      horizon <- length(schedule)
-    } else {
-      horizon <- check_horizon(horizon)
-    }
-    if (horizon != length(schedule)) {
-      ec_abort(
-        c(
-          "{.arg horizon} must equal the {.arg schedule} length.",
-          "x" = "{.arg horizon} is {.val {horizon}} but {.arg schedule} has {length(schedule)} step{?s}."
-        ),
-        class = "enrollcast_error_horizon_schedule_mismatch"
-      )
-    }
-    n <- as_base_vector(base, go)
-    steps <- schedule
+  prep <- if (!is.null(schedule)) {
+    prepare_schedule_projection(base, ratios, entry, schedule, horizon)
   } else {
-    if (is.null(ratios)) {
-      ec_abort(
-        c(
-          "Supply {.arg ratios} (or a {.arg schedule}).",
-          "i" = "{.arg ratios} comes from {.fn progression_ratios}."
-        ),
-        class = "enrollcast_error_missing_input"
-      )
-    }
-    horizon <- check_horizon(horizon)
-    m <- projection_matrix(ratios)
-    go <- rownames(m)
-    n <- as_base_vector(base, go)
-    entry_vals <- entry_values(entry, horizon, n, go[1])
-    steps <- lapply(seq_len(horizon), function(h) {
-      list(matrix = m, entry = entry_vals[[h]])
-    })
+    prepare_ratio_projection(base, ratios, entry, horizon)
   }
-  derived_year <- is.null(start_year)
-  if (derived_year) {
-    start_year <- base_year(base)
-  } else {
-    start_year <- check_start_year(start_year)
-  }
-  if (!is.null(start_year) && start_year > .Machine$integer.max - horizon) {
-    if (derived_year) {
-      ec_abort(
-        "{.arg base} year and {.arg horizon} must produce years within the R integer range.",
-        class = "enrollcast_error_base_year"
-      )
-    }
-    ec_abort(
-      "{.arg start_year} and {.arg horizon} must produce years within the R integer range.",
-      class = "enrollcast_error_start_year"
-    )
-  }
-  out_years <- if (is.null(start_year)) {
-    seq_len(horizon)
-  } else {
-    start_year + seq_len(horizon)
-  }
-  run_projection(steps, n, out_years)
+  out_years <- resolve_out_years(base, start_year, prep$horizon)
+  run_projection(prep$steps, prep$n, out_years)
 }
