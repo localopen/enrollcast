@@ -120,8 +120,7 @@ resolve_grade_order <- function(
   sort(u)
 }
 
-check_ratio_weights <- function(
-  R,
+check_weights_supplied <- function(
   method,
   weights,
   call = rlang::caller_env()
@@ -133,28 +132,30 @@ check_ratio_weights <- function(
       call = call
     )
   }
-  if (method != "weighted") {
-    return(invisible())
-  }
-  if (is.null(weights)) {
+  if (method == "weighted" && is.null(weights)) {
     ec_abort(
       "{.arg weights} is required for {.code method = \"weighted\"}.",
       class = "enrollcast_error_weights_missing",
       call = call
     )
   }
-  if (
-    !is.numeric(weights) ||
-      anyNA(weights) ||
-      !all(is.finite(weights)) ||
-      any(weights < 0)
-  ) {
+}
+
+check_weights_values <- function(weights, call = rlang::caller_env()) {
+  bad <- !is.numeric(weights) ||
+    anyNA(weights) ||
+    !all(is.finite(weights)) ||
+    any(weights < 0)
+  if (bad) {
     ec_abort(
       "{.arg weights} must be numeric, finite, non-missing, and non-negative.",
       class = "enrollcast_error_weights_values",
       call = call
     )
   }
+}
+
+check_weights_shape <- function(weights, R, call = rlang::caller_env()) {
   if (length(weights) != ncol(R)) {
     ec_abort(
       c(
@@ -173,6 +174,20 @@ check_ratio_weights <- function(
       call = call
     )
   }
+}
+
+check_ratio_weights <- function(
+  R,
+  method,
+  weights,
+  call = rlang::caller_env()
+) {
+  check_weights_supplied(method, weights, call = call)
+  if (method != "weighted") {
+    return(invisible())
+  }
+  check_weights_values(weights, call = call)
+  check_weights_shape(weights, R, call = call)
 }
 
 summarise_ratio_row <- function(x, method, weights) {
