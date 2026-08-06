@@ -1,5 +1,9 @@
 check_recovery_values <- function(recovery, call = rlang::caller_env()) {
-  if (anyNA(recovery) || !all(is.finite(recovery)) || any(recovery < 0)) {
+  bad <- !is.numeric(recovery) ||
+    anyNA(recovery) ||
+    !all(is.finite(recovery)) ||
+    any(recovery < 0)
+  if (bad) {
     ec_abort(
       "{.arg recovery} values must be numeric, finite, non-missing, and non-negative.",
       class = "enrollcast_error_recovery_values",
@@ -40,13 +44,6 @@ recovery_diagonals <- function(recovery, go, call = rlang::caller_env()) {
   G <- length(go)
   if (is.matrix(recovery)) {
     recovery <- align_recovery_matrix(recovery, go, call = call)
-    if (!is.numeric(recovery)) {
-      ec_abort(
-        "{.arg recovery} values must be numeric, finite, non-missing, and non-negative.",
-        class = "enrollcast_error_recovery_values",
-        call = call
-      )
-    }
     check_recovery_values(recovery, call = call)
     return(lapply(seq_len(ncol(recovery)), function(j) {
       stats::setNames(recovery[, j], go)

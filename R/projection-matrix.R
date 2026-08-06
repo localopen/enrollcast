@@ -81,8 +81,9 @@ check_ratio_values <- function(ratio, call = rlang::caller_env()) {
   invisible(ratio)
 }
 
-# Grade labels in `ratios` must not be missing.
-check_grade_labels <- function(from, to, call = rlang::caller_env()) {
+# Grade labels in `ratios` must not be missing, and each grade may be fed by
+# only one ratio row.
+check_ratio_labels <- function(from, to, call = rlang::caller_env()) {
   n_na <- sum(is.na(from)) + sum(is.na(to))
   if (n_na > 0) {
     ec_abort(
@@ -94,11 +95,6 @@ check_grade_labels <- function(from, to, call = rlang::caller_env()) {
       call = call
     )
   }
-  invisible(NULL)
-}
-
-# Abort when any grade is fed by more than one ratio row.
-check_duplicate_feeder <- function(to, call = rlang::caller_env()) {
   if (anyDuplicated(to)) {
     ec_abort(
       c(
@@ -110,7 +106,7 @@ check_duplicate_feeder <- function(to, call = rlang::caller_env()) {
       call = call
     )
   }
-  invisible(to)
+  invisible(NULL)
 }
 
 # Validate from/to transitions against the resolved grade order.
@@ -241,8 +237,7 @@ projection_matrix <- function(ratios, grade_order = NULL) {
   check_ratio_values(ratios$ratio)
   from <- as.character(ratios$grade_from)
   to <- as.character(ratios$grade_to)
-  check_grade_labels(from, to)
-  check_duplicate_feeder(to)
+  check_ratio_labels(from, to)
 
   if (is.null(grade_order)) {
     grade_order <- chain_order(from, to)

@@ -94,10 +94,6 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
       call = call
     )
   }
-  m
-}
-
-check_step_matrix_values <- function(m, call = rlang::caller_env()) {
   if (
     !is.numeric(m) ||
       any(is.infinite(m)) ||
@@ -109,6 +105,7 @@ check_step_matrix_values <- function(m, call = rlang::caller_env()) {
       call = call
     )
   }
+  m
 }
 
 check_step_dimnames <- function(m, call = rlang::caller_env()) {
@@ -142,7 +139,6 @@ check_step_dimnames <- function(m, call = rlang::caller_env()) {
 # Validate one projection step; return its grade order.
 check_step <- function(step, call = rlang::caller_env()) {
   m <- check_step_matrix(step, call = call)
-  check_step_matrix_values(m, call = call)
   go <- check_step_dimnames(m, call = call)
   check_step_entry(step$entry, call = call)
   go
