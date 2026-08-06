@@ -60,7 +60,7 @@ Inspect the underlying projection matrix at any time:
 
 ``` r
 
-projection_matrix(ratios)
+progression_matrix(ratios)
 #>       K         1 2
 #> K 0.000 0.0000000 0
 #> 1 0.925 0.0000000 0
@@ -85,7 +85,7 @@ school_history <- data.frame(
 
 projections <- lapply(
   split(school_history, school_history$school),
-  \(df) {
+  function(df) {
     ratios <- progression_ratios(df)
     base <- df[df$year == max(df$year), c("year", "grade", "enrollment")]
     project_enrollment(base, ratios, horizon = 3, entry = rep(100, 3))

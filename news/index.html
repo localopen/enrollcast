@@ -37,11 +37,14 @@
 <h2 class="pkg-version" data-toc-text="0.0.0.9000" id="enrollcast-0009000">enrollcast 0.0.0.9000<a class="anchor" aria-label="anchor" href="#enrollcast-0009000"></a></h2>
 <ul><li>Initial development version.</li>
 <li>
+<code>projection_matrix()</code> is renamed to <code><a href="../reference/progression_matrix.html">progression_matrix()</a></code> (hard rename, no alias): the name completes the pipeline vocabulary alongside <code><a href="../reference/progression_ratios.html">progression_ratios()</a></code> and avoids a function-name collision with the risdr package.</li>
+<li>Internal refactor with no user-facing changes: conditions are raised through shared <code>ec_abort()</code>/<code>ec_warn()</code> helpers, validators are consolidated, and the <code>utils</code> package is no longer imported. All exported behavior, condition classes, and messages are unchanged.</li>
+<li>
 <code><a href="../reference/progression_ratios.html">progression_ratios()</a></code> validates column selectors, historical enrollment and years, warns about gaps across the complete history before <code>n_years</code> selects recent transitions, and supports mean, geometric, median, last, and strictly validated weighted summaries.</li>
 <li>
 <code><a href="../reference/project_enrollment.html">project_enrollment()</a></code> validates base and entry enrollment, year labels, and prebuilt schedules while projecting an arbitrary horizon. Missing schedule coefficients are preserved with an aggregate warning and can spread missingness through later matrix products; a supplied entry value restores only the entry grade.</li>
 <li>
-<code><a href="../reference/projection_matrix.html">projection_matrix()</a></code> validates ratio values, grade labels and order, and requires a data frame with one adjacent low-to-high transition per non-entry grade.</li>
+<code><a href="../reference/progression_matrix.html">progression_matrix()</a></code> validates ratio values, grade labels and order, and requires a data frame with one adjacent low-to-high transition per non-entry grade.</li>
 <li>
 <code><a href="../reference/swing_schedule.html">swing_schedule()</a></code> builds swing/recovery schedules with strictly validated entry and recovery values; named recovery rows are aligned by grade.</li>
 </ul></div>

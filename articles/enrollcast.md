@@ -61,7 +61,7 @@ entry-grade row is zero because entry is supplied exogenously.
 
 ``` r
 
-projection_matrix(ratios)
+progression_matrix(ratios)
 #>       K         1 2
 #> K 0.000 0.0000000 0
 #> 1 0.925 0.0000000 0

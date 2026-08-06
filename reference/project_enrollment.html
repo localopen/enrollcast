@@ -75,9 +75,10 @@ must be finite, non-missing, and non-negative.</p></dd>
 
 <dt id="arg-ratios">ratios<a class="anchor" aria-label="anchor" href="#arg-ratios"></a></dt>
 <dd><p>A data frame or data-frame subclass with columns <code>grade_from</code>,
-<code>grade_to</code>, and <code>ratio</code>, as returned by <code><a href="progression_ratios.html">progression_ratios()</a></code>. <code>grade_from</code>
-and <code>grade_to</code> must not be missing. <code>ratio</code> must be numeric, non-negative,
-and finite; an infinite ratio (from a zero-enrollment feeder) is rejected,
+<code>grade_to</code>, and <code>ratio</code>, as returned by <code><a href="progression_ratios.html">progression_ratios()</a></code>.
+<code>grade_from</code> and <code>grade_to</code> must not be missing. <code>ratio</code> must be numeric,
+non-negative, and finite; an infinite ratio (from a zero-enrollment
+feeder) is rejected,
 while <code>NA</code>/<code>NaN</code> ratios (e.g. from sparse history) are kept in the matrix
 with a warning.</p></dd>
 
