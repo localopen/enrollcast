@@ -410,13 +410,8 @@ test_that("schedule matrices allow missing coefficients with one warning", {
     list(matrix = undefined, entry = 140)
   )
 
-  warnings <- list()
-  withCallingHandlers(
-    project_enrollment(proj_base(), schedule = schedule),
-    warning = function(cnd) {
-      warnings[[length(warnings) + 1]] <<- cnd
-      invokeRestart("muffleWarning")
-    }
+  warnings <- collect_warnings(
+    project_enrollment(proj_base(), schedule = schedule)
   )
 
   expect_length(warnings, 1)
@@ -440,17 +435,12 @@ test_that("schedule structural errors pre-empt missing-value warnings", {
     list(matrix = inconsistent, entry = 140)
   )
 
-  warnings <- list()
-  expect_error(
-    withCallingHandlers(
+  expect_no_warning(
+    expect_error(
       check_schedule(schedule),
-      warning = function(cnd) {
-        warnings[[length(warnings) + 1]] <<- cnd
-      }
-    ),
-    class = "enrollcast_error_schedule_inconsistent"
+      class = "enrollcast_error_schedule_inconsistent"
+    )
   )
-  expect_length(warnings, 0)
 })
 
 test_that("swing schedules preserve missing ratios through projection", {

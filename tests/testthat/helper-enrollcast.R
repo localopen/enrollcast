@@ -10,3 +10,17 @@ enrollcast_fixture <- function() {
     enrollment = c(100, 90, 80, 110, 95, 88, 120, 99, 91)
   )
 }
+
+# Evaluate `expr`, muffling warnings; return the collected warning conditions.
+collect_warnings <- function(expr) {
+  store <- new.env(parent = emptyenv())
+  store$warnings <- list()
+  withCallingHandlers(
+    expr,
+    warning = function(cnd) {
+      store$warnings[[length(store$warnings) + 1]] <- cnd
+      invokeRestart("muffleWarning")
+    }
+  )
+  store$warnings
+}

@@ -161,14 +161,7 @@ test_that("multiple year gaps are reported in one warning", {
     enrollment = seq_len(15) + 100
   )
 
-  warnings <- list()
-  withCallingHandlers(
-    progression_ratios(history),
-    warning = function(cnd) {
-      warnings[[length(warnings) + 1]] <<- cnd
-      invokeRestart("muffleWarning")
-    }
-  )
+  warnings <- collect_warnings(progression_ratios(history))
   expect_length(warnings, 1)
   expect_s3_class(warnings[[1]], "enrollcast_warning_year_gaps")
   expect_snapshot(invisible(progression_ratios(history)))
