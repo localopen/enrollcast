@@ -14,12 +14,7 @@ check_horizon <- function(horizon, call = rlang::caller_env()) {
 }
 
 check_start_year <- function(start_year, call = rlang::caller_env()) {
-  if (
-    !is.numeric(start_year) ||
-      length(start_year) != 1 ||
-      !is.finite(start_year) ||
-      start_year %% 1 != 0
-  ) {
+  if (!is_whole_number(start_year)) {
     ec_abort(
       "{.arg start_year} must be one finite integer.",
       class = "enrollcast_error_start_year",

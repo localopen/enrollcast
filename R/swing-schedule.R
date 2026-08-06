@@ -66,10 +66,6 @@ recovery_diagonals <- function(recovery, go, call = rlang::caller_env()) {
   lapply(recovery, function(mult) stats::setNames(rep(mult, G), go))
 }
 
-is_nonnegative_integer <- function(x) {
-  is.numeric(x) && length(x) == 1 && is.finite(x) && x >= 0 && x %% 1 == 0
-}
-
 # Number of normal (GPR) years; errors if swing + recovery exceed the horizon.
 check_swing <- function(
   swing_years,
@@ -77,7 +73,7 @@ check_swing <- function(
   horizon,
   call = rlang::caller_env()
 ) {
-  if (!is_nonnegative_integer(swing_years)) {
+  if (!is_whole_number(swing_years, min = 0)) {
     ec_abort(
       "{.arg swing_years} must be a non-negative integer.",
       class = "enrollcast_error_swing_years",

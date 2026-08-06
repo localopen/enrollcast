@@ -1,8 +1,13 @@
 # Internal helpers. Not exported.
 
+# TRUE if `x` is a single, non-missing whole number with `x >= min`.
+is_whole_number <- function(x, min = -Inf) {
+  is.numeric(x) && length(x) == 1 && is.finite(x) && x %% 1 == 0 && x >= min
+}
+
 # TRUE if `x` is a single, non-missing, positive integer value.
 is_count <- function(x) {
-  is.numeric(x) && length(x) == 1 && is.finite(x) && x %% 1 == 0 && x >= 1
+  is_whole_number(x, min = 1)
 }
 
 check_data_frame <- function(
@@ -289,7 +294,7 @@ base_year <- function(base, call = rlang::caller_env()) {
   }
   uy <- unique(base$year)
   y <- suppressWarnings(as.numeric(as.character(uy)))
-  if (length(y) != 1 || !is.finite(y) || y %% 1 != 0) {
+  if (!is_whole_number(y)) {
     ec_abort(
       "{.arg base} year must contain one finite integer value.",
       class = "enrollcast_error_base_year",
