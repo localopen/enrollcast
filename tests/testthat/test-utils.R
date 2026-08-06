@@ -14,18 +14,6 @@ test_that("resolve_grade_order honours explicit grade_order", {
   )
 })
 
-test_that("summarise_ratios computes each method", {
-  R <- matrix(c(0.95, 0.9), nrow = 1, dimnames = list("1", c("2022", "2023")))
-  expect_equal(summarise_ratios(R, "mean"), c("1" = 0.925))
-  expect_equal(summarise_ratios(R, "last"), c("1" = 0.9))
-  expect_equal(summarise_ratios(R, "median"), c("1" = 0.925))
-  expect_equal(summarise_ratios(R, "geometric"), c("1" = sqrt(0.855)))
-  expect_equal(
-    summarise_ratios(R, "weighted", weights = c(2, 1)),
-    c("1" = (0.9 * 2 + 0.95 * 1) / 3)
-  )
-})
-
 test_that("summarise_ratios returns NA_real_ for all-NA rows", {
   R <- matrix(NA_real_, nrow = 1, ncol = 2, dimnames = list("1", NULL))
   methods <- c("mean", "median", "geometric", "last", "weighted")

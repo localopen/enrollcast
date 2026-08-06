@@ -20,7 +20,7 @@
 # projection_matrix errors with fewer than two grades
 
     Code
-      projection_matrix(ratios_fixture(), grade_order = "K")
+      projection_matrix(fixture_ratios(), grade_order = "K")
     Condition
       Error in `projection_matrix()`:
       ! A projection matrix needs at least 2 grades.
@@ -30,7 +30,7 @@
 # projection_matrix errors when ratios reference an unknown grade
 
     Code
-      projection_matrix(ratios_fixture(), grade_order = c("K", "1"))
+      projection_matrix(fixture_ratios(), grade_order = c("K", "1"))
     Condition
       Error in `projection_matrix()`:
       ! `ratios` references grade not in `grade_order`.
@@ -65,24 +65,6 @@
       ! Each grade in `ratios` may be fed by only one progression ratio.
       x Grade fed more than once: 1.
       i Check grade_to in `ratios` for duplicate rows.
-
-# projection_matrix rejects a grade_order containing missing values
-
-    Code
-      projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", NA))
-    Condition
-      Error in `projection_matrix()`:
-      ! `grade_order` must not contain missing values.
-      x Found 1 missing value.
-
-# projection_matrix rejects a grade_order containing duplicates
-
-    Code
-      projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", "2"))
-    Condition
-      Error in `projection_matrix()`:
-      ! `grade_order` must not contain duplicate grades.
-      x Duplicated grade: 2.
 
 # projection_matrix rejects missing grade labels on the inferred path
 

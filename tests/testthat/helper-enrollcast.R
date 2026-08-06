@@ -38,3 +38,23 @@ expect_enrollcast_warning <- function(expr, class) {
   eval.parent(bquote(testthat::expect_warning(.(expr), class = .(class))))
   eval.parent(bquote(testthat::expect_snapshot(.(expr))))
 }
+
+# Canonical K-2 ratios (literal): the rounded ratios of enrollcast_fixture().
+fixture_ratios <- function() {
+  data.frame(
+    grade_from = c("K", "1"),
+    grade_to = c("1", "2"),
+    ratio = c(0.925, 0.96783626)
+  )
+}
+
+# Ratios computed from the shared fixture (exact floating-point values).
+proj_ratios <- function() progression_ratios(enrollcast_fixture())
+
+# The 2023 base-year enrollment of enrollcast_fixture().
+proj_base <- function() {
+  data.frame(
+    grade = c("K", "1", "2"),
+    enrollment = c(120, 99, 91)
+  )
+}

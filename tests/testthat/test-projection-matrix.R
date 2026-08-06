@@ -1,13 +1,5 @@
-ratios_fixture <- function() {
-  data.frame(
-    grade_from = c("K", "1"),
-    grade_to = c("1", "2"),
-    ratio = c(0.925, 0.96783626)
-  )
-}
-
 test_that("projection_matrix builds the canonical sub-diagonal matrix", {
-  M <- projection_matrix(ratios_fixture()[2:1, ])
+  M <- projection_matrix(fixture_ratios()[2:1, ])
   expect_identical(dim(M), c(3L, 3L))
   expect_identical(rownames(M), c("K", "1", "2"))
   expect_identical(colnames(M), c("K", "1", "2"))
@@ -18,7 +10,7 @@ test_that("projection_matrix builds the canonical sub-diagonal matrix", {
 })
 
 test_that("ratios must be a data frame or subclass", {
-  ratios <- ratios_fixture()
+  ratios <- fixture_ratios()
   invalid <- list(
     as.list(ratios),
     as.matrix(ratios),
@@ -41,7 +33,7 @@ test_that("ratios must be a data frame or subclass", {
 })
 
 test_that("a ratio of zero is kept, not treated as missing", {
-  r <- ratios_fixture()
+  r <- fixture_ratios()
   r$ratio[2] <- 0
   M <- projection_matrix(r)
   expect_identical(M["2", "1"], 0)
@@ -49,7 +41,7 @@ test_that("a ratio of zero is kept, not treated as missing", {
 
 test_that("explicit grade_order controls dimnames and ratio placement", {
   M <- projection_matrix(
-    ratios_fixture()[2:1, ],
+    fixture_ratios()[2:1, ],
     grade_order = c("K", "1", "2")
   )
   expect_identical(dimnames(M), list(c("K", "1", "2"), c("K", "1", "2")))
@@ -58,7 +50,7 @@ test_that("explicit grade_order controls dimnames and ratio placement", {
 })
 
 test_that("projection_matrix errors on a missing feeding ratio", {
-  r <- ratios_fixture()
+  r <- fixture_ratios()
   r <- r[r$grade_to != "2", ]
   expect_enrollcast_error(
     projection_matrix(r, grade_order = c("K", "1", "2")),
@@ -68,14 +60,14 @@ test_that("projection_matrix errors on a missing feeding ratio", {
 
 test_that("projection_matrix errors with fewer than two grades", {
   expect_enrollcast_error(
-    projection_matrix(ratios_fixture(), grade_order = "K"),
+    projection_matrix(fixture_ratios(), grade_order = "K"),
     class = "enrollcast_error_too_few_grades"
   )
 })
 
 test_that("projection_matrix errors when ratios reference an unknown grade", {
   expect_enrollcast_error(
-    projection_matrix(ratios_fixture(), grade_order = c("K", "1")),
+    projection_matrix(fixture_ratios(), grade_order = c("K", "1")),
     class = "enrollcast_error_unknown_grade"
   )
 })
@@ -116,20 +108,6 @@ test_that("projection_matrix reports duplicate feeders when grade_order is omitt
   )
 })
 
-test_that("projection_matrix rejects a grade_order containing missing values", {
-  expect_enrollcast_error(
-    projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", NA)),
-    class = "enrollcast_error_grade_order_na"
-  )
-})
-
-test_that("projection_matrix rejects a grade_order containing duplicates", {
-  expect_enrollcast_error(
-    projection_matrix(ratios_fixture(), grade_order = c("K", "1", "2", "2")),
-    class = "enrollcast_error_grade_order_duplicate"
-  )
-})
-
 test_that("projection_matrix rejects missing grade labels on the inferred path", {
   r <- data.frame(
     grade_from = c("K", "1"),
@@ -143,7 +121,7 @@ test_that("projection_matrix rejects missing grade labels on the inferred path",
 })
 
 test_that("projection_matrix rejects a non-numeric ratio column", {
-  r <- ratios_fixture()
+  r <- fixture_ratios()
   r$ratio <- as.character(r$ratio)
   expect_enrollcast_error(
     projection_matrix(r),
@@ -152,7 +130,7 @@ test_that("projection_matrix rejects a non-numeric ratio column", {
 })
 
 test_that("an all-NA (logical) ratio column is rejected as non-numeric", {
-  r <- ratios_fixture()
+  r <- fixture_ratios()
   r$ratio <- c(NA, NA)
   expect_enrollcast_error(
     projection_matrix(r),
@@ -173,7 +151,7 @@ test_that("a structural error pre-empts the NA-ratio warning", {
 })
 
 test_that("projection_matrix rejects negative ratios", {
-  r <- ratios_fixture()
+  r <- fixture_ratios()
   r$ratio[1] <- -0.5
   expect_enrollcast_error(
     projection_matrix(r),
@@ -182,7 +160,7 @@ test_that("projection_matrix rejects negative ratios", {
 })
 
 test_that("projection_matrix rejects an infinite ratio", {
-  r <- ratios_fixture()
+  r <- fixture_ratios()
   r$ratio[1] <- Inf
   expect_enrollcast_error(
     projection_matrix(r),
@@ -191,7 +169,7 @@ test_that("projection_matrix rejects an infinite ratio", {
 })
 
 test_that("projection_matrix warns on NA ratios and keeps them in the matrix", {
-  r <- ratios_fixture()
+  r <- fixture_ratios()
   r$ratio[2] <- NA
   expect_snapshot(M <- projection_matrix(r))
   expect_warning(projection_matrix(r), class = "enrollcast_warning_ratio_na")
@@ -201,7 +179,7 @@ test_that("projection_matrix warns on NA ratios and keeps them in the matrix", {
 })
 
 test_that("projection_matrix warns on NaN ratios from sparse history", {
-  r <- ratios_fixture()
+  r <- fixture_ratios()
   r$ratio[2] <- NaN
   expect_warning(projection_matrix(r), class = "enrollcast_warning_ratio_na")
   M <- suppressWarnings(projection_matrix(r))

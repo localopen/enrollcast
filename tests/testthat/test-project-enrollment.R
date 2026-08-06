@@ -1,11 +1,3 @@
-proj_ratios <- function() progression_ratios(enrollcast_fixture())
-proj_base <- function() {
-  data.frame(
-    grade = c("K", "1", "2"),
-    enrollment = c(120, 99, 91)
-  )
-}
-
 test_that("project_enrollment returns the canonical ordered projection", {
   base <- proj_base()[c(3, 1, 2), ]
   p <- project_enrollment(
