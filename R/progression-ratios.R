@@ -340,7 +340,8 @@ progression_ratios <- function(
   w <- enrollment_matrix(clean, year, grade, enrollment)
   r <- transition_ratios(w)
   if (!is.null(n_years)) {
-    r <- r[, utils::tail(seq_len(ncol(r)), n_years), drop = FALSE]
+    first <- max(1L, ncol(r) - n_years + 1L)
+    r <- r[, first:ncol(r), drop = FALSE]
   }
   if (any(is.infinite(r)) || any(is.nan(r))) {
     ec_warn(
