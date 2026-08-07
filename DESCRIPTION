@@ -1,6 +1,6 @@
 Package: enrollcast
 Title: Project School Enrollment with Grade Progression Ratios
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: person("Rory", "Lawless", , email = "rory@rorylawless.com", role = c("aut", "cre"), comment = c(ORCID = "0009-0003-7688-309X"))
 Description: Projects school enrollment using the cohort survival / grade 
     progression ratio method, implemented as a matrix projection. Works at any
