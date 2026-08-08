@@ -175,9 +175,6 @@ enrollment_matrix <- function(
   enrollment,
   call = rlang::caller_env()
 ) {
-  go <- levels(data[[grade]])
-  years <- sort(unique(data[[year]]))
-
   if (anyDuplicated(data[, c(grade, year)]) > 0) {
     ec_abort(
       c(
@@ -193,22 +190,8 @@ enrollment_matrix <- function(
     )
   }
 
-  # Fill in missing (grade, year) combinations with NA
-  expand <- expand.grid(
-    stats::setNames(list(years, go), c(year, grade))
-  )
-
-  data <- merge(expand, data, by = c(year, grade), all.x = TRUE)
-
-  data <- data[order(data[[year]], data[[grade]]), ]
-
-  w <- matrix(
-    data[[enrollment]],
-    nrow = length(go),
-    ncol = length(years),
-    dimnames = list(go, as.character(years))
-  )
-  w
+  # tapply fills absent (grade, year) combinations with NA.
+  tapply(data[[enrollment]], list(data[[grade]], data[[year]]), sum)
 }
 
 # Per-transition ratios: destination grade at t+1 over feeder grade at t.
