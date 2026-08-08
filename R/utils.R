@@ -38,7 +38,10 @@ check_columns <- function(
   missing <- setdiff(cols, names(data))
   if (length(missing)) {
     ec_abort(
-      "{.arg {arg}} is missing required column{?s}: {.field {missing}}.",
+      paste0(
+        "{.arg {arg}} is missing required ",
+        "{cli::qty(missing)}column{?s}: {.field {missing}}."
+      ),
       class = "enrollcast_error_missing_columns",
       call = call
     )
