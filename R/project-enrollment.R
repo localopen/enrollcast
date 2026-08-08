@@ -217,7 +217,7 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
     ec_warn(
       c(
         paste0(
-          "{cli::qty(n_missing)}{n_missing} missing matrix ",
+          "{n_missing} missing matrix ",
           "coefficient{?s} {?was/were} found in {.arg schedule}."
         ),
         "!" = paste0(

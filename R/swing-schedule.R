@@ -185,14 +185,7 @@ swing_schedule <- function(
   n_normal <- check_swing(swing_years, length(diags), horizon)
   entry_vals <- normal_entry(entry, n_normal)
 
-  ident <- diag(length(go))
-  dimnames(ident) <- list(go, go)
-
-  swing <- if (swing_years > 0) {
-    rep(list(list(matrix = ident, entry = NULL)), swing_years)
-  } else {
-    list()
-  }
+  swing <- rep(list(diag_step(1, go)), swing_years)
   recov <- lapply(diags, diag_step, go = go)
   normal <- lapply(seq_len(n_normal), function(k) {
     list(matrix = m, entry = entry_vals[[k]])

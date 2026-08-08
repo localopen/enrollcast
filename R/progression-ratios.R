@@ -6,11 +6,7 @@ check_enrollment_selectors <- function(
   call = rlang::caller_env()
 ) {
   selectors <- list(year = year, grade = grade, enrollment = enrollment)
-  valid_selectors <- vapply(
-    selectors,
-    function(x) is.character(x) && length(x) == 1 && !is.na(x),
-    logical(1)
-  )
+  valid_selectors <- vapply(selectors, rlang::is_string, logical(1))
   if (!all(valid_selectors) || anyDuplicated(unlist(selectors))) {
     ec_abort(
       c(
@@ -218,10 +214,7 @@ transition_ratios <- function(w, call = rlang::caller_env()) {
       c(
         "Historical years are not consecutive.",
         "i" = "Only adjacent-year transitions will be used.",
-        "!" = paste0(
-          "{cli::qty(length(gaps))}Gap{?s} between ",
-          "observed years: {.val {gap_pairs}}."
-        )
+        "!" = "Gap{?s} between observed years: {.val {gap_pairs}}."
       ),
       class = "enrollcast_warning_year_gaps"
     )
