@@ -140,9 +140,7 @@ check_step_dimnames <- function(m, call = rlang::caller_env()) {
       call = call
     )
   }
-  if (
-    anyNA(rn) || !all(nzchar(rn)) || anyDuplicated(rn) || !identical(rn, cn)
-  ) {
+  if (!has_unique_names(rn) || !identical(rn, cn)) {
     ec_abort(
       c(
         paste0(

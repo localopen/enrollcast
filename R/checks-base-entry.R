@@ -48,7 +48,7 @@ check_base_values <- function(v, call = rlang::caller_env()) {
 }
 
 align_base_grades <- function(v, go, call = rlang::caller_env()) {
-  if (anyNA(names(v)) || !all(nzchar(names(v))) || anyDuplicated(names(v))) {
+  if (!has_unique_names(names(v))) {
     ec_abort(
       "{.arg base} grade names must be present and unique.",
       class = "enrollcast_error_base_grade_names",

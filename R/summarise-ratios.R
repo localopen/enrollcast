@@ -84,7 +84,7 @@ summarise_ratio_row <- function(x, method, weights) {
     geometric = exp(mean(log(x), na.rm = TRUE)),
     last = {
       nn <- x[!is.na(x)]
-      if (length(nn)) nn[[length(nn)]] else NA_real_
+      nn[[length(nn)]]
     },
     weighted = stats::weighted.mean(x, w = weights, na.rm = TRUE)
   )

@@ -42,8 +42,8 @@ check_enrollment_values <- function(
     )
   }
 
-  invalid_enrollment <- is.nan(data[[enrollment]]) |
-    (!is.na(data[[enrollment]]) & !is.finite(data[[enrollment]]))
+  invalid_enrollment <- is.infinite(data[[enrollment]]) |
+    is.nan(data[[enrollment]])
   if (any(invalid_enrollment)) {
     ec_abort(
       c(
@@ -108,9 +108,7 @@ check_enrollment_grades <- function(data, grade, call = rlang::caller_env()) {
 
 coerce_enrollment_year <- function(data, year, call = rlang::caller_env()) {
   yr <- suppressWarnings(as.numeric(as.character(data[[year]])))
-  invalid_year <- is.na(yr) |
-    !is.finite(yr) |
-    (is.finite(yr) & yr %% 1 != 0)
+  invalid_year <- !is.finite(yr) | yr %% 1 != 0
   if (any(invalid_year)) {
     ec_abort(
       c(
@@ -319,11 +317,12 @@ progression_ratios <- function(
     first <- max(1L, ncol(r) - n_years + 1L)
     r <- r[, first:ncol(r), drop = FALSE]
   }
-  if (any(is.infinite(r)) || any(is.nan(r))) {
+  undefined <- is.infinite(r) | is.nan(r)
+  if (any(undefined)) {
     ec_warn(
       c(
         paste0(
-          "{sum(is.infinite(r) | is.nan(r))} progression ",
+          "{sum(undefined)} progression ",
           "ratio{?s} {?is/are} infinite or {.val {NaN}}."
         ),
         "!" = "A feeder grade had zero enrollment in at least one transition."

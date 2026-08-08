@@ -31,7 +31,7 @@ align_recovery_matrix <- function(recovery, go, call = rlang::caller_env()) {
   if (is.null(rn)) {
     return(recovery)
   }
-  if (anyNA(rn) || !all(nzchar(rn)) || anyDuplicated(rn) || !setequal(rn, go)) {
+  if (!has_unique_names(rn) || !setequal(rn, go)) {
     ec_abort(
       paste0(
         "Named {.arg recovery} matrix rows must be ",
@@ -52,7 +52,7 @@ recovery_diagonals <- function(recovery, go, call = rlang::caller_env()) {
     recovery <- align_recovery_matrix(recovery, go, call = call)
     check_recovery_values(recovery, call = call)
     return(lapply(seq_len(ncol(recovery)), function(j) {
-      stats::setNames(recovery[, j], go)
+      recovery[, j]
     }))
   }
   if (!is.numeric(recovery)) {
@@ -66,7 +66,7 @@ recovery_diagonals <- function(recovery, go, call = rlang::caller_env()) {
     )
   }
   check_recovery_values(recovery, call = call)
-  lapply(recovery, function(mult) stats::setNames(rep(mult, G), go))
+  lapply(recovery, function(mult) rep(mult, G))
 }
 
 # Number of normal (GPR) years; errors if swing + recovery exceed the horizon.
