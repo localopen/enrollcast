@@ -1,5 +1,12 @@
 # enrollcast 0.1.0
 
+* Missing-columns errors now pluralize correctly when multiple required columns
+  are absent.
+* Internal refactor with no user-facing changes: base R, `cli`, `rlang`, and
+  `testthat` idioms replace hand-rolled equivalents. Apart from the separately
+  listed missing-columns message correction, exported behavior, condition
+  classes, and all other messages are unchanged.
+
 # enrollcast 0.0.0.9000
 
 * Initial development version.

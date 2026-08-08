@@ -87,9 +87,10 @@ and map when projecting multiple schools or sectors.
 - User-facing conditions use `cli::cli_abort()`, `cli::cli_warn()`, or
   `cli::cli_inform()` and carry a stable `enrollcast_error_*` or
   `enrollcast_warning_*` class; raise them through the `ec_abort()`/`ec_warn()`
-  helpers in `R/conditions.R`. Reuse shared validators: `is_count()` and
-  `check_columns()` live in `R/utils.R`, `resolve_grade_order()` in
-  `R/checks-grades.R`, and `base`/`entry` coercion in `R/checks-base-entry.R`.
+  helpers in `R/conditions.R`. Reuse shared validators: `is_count()`,
+  `check_columns()`, and `has_unique_names()` live in `R/utils.R`,
+  `resolve_grade_order()` in `R/checks-grades.R`, and `base`/`entry` coercion
+  in `R/checks-base-entry.R`.
 - Tests pair class assertions with snapshots of rendered cli messages. When a
   message changes, update and review `tests/testthat/_snaps/*.md` rather than
   weakening either assertion.
@@ -103,5 +104,5 @@ and map when projecting multiple schools or sectors.
   expectations: `enrollcast_fixture()` (ordered K-2, 2021-2023 history),
   `fixture_ratios()` / `proj_ratios()` / `proj_base()`, the
   `expect_enrollcast_error()` / `expect_enrollcast_warning()` pair (snapshot +
-  class in one call), and `collect_warnings()`. Use these instead of re-rolling
-  snapshot/class two-liners or `withCallingHandlers` collectors.
+  class in one call). Reuse these fixtures and error/warning expectation helpers
+  instead of re-rolling snapshot/class two-liners.
