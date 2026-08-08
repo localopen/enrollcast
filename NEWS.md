@@ -2,10 +2,12 @@
 
 * Missing-columns errors now pluralize correctly when multiple required columns
   are absent.
+* Whole-number arguments above R's reliable modulus range are now rejected
+  cleanly instead of leaking a loss-of-accuracy warning.
 * Internal refactor with no user-facing changes: base R, `cli`, `rlang`, and
-  `testthat` idioms replace hand-rolled equivalents. Apart from the separately
-  listed missing-columns message correction, exported behavior, condition
-  classes, and all other messages are unchanged.
+  `testthat` idioms replace hand-rolled equivalents. Apart from the two changes
+  listed above, exported behavior, condition classes, and messages are
+  unchanged.
 
 # enrollcast 0.0.0.9000
 
