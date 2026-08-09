@@ -46,15 +46,15 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: blacksmith-6vcpu-macos-latest, r: "release" }
-          - { os: blacksmith-4vcpu-windows-2025, r: "release" }
+          - { os: macos-latest, r: "release" }
+          - { os: blacksmith-2vcpu-windows-2025, r: "release" }
           - {
-              os: blacksmith-4vcpu-ubuntu-2404,
+              os: blacksmith-2vcpu-ubuntu-2404,
               r: "devel",
               http-user-agent: "release",
             }
-          - { os: blacksmith-4vcpu-ubuntu-2404, r: "release" }
-          - { os: blacksmith-4vcpu-ubuntu-2404, r: "oldrel-1" }
+          - { os: blacksmith-2vcpu-ubuntu-2404, r: "release" }
+          - { os: blacksmith-2vcpu-ubuntu-2404, r: "oldrel-1" }
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
