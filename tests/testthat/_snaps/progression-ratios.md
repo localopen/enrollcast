@@ -31,7 +31,7 @@
       progression_ratios(data.frame(a = 1))
     Condition
       Error in `progression_ratios()`:
-      ! `data` is missing required column: year, grade, and enrollment.
+      ! `data` is missing required columns: year, grade, and enrollment.
 
 # non-consecutive years yield no transitions
 

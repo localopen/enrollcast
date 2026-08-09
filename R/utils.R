@@ -2,12 +2,17 @@
 
 # TRUE if `x` is a single, non-missing whole number with `x >= min`.
 is_whole_number <- function(x, min = -Inf) {
-  is.numeric(x) && length(x) == 1 && is.finite(x) && x %% 1 == 0 && x >= min
+  is.numeric(x) && rlang::is_scalar_integerish(x, finite = TRUE) && x >= min
 }
 
 # TRUE if `x` is a single, non-missing, positive integer value.
 is_count <- function(x) {
   is_whole_number(x, min = 1)
+}
+
+# TRUE if `x` has no missing, empty, or duplicated elements.
+has_unique_names <- function(x) {
+  !anyNA(x) && all(nzchar(x)) && !anyDuplicated(x)
 }
 
 check_data_frame <- function(
@@ -38,7 +43,10 @@ check_columns <- function(
   missing <- setdiff(cols, names(data))
   if (length(missing)) {
     ec_abort(
-      "{.arg {arg}} is missing required column{?s}: {.field {missing}}.",
+      paste0(
+        "{.arg {arg}} is missing required ",
+        "{cli::qty(missing)}column{?s}: {.field {missing}}."
+      ),
       class = "enrollcast_error_missing_columns",
       call = call
     )

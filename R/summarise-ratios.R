@@ -41,10 +41,7 @@ check_weights_shape <- function(weights, R, call = rlang::caller_env()) {
       c(
         "{.arg weights} length must equal the number of transition years used.",
         "x" = "{.arg weights} has length {length(weights)}.",
-        "i" = paste0(
-          "There {cli::qty(ncol(R))}{?is/are} ",
-          "{ncol(R)} transition year{?s}."
-        )
+        "i" = "There {?is/are} {ncol(R)} transition year{?s}."
       ),
       class = "enrollcast_error_weights_length",
       call = call
@@ -87,7 +84,7 @@ summarise_ratio_row <- function(x, method, weights) {
     geometric = exp(mean(log(x), na.rm = TRUE)),
     last = {
       nn <- x[!is.na(x)]
-      if (length(nn)) nn[[length(nn)]] else NA_real_
+      nn[[length(nn)]]
     },
     weighted = stats::weighted.mean(x, w = weights, na.rm = TRUE)
   )

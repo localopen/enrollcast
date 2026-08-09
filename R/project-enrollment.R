@@ -140,9 +140,7 @@ check_step_dimnames <- function(m, call = rlang::caller_env()) {
       call = call
     )
   }
-  if (
-    anyNA(rn) || !all(nzchar(rn)) || anyDuplicated(rn) || !identical(rn, cn)
-  ) {
+  if (!has_unique_names(rn) || !identical(rn, cn)) {
     ec_abort(
       c(
         paste0(
@@ -217,7 +215,7 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
     ec_warn(
       c(
         paste0(
-          "{cli::qty(n_missing)}{n_missing} missing matrix ",
+          "{n_missing} missing matrix ",
           "coefficient{?s} {?was/were} found in {.arg schedule}."
         ),
         "!" = paste0(

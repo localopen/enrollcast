@@ -11,20 +11,6 @@ enrollcast_fixture <- function() {
   )
 }
 
-# Evaluate `expr`, muffling warnings; return the collected warning conditions.
-collect_warnings <- function(expr) {
-  store <- new.env(parent = emptyenv())
-  store$warnings <- list()
-  withCallingHandlers(
-    expr,
-    warning = function(cnd) {
-      store$warnings[[length(store$warnings) + 1]] <- cnd
-      invokeRestart("muffleWarning")
-    }
-  )
-  store$warnings
-}
-
 # House-style pair: snapshot the rendered condition AND assert its stable
 # class. `bquote()` injection keeps the real call in the snapshot Code lines.
 expect_enrollcast_error <- function(expr, class) {

@@ -6,11 +6,7 @@ check_enrollment_selectors <- function(
   call = rlang::caller_env()
 ) {
   selectors <- list(year = year, grade = grade, enrollment = enrollment)
-  valid_selectors <- vapply(
-    selectors,
-    function(x) is.character(x) && length(x) == 1 && !is.na(x),
-    logical(1)
-  )
+  valid_selectors <- vapply(selectors, rlang::is_string, logical(1))
   if (!all(valid_selectors) || anyDuplicated(unlist(selectors))) {
     ec_abort(
       c(
@@ -46,8 +42,8 @@ check_enrollment_values <- function(
     )
   }
 
-  invalid_enrollment <- is.nan(data[[enrollment]]) |
-    (!is.na(data[[enrollment]]) & !is.finite(data[[enrollment]]))
+  invalid_enrollment <- is.infinite(data[[enrollment]]) |
+    is.nan(data[[enrollment]])
   if (any(invalid_enrollment)) {
     ec_abort(
       c(
@@ -112,9 +108,7 @@ check_enrollment_grades <- function(data, grade, call = rlang::caller_env()) {
 
 coerce_enrollment_year <- function(data, year, call = rlang::caller_env()) {
   yr <- suppressWarnings(as.numeric(as.character(data[[year]])))
-  invalid_year <- is.na(yr) |
-    !is.finite(yr) |
-    (is.finite(yr) & yr %% 1 != 0)
+  invalid_year <- !is.finite(yr) | yr %% 1 != 0
   if (any(invalid_year)) {
     ec_abort(
       c(
@@ -175,9 +169,6 @@ enrollment_matrix <- function(
   enrollment,
   call = rlang::caller_env()
 ) {
-  go <- levels(data[[grade]])
-  years <- sort(unique(data[[year]]))
-
   if (anyDuplicated(data[, c(grade, year)]) > 0) {
     ec_abort(
       c(
@@ -193,22 +184,8 @@ enrollment_matrix <- function(
     )
   }
 
-  # Fill in missing (grade, year) combinations with NA
-  expand <- expand.grid(
-    stats::setNames(list(years, go), c(year, grade))
-  )
-
-  data <- merge(expand, data, by = c(year, grade), all.x = TRUE)
-
-  data <- data[order(data[[year]], data[[grade]]), ]
-
-  w <- matrix(
-    data[[enrollment]],
-    nrow = length(go),
-    ncol = length(years),
-    dimnames = list(go, as.character(years))
-  )
-  w
+  # tapply fills absent (grade, year) combinations with NA.
+  tapply(data[[enrollment]], list(data[[grade]], data[[year]]), sum)
 }
 
 # Per-transition ratios: destination grade at t+1 over feeder grade at t.
@@ -235,10 +212,7 @@ transition_ratios <- function(w, call = rlang::caller_env()) {
       c(
         "Historical years are not consecutive.",
         "i" = "Only adjacent-year transitions will be used.",
-        "!" = paste0(
-          "{cli::qty(length(gaps))}Gap{?s} between ",
-          "observed years: {.val {gap_pairs}}."
-        )
+        "!" = "Gap{?s} between observed years: {.val {gap_pairs}}."
       ),
       class = "enrollcast_warning_year_gaps"
     )
@@ -343,11 +317,12 @@ progression_ratios <- function(
     first <- max(1L, ncol(r) - n_years + 1L)
     r <- r[, first:ncol(r), drop = FALSE]
   }
-  if (any(is.infinite(r)) || any(is.nan(r))) {
+  undefined <- is.infinite(r) | is.nan(r)
+  if (any(undefined)) {
     ec_warn(
       c(
         paste0(
-          "{sum(is.infinite(r) | is.nan(r))} progression ",
+          "{sum(undefined)} progression ",
           "ratio{?s} {?is/are} infinite or {.val {NaN}}."
         ),
         "!" = "A feeder grade had zero enrollment in at least one transition."

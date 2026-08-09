@@ -362,12 +362,12 @@ test_that("schedule matrices allow missing coefficients with one warning", {
     list(matrix = undefined, entry = 140)
   )
 
-  warnings <- collect_warnings(
-    project_enrollment(proj_base(), schedule = schedule)
+  expect_no_warning(
+    expect_warning(
+      project_enrollment(proj_base(), schedule = schedule),
+      class = "enrollcast_warning_schedule_na"
+    )
   )
-
-  expect_length(warnings, 1)
-  expect_s3_class(warnings[[1]], "enrollcast_warning_schedule_na")
   expect_snapshot(
     invisible(project_enrollment(proj_base(), schedule = schedule))
   )
