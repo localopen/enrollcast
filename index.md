@@ -10,6 +10,13 @@ enrollment series.
 
 ``` r
 
+install.packages("enrollcast")
+```
+
+Install the development version from GitHub:
+
+``` r
+
 # install.packages("pak")
 pak::pak("localopen/enrollcast")
 ```

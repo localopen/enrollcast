@@ -35,27 +35,17 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="enrollcast-010">enrollcast 0.1.0<a class="anchor" aria-label="anchor" href="#enrollcast-010"></a></h2>
-<ul><li>Missing-columns errors now pluralize correctly when multiple required columns are absent.</li>
-<li>Whole-number arguments above R’s reliable modulus range are now rejected cleanly instead of leaking a loss-of-accuracy warning.</li>
-<li>Internal refactor with no user-facing changes: base R, <code>cli</code>, <code>rlang</code>, and <code>testthat</code> idioms replace hand-rolled equivalents. Apart from the two changes listed above, exported behavior, condition classes, and messages are unchanged.</li>
+<ul><li>Initial CRAN release.</li>
+<li>
+<code><a href="../reference/progression_ratios.html">progression_ratios()</a></code> computes progression ratios from historical grade-level enrollment, with mean, geometric, median, last, and weighted summaries. It warns about calendar-year gaps across the complete supplied history before <code>n_years</code> selects the most recent transitions.</li>
+<li>
+<code><a href="../reference/progression_matrix.html">progression_matrix()</a></code> places ratios on the sub-diagonal of a square projection matrix, leaving the entry-grade row at zero.</li>
+<li>
+<code><a href="../reference/project_enrollment.html">project_enrollment()</a></code> advances a base enrollment vector over an arbitrary horizon, from either ratios or a prebuilt schedule, overwriting the exogenous entry grade each year. Missing schedule coefficients are preserved with an aggregate warning rather than imputed.</li>
+<li>
+<code><a href="../reference/swing_schedule.html">swing_schedule()</a></code> builds per-year schedules that hold enrollment flat during swing years, apply recovery multipliers, then resume normal projection.</li>
 </ul></div>
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.0.0.9000" id="enrollcast-0009000">enrollcast 0.0.0.9000<a class="anchor" aria-label="anchor" href="#enrollcast-0009000"></a></h2>
-<ul><li>Initial development version.</li>
-<li>
-<code>projection_matrix()</code> is renamed to <code><a href="../reference/progression_matrix.html">progression_matrix()</a></code> (hard rename, no alias): the name completes the pipeline vocabulary alongside <code><a href="../reference/progression_ratios.html">progression_ratios()</a></code> and avoids a function-name collision with the risdr package.</li>
-<li>Internal refactor with no user-facing changes: conditions are raised through shared <code>ec_abort()</code>/<code>ec_warn()</code> helpers, validators are consolidated, and the <code>utils</code> package is no longer imported. All exported behavior, condition classes, and messages are unchanged.</li>
-<li>
-<code><a href="../reference/progression_ratios.html">progression_ratios()</a></code> validates column selectors, historical enrollment and years, warns about gaps across the complete history before <code>n_years</code> selects recent transitions, and supports mean, geometric, median, last, and strictly validated weighted summaries.</li>
-<li>
-<code><a href="../reference/project_enrollment.html">project_enrollment()</a></code> validates base and entry enrollment, year labels, and prebuilt schedules while projecting an arbitrary horizon. Missing schedule coefficients are preserved with an aggregate warning and can spread missingness through later matrix products; a supplied entry value restores only the entry grade.</li>
-<li>
-<code><a href="../reference/progression_matrix.html">progression_matrix()</a></code> validates ratio values, grade labels and order, and requires a data frame with one adjacent low-to-high transition per non-entry grade.</li>
-<li>
-<code><a href="../reference/swing_schedule.html">swing_schedule()</a></code> builds swing/recovery schedules with strictly validated entry and recovery values; named recovery rows are aligned by grade.</li>
-</ul></div>
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
-    </nav></aside></div>
+  </main></div>
 
 
     <footer><div class="pkgdown-footer-left">

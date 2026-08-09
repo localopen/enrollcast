@@ -21,9 +21,9 @@ Useful links:
 ## Author
 
 **Maintainer**: Rory Lawless <rory@rorylawless.com>
-([ORCID](https://orcid.org/0009-0003-7688-309X))
+([ORCID](https://orcid.org/0009-0003-7688-309X)) \[copyright holder\]
 
 Authors:
 
 - Rory Lawless <rory@rorylawless.com>
-  ([ORCID](https://orcid.org/0009-0003-7688-309X))
+  ([ORCID](https://orcid.org/0009-0003-7688-309X)) \[copyright holder\]

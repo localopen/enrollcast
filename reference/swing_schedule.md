@@ -55,10 +55,10 @@ swing_schedule(
 
 - entry:
 
-  Exogenous entry-grade enrollment for the normal (GPR) years only — one
-  finite, non-missing, non-negative numeric value for each of the
-  `horizon - swing_years - length(recovery)` years after recovery. Must
-  be empty when there are no normal years.
+  Exogenous entry-grade enrollment for the normal grade progression
+  ratio years only: one finite, non-missing, non-negative numeric value
+  for each of the `horizon - swing_years - length(recovery)` years after
+  recovery. Must be empty when there are no normal years.
 
 - grade_order:
 

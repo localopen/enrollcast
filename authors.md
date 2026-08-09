@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Rory Lawless**. Author, maintainer.
+- **Rory Lawless**. Author, maintainer, copyright holder.
   [](https://orcid.org/0009-0003-7688-309X)
 
 ## Citation
