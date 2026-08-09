@@ -35,7 +35,10 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="enrollcast-010">enrollcast 0.1.0<a class="anchor" aria-label="anchor" href="#enrollcast-010"></a></h2>
-</div>
+<ul><li>Missing-columns errors now pluralize correctly when multiple required columns are absent.</li>
+<li>Whole-number arguments above R’s reliable modulus range are now rejected cleanly instead of leaking a loss-of-accuracy warning.</li>
+<li>Internal refactor with no user-facing changes: base R, <code>cli</code>, <code>rlang</code>, and <code>testthat</code> idioms replace hand-rolled equivalents. Apart from the two changes listed above, exported behavior, condition classes, and messages are unchanged.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9000" id="enrollcast-0009000">enrollcast 0.0.0.9000<a class="anchor" aria-label="anchor" href="#enrollcast-0009000"></a></h2>
 <ul><li>Initial development version.</li>
