@@ -13,3 +13,8 @@ inst/doc
 
 docs/
 dev/
+
+.httr-oauth
+.DS_Store
+
+**/.claude/settings.local.json
