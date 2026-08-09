@@ -35,8 +35,9 @@ non-negative. Named matrix rows are matched and reordered by grade;
 unnamed rows are interpreted in projection grade order. Use \code{numeric(0)}
 for no recovery window.}
 
-\item{entry}{Exogenous entry-grade enrollment for the normal (GPR) years only
-— one finite, non-missing, non-negative numeric value for each of the
+\item{entry}{Exogenous entry-grade enrollment for the normal grade
+progression ratio years only: one finite, non-missing, non-negative
+numeric value for each of the
 \code{horizon - swing_years - length(recovery)} years after recovery. Must be
 empty when there are no normal years.}
 

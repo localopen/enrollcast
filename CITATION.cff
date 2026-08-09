@@ -8,12 +8,12 @@ message: 'To cite package "enrollcast" in publications use:'
 type: software
 license: MIT
 title: 'enrollcast: Project School Enrollment with Grade Progression Ratios'
-version: 0.0.0.9000
+version: 0.1.0
 abstract: Projects school enrollment using the cohort survival / grade progression
-  ratio method, implemented as a matrix projection. Works at any level of aggregation
-  and any number of grades. Provides functions to compute progression ratios from
-  historical grade-level enrollment and to project future enrollment forward an arbitrary
-  horizon.
+  ratio method described in Webster (1970) <doi:10.1080/00220973.1970.11011238>, implemented
+  as a matrix projection. Works at any level of aggregation and any number of grades.
+  Provides functions to compute progression ratios from historical grade-level enrollment
+  and to project future enrollment forward an arbitrary horizon.
 authors:
 - family-names: Lawless
   given-names: Rory
@@ -72,19 +72,6 @@ references:
   version: '>= 1.0.0'
 - type: software
   title: stats
-  abstract: 'R: A Language and Environment for Statistical Computing'
-  notes: Imports
-  authors:
-  - name: R Core Team
-    website: https://ror.org/02zz1nj61
-  institution:
-    name: R Foundation for Statistical Computing
-    website: https://ror.org/05qewa988
-    address: Vienna, Austria
-  year: '2026'
-  doi: 10.32614/R.manuals
-- type: software
-  title: utils
   abstract: 'R: A Language and Environment for Statistical Computing'
   notes: Imports
   authors:
@@ -165,5 +152,5 @@ references:
     email: hadley@posit.co
   year: '2026'
   doi: 10.32614/CRAN.package.testthat
-  version: '>= 3.0.0'
+  version: '>= 3.2.0'
 

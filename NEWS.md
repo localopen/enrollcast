@@ -1,36 +1,15 @@
 # enrollcast 0.1.0
 
-* Missing-columns errors now pluralize correctly when multiple required columns
-  are absent.
-* Whole-number arguments above R's reliable modulus range are now rejected
-  cleanly instead of leaking a loss-of-accuracy warning.
-* Internal refactor with no user-facing changes: base R, `cli`, `rlang`, and
-  `testthat` idioms replace hand-rolled equivalents. Apart from the two changes
-  listed above, exported behavior, condition classes, and messages are
-  unchanged.
-
-# enrollcast 0.0.0.9000
-
-* Initial development version.
-* `projection_matrix()` is renamed to `progression_matrix()` (hard rename, no
-  alias): the name completes the pipeline vocabulary alongside
-  `progression_ratios()` and avoids a function-name collision with the risdr
-  package.
-* Internal refactor with no user-facing changes: conditions are raised through
-  shared `ec_abort()`/`ec_warn()` helpers, validators are consolidated, and the
-  `utils` package is no longer imported. All exported behavior, condition
-  classes, and messages are unchanged.
-* `progression_ratios()` validates column selectors, historical enrollment and
-  years, warns about gaps across the complete history before `n_years` selects
-  recent transitions, and supports mean, geometric, median, last, and strictly
-  validated weighted summaries.
-* `project_enrollment()` validates base and entry enrollment, year labels, and
-  prebuilt schedules while projecting an arbitrary horizon. Missing schedule
-  coefficients are preserved with an aggregate warning and can spread
-  missingness through later matrix products; a supplied entry value restores
-  only the entry grade.
-* `progression_matrix()` validates ratio values, grade labels and order, and
-  requires a data frame with one adjacent low-to-high transition per non-entry
-  grade.
-* `swing_schedule()` builds swing/recovery schedules with strictly validated
-  entry and recovery values; named recovery rows are aligned by grade.
+* Initial CRAN release.
+* `progression_ratios()` computes progression ratios from historical
+  grade-level enrollment, with mean, geometric, median, last, and weighted
+  summaries. It warns about calendar-year gaps across the complete supplied
+  history before `n_years` selects the most recent transitions.
+* `progression_matrix()` places ratios on the sub-diagonal of a square
+  projection matrix, leaving the entry-grade row at zero.
+* `project_enrollment()` advances a base enrollment vector over an arbitrary
+  horizon, from either ratios or a prebuilt schedule, overwriting the exogenous
+  entry grade each year. Missing schedule coefficients are preserved with an
+  aggregate warning rather than imputed.
+* `swing_schedule()` builds per-year schedules that hold enrollment flat during
+  swing years, apply recovery multipliers, then resume normal projection.

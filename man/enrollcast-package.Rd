@@ -19,11 +19,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Rory Lawless \email{rory@rorylawless.com} (\href{https://orcid.org/0009-0003-7688-309X}{ORCID})
+\strong{Maintainer}: Rory Lawless \email{rory@rorylawless.com} (\href{https://orcid.org/0009-0003-7688-309X}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Rory Lawless \email{rory@rorylawless.com} (\href{https://orcid.org/0009-0003-7688-309X}{ORCID})
+  \item Rory Lawless \email{rory@rorylawless.com} (\href{https://orcid.org/0009-0003-7688-309X}{ORCID}) [copyright holder]
 }
 
 }
