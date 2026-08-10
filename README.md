@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# enrollcast
+# enrollcast <a href="https://localopen.github.io/enrollcast/"><img src="man/figures/logo.svg" align="right" height="139" alt="enrollcast website" /></a>
 
 <!-- badges: start -->
 
