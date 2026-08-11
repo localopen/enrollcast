@@ -21,6 +21,8 @@ works at any level of aggregation (school, district, LEA, city-wide) and
 any number of grades, because it operates on a single grade-by-year
 enrollment series.
 
+**Awesome hex logo provided by Adam Higerd.**
+
 ## Installation
 
 ``` r
