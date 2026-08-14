@@ -26,7 +26,8 @@ enrollment series.
 ## Installation
 
 ``` r
-install.packages("enrollcast")
+# install.packages("pak")
+pak::pak("localopen/enrollcast")
 ```
 
 Install the development version from GitHub:

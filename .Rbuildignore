@@ -19,6 +19,6 @@
 ^doc$
 ^Meta$
 ^data-raw$
-^dev$
+^_dev$
 ^[.]?air[.]toml$
 ^[.]?jarl[.]toml$

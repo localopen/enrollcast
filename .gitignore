@@ -12,7 +12,7 @@ inst/doc
 **/*.quarto_ipynb
 
 docs/
-dev/
+_dev/*
 
 .httr-oauth
 .DS_Store
