@@ -2,6 +2,8 @@
 
 ## enrollcast 0.1.0
 
+CRAN release: 2026-08-26
+
 - Initial CRAN release.
 - [`progression_ratios()`](https://localopen.github.io/enrollcast/reference/progression_ratios.md)
   computes progression ratios from historical grade-level enrollment,
