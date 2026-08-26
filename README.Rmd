@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 # enrollcast <a href="https://localopen.github.io/enrollcast/"><img src="man/figures/logo.svg" align="right" height="139" alt="enrollcast website" /></a>
 
 <!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/enrollcast)](https://CRAN.R-project.org/package=enrollcast)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![name status badge](https://rorylawless.r-universe.dev/badges/:name)](https://rorylawless.r-universe.dev/)
 [![R-CMD-check](https://github.com/localopen/enrollcast/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/localopen/enrollcast/actions/workflows/R-CMD-check.yaml)
