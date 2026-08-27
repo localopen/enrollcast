@@ -8,7 +8,7 @@ message: 'To cite package "enrollcast" in publications use:'
 type: software
 license: MIT
 title: 'enrollcast: Project School Enrollment with Grade Progression Ratios'
-version: 0.1.0
+version: 0.1.0.9000
 doi: 10.32614/CRAN.package.enrollcast
 abstract: Projects school enrollment using the cohort survival / grade progression
   ratio method described in Webster (1970) <https://doi.org/10.1080/00220973.1970.11011238>,
