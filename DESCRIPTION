@@ -12,9 +12,7 @@ Description: Projects school enrollment using the cohort survival / grade
     grade-level enrollment and to project future enrollment forward an
     arbitrary horizon.
 License: MIT + file LICENSE
-URL: https://rorylawless.r-universe.dev/enrollcast,
-    https://github.com/localopen/enrollcast,
-    https://localopen.github.io/enrollcast/
+URL: https://localopen.github.io/enrollcast/, https://github.com/localopen/enrollcast
 BugReports: https://github.com/localopen/enrollcast/issues
 Depends:
     R (>= 4.0)
