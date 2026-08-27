@@ -1,6 +1,6 @@
 Package: enrollcast
 Title: Project School Enrollment with Grade Progression Ratios
-Version: 0.1.0.9000
+Version: 0.1.0
 Authors@R: 
     person("Rory", "Lawless", , "rory@rorylawless.com", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0009-0003-7688-309X"))
