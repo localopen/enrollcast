@@ -33,8 +33,7 @@ grades, because it operates on a single grade-by-year enrollment series.
 ## Installation
 
 ```{r installation, eval = FALSE}
-# install.packages("pak")
-pak::pak("localopen/enrollcast")
+install.packages("enrollcast")
 ```
 
 Install the development version from GitHub:
