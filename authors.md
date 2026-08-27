@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/localopen/enrollcast/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/localopen/enrollcast/blob/v0.1.0/DESCRIPTION)
 
 Lawless R (2026). *enrollcast: Project School Enrollment with Grade
 Progression Ratios*. R package version 0.1.0,
