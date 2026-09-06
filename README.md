@@ -11,7 +11,7 @@ status](https://www.r-pkg.org/badges/version/enrollcast)](https://CRAN.R-project
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![name status
-badge](https://rorylawless.r-universe.dev/badges/:name)](https://rorylawless.r-universe.dev/)
+badge](https://localopen.r-universe.dev/badges/:name)](https://localopen.r-universe.dev/)
 [![R-CMD-check](https://github.com/localopen/enrollcast/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/localopen/enrollcast/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/localopen/enrollcast/graph/badge.svg)](https://app.codecov.io/gh/localopen/enrollcast)
