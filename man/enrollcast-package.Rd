@@ -6,14 +6,15 @@
 \alias{enrollcast-package}
 \title{enrollcast: Project School Enrollment with Grade Progression Ratios}
 \description{
-Projects school enrollment using the cohort survival / grade progression ratio method, implemented as a matrix projection. Works at any level of aggregation and any number of grades. Provides functions to compute progression ratios from historical grade-level enrollment and to project future enrollment forward an arbitrary horizon.
+\if{html}{\figure{logo.svg}{options: style='float: right' alt='logo' width='120'}}
+
+Projects school enrollment using the cohort survival / grade progression ratio method described in Webster (1970) \doi{10.1080/00220973.1970.11011238}, implemented as a matrix projection. Works at any level of aggregation and any number of grades. Provides functions to compute progression ratios from historical grade-level enrollment and to project future enrollment forward an arbitrary horizon.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://rorylawless.r-universe.dev/enrollcast}
-  \item \url{https://github.com/localopen/enrollcast}
   \item \url{https://localopen.github.io/enrollcast/}
+  \item \url{https://github.com/localopen/enrollcast}
   \item Report bugs at \url{https://github.com/localopen/enrollcast/issues}
 }
 
