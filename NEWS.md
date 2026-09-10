@@ -1,5 +1,7 @@
 # enrollcast (development version)
 
+# enrollcast 0.2.0
+
 # enrollcast 0.1.0
 
 * Initial CRAN release.
