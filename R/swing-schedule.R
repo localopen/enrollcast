@@ -66,7 +66,7 @@ recovery_diagonals <- function(recovery, go, call = rlang::caller_env()) {
     )
   }
   check_recovery_values(recovery, call = call)
-  lapply(recovery, function(mult) rep(mult, G))
+  lapply(recovery, rep, times = G)
 }
 
 # Number of normal (GPR) years; errors if swing + recovery exceed the horizon.
