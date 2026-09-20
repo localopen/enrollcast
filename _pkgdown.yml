@@ -2,3 +2,7 @@ url: https://localopen.github.io/enrollcast/
 template:
   bootstrap: 5
   bootswatch: pulse
+news:
+  releases:
+  - text: "enrollcast 0.1.0"
+    href: https://rorylawless.com/posts/announcing-enrollcast/
