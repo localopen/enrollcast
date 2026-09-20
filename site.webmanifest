@@ -1,0 +1,21 @@
+{
+  "name": "enrollcast",
+  "short_name": "enrollcast",
+  "icons": [
+    {
+      "src": "/pkgdown/favicon/web-app-manifest-192x192.png?v=20260920",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pkgdown/favicon/web-app-manifest-512x512.png?v=20260920",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}
