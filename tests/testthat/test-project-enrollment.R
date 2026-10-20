@@ -548,7 +548,7 @@ test_that("check_schedule rejects inconsistent grade dimnames", {
   )
 })
 
-test_that("schedule totals scale output after entry without feeding back", {
+test_that("schedule totals rescale after entry and feed the next step", {
   m <- progression_matrix(fixture_ratios())
   schedule <- list(
     list(matrix = m, entry = 80, total = 100),
@@ -556,18 +556,19 @@ test_that("schedule totals scale output after entry without feeding back", {
     list(matrix = m, entry = 100)
   )
   p <- project_enrollment(proj_base(), schedule = schedule)
-  normal <- project_enrollment(
-    proj_base(),
-    fixture_ratios(),
-    horizon = 3,
-    entry = c(80, 90, 100)
-  )
-  totals <- tapply(normal$enrollment, normal$year, sum)
-  adjustment <- c(100 / totals[1], 300 / totals[2], 300 / totals[2])
+  base <- stats::setNames(proj_base()$enrollment, proj_base()$grade)
   expect_equal(
     p$enrollment,
-    normal$enrollment * rep(as.numeric(adjustment), each = 3)
+    as.vector(reference_carry(
+      base,
+      rep(list(m), 3),
+      c(80, 90, 100),
+      c(100, 300, NA)
+    ))
   )
+  expect_equal(sum(p$enrollment[p$year == 2]), 300)
+  # A step without a total applies no adjustment, so its entry is as supplied.
+  expect_equal(p$enrollment[p$year == 3][[1]], 100)
 })
 
 test_that("step totals are validated before projection", {
@@ -599,7 +600,8 @@ test_that("step totals are validated before projection", {
   }
 })
 
-test_that("zero targets can recover from the unadjusted cohort projection", {
+test_that("a zero target empties the year and only later entry classes remain", {
+  m <- progression_matrix(fixture_ratios())
   s <- swing_schedule(
     fixture_ratios(),
     horizon = 3,
@@ -609,12 +611,13 @@ test_that("zero targets can recover from the unadjusted cohort projection", {
   )
   p <- project_enrollment(proj_base(), schedule = s)
   expect_equal(p$enrollment[p$year == 1], c(0, 0, 0))
-  expect_equal(sum(p$enrollment[p$year == 2]), 300)
-  expect_true(all(p$enrollment[p$year == 3] > 0))
+  # Only the new entry class is left to rescale to the next target.
+  expect_equal(p$enrollment[p$year == 2], c(300, 0, 0))
+  expect_equal(p$enrollment[p$year == 3], c(150, unname(m[2, 1]) * 300, 0))
 
   s[[2]]$total <- NULL
   p <- project_enrollment(proj_base(), schedule = s)
-  expect_equal(p$enrollment, rep(0, 9))
+  expect_equal(p$enrollment[p$year == 2], c(140, 0, 0))
 })
 
 test_that("zero projections accept zero targets with an adjustment of one", {

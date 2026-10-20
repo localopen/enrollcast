@@ -110,10 +110,14 @@ swing_matrices <- function(
 #' The output grades are then rescaled to the base-year school total during
 #' swing years and to the supplied annual totals during recovery.
 #'
-#' Rescaling affects the output only: the next year's cohort projection uses
-#' the unadjusted grades. After the last swing or recovery year, its adjustment
-#' factor continues to apply to all projected grades, including new entry
-#' classes. This replaces the former freeze-then-multiply behavior.
+#' The rescaled grades are the students who move up the next year. After the
+#' last swing or recovery year nothing is adjusted: the projection continues
+#' from the recovered grades using the progression ratios and the supplied
+#' `entry` values. Later totals then follow the ratios, and drift toward the
+#' level the ratios and entry values sustain if the final target is far from it.
+#' If a school's own ratios are inflated by recovery growth, supply ordinary
+#' ratios for the years after recovery through a list for `ratios`. This
+#' replaces the former freeze-then-multiply behavior.
 #'
 #' @inheritParams project_enrollment
 #' @inheritParams progression_matrix
@@ -133,8 +137,11 @@ swing_matrices <- function(
 #' @param entry Required exogenous entry-grade enrollment for every projected
 #'   year, including swing and recovery: a numeric vector of length `horizon`,
 #'   or a data frame with an `enrollment` or `value` column. Values must be
-#'   finite, non-missing, and non-negative. These are the unadjusted entry
-#'   values; output entry enrollment is rescaled along with the other grades.
+#'   finite, non-missing, and non-negative. In swing and recovery years the
+#'   entry grade is rescaled along with the other grades, so reported entry
+#'   enrollment is the supplied value times that year's adjustment, and a larger
+#'   entry class gives a larger reported one. In later years the supplied values
+#'   are used as given.
 #' @param grade_order Optional character vector giving the low-to-high grade
 #'   order for every year. If omitted, each ratios table's order is reconstructed
 #'   from its transition chain; supplied matrices retain their dimname order.

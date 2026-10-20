@@ -1,4 +1,4 @@
-test_that("swing_schedule matches issue #8's expected cohort trajectory", {
+test_that("swing_schedule matches issue #8's carried cohort trajectory", {
   grades <- c("K", "1", "2", "3", "4", "5")
   base <- c(K = 60, `1` = 58, `2` = 55, `3` = 60, `4` = 64, `5` = 30)
   ratios <- data.frame(
@@ -17,31 +17,23 @@ test_that("swing_schedule matches issue #8's expected cohort trajectory", {
     grade_order = grades
   )
   p <- project_enrollment(base, schedule = s, start_year = 2026)
-  normal <- project_enrollment(
+  expected <- reference_carry(
     base,
-    ratios,
-    horizon = 6,
-    entry = entry,
-    start_year = 2026
+    rep(list(progression_matrix(ratios, grades)), 6),
+    entry,
+    target
   )
-  normal_totals <- tapply(normal$enrollment, normal$year, sum)
-  adjustment <- c(
-    target / normal_totals[1:4],
-    rep(target[4] / normal_totals[4], 2)
-  )
-  expected <- normal
-  expected$enrollment <- normal$enrollment * rep(adjustment, each = 6)
 
-  expect_equal(p, expected)
+  expect_equal(p$enrollment, as.vector(expected))
   expect_equal(
     as.numeric(round(tapply(p$enrollment, p$year, sum))),
-    c(345, 360, 368, 374, 377, 379)
+    c(345, 360, 368, 374, 370, 366)
   )
-  expect_equal(round(p$enrollment[p$grade == "5"]), c(60, 58, 54, 55, 56, 58))
-  expect_equal(round(p$enrollment[p$grade == "K"]), c(61, 65, 67, 67, 67, 67))
+  expect_equal(round(p$enrollment[p$grade == "5"]), c(60, 58, 54, 56, 57, 59))
+  expect_equal(round(p$enrollment[p$grade == "K"]), c(61, 66, 64, 63, 62, 62))
 })
 
-test_that("swing and recovery keep normal grade shares and annual entries", {
+test_that("swing and recovery rescale the grades that move up next year", {
   entry <- c(85, 90, 95, 100, 105, 110)
   s <- swing_schedule(
     fixture_ratios(),
@@ -59,30 +51,33 @@ test_that("swing and recovery keep normal grade shares and annual entries", {
   expect_identical(vapply(s, function(step) step$entry, numeric(1)), entry)
 
   base <- c(K = 80, `1` = 66, `2` = 60)
+  m <- progression_matrix(fixture_ratios())
   p <- project_enrollment(base, schedule = s)
-  normal <- project_enrollment(
-    base,
-    fixture_ratios(),
-    horizon = 6,
-    entry = entry
-  )
-  normal_totals <- tapply(normal$enrollment, normal$year, sum)
-  adjustment <- c(
-    c(206, 206, 225, 245, 260) / normal_totals[1:5],
-    260 / normal_totals[5]
-  )
   expect_equal(
     p$enrollment,
-    normal$enrollment * rep(as.numeric(adjustment), each = 3)
+    as.vector(reference_carry(
+      base,
+      rep(list(m), 6),
+      entry,
+      c(206, 206, 225, 245, 260)
+    ))
   )
   expect_equal(
     as.numeric(tapply(p$enrollment, p$year, sum)[1:5]),
     c(206, 206, 225, 245, 260)
   )
+
+  # After the last target nothing is adjusted: the entry class is the supplied
+  # value and the other grades are the ratios applied to the recovered grades.
+  last <- p$enrollment[p$year == 5]
+  after <- p$enrollment[p$year == 6]
+  expect_equal(after[[1]], entry[[6]])
+  expect_equal(after[-1], unname(drop(m %*% last))[-1])
 })
 
 test_that("all-swing and swing-only targets still advance the grade mix", {
   base <- c(K = 80, `1` = 66, `2` = 60)
+  m <- progression_matrix(fixture_ratios())
   for (swing_years in c(1, 3)) {
     s <- swing_schedule(
       fixture_ratios(),
@@ -92,17 +87,10 @@ test_that("all-swing and swing-only targets still advance the grade mix", {
       entry = c(85, 90, 95)
     )
     p <- project_enrollment(base, schedule = s)
-    normal <- project_enrollment(
-      base,
-      fixture_ratios(),
-      horizon = 3,
-      entry = c(85, 90, 95)
-    )
-    normal_totals <- tapply(normal$enrollment, normal$year, sum)
-    adjustment <- 206 / normal_totals[pmin(1:3, swing_years)]
+    totals <- c(rep(206, swing_years), rep(NA, 3 - swing_years))
     expect_equal(
       p$enrollment,
-      normal$enrollment * rep(as.numeric(adjustment), each = 3)
+      as.vector(reference_carry(base, rep(list(m), 3), c(85, 90, 95), totals))
     )
   }
 })
@@ -163,17 +151,18 @@ test_that("per-year ratios and matrices support changing ratios and opening grad
   )
   base <- c(K = 80, `1` = 60, `2` = 0)
   p <- project_enrollment(base, schedule = s)
-  normal <- cbind(
-    c(80, 74, 0),
-    c(90, 74, 0),
-    c(100, 72, 81.4),
-    c(110, 92.5, 72 * ratios$ratio[2])
+  expected <- reference_carry(
+    base,
+    list(
+      closed,
+      closed,
+      progression_matrix(changed),
+      progression_matrix(ratios)
+    ),
+    c(80, 90, 100, 110),
+    c(140, 200, 230)
   )
-  adjustment <- c(
-    c(140, 200, 230) / colSums(normal)[1:3],
-    230 / sum(normal[, 3])
-  )
-  expect_equal(p$enrollment, as.vector(sweep(normal, 2, adjustment, "*")))
+  expect_equal(p$enrollment, as.vector(expected))
   expect_equal(p$enrollment[p$grade == "2"][1:2], c(0, 0))
   expect_gt(p$enrollment[p$year == 3 & p$grade == "2"], 0)
 })

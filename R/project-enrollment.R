@@ -377,7 +377,7 @@ resolve_out_years <- function(
   if (is.null(start_year)) seq_len(horizon) else start_year + seq_len(horizon)
 }
 
-# Calculate an output adjustment without changing the normal cohort state.
+# Calculate the factor that rescales projected grades to a target total.
 total_adjustment <- function(total, n, year, call = rlang::caller_env()) {
   projected <- sum(n)
   if (!is.finite(projected) || (projected == 0 && total > 0)) {
@@ -404,12 +404,12 @@ total_adjustment <- function(total, n, year, call = rlang::caller_env()) {
   adjustment
 }
 
-# Advance unadjusted cohorts and rescale only the recorded output.
+# Advance cohorts one step at a time; a step's target rescales the grades that
+# are recorded and carried into the next step.
 run_projection <- function(steps, base_vec, out_years) {
   go <- names(base_vec)
   entry_grade <- go[1]
   n <- base_vec
-  adjustment <- 1
   out <- matrix(NA_real_, nrow = length(go), ncol = length(out_years))
   for (h in seq_along(out_years)) {
     n <- drop(steps[[h]]$matrix %*% n)
@@ -421,9 +421,9 @@ run_projection <- function(steps, base_vec, out_years) {
       if (identical(total, "base")) {
         total <- sum(base_vec)
       }
-      adjustment <- total_adjustment(total, n, out_years[[h]])
+      n <- n * total_adjustment(total, n, out_years[[h]])
     }
-    out[, h] <- n * adjustment
+    out[, h] <- n
   }
   data.frame(
     year = rep(out_years, each = length(go)),
@@ -464,14 +464,16 @@ run_projection <- function(steps, base_vec, out_years) {
 #'   restores only the entry grade. Matrix row and column names must be unique
 #'   and identical in the same order; all steps must use the same names. A
 #'   step's `entry` must be `NULL` or one finite, non-negative number.
-#'   An optional step `total` rescales that year's output grades after entry
-#'   replacement. It must be one finite, non-negative school total, or `"base"`
-#'   for the sum of the aligned base grades. The unadjusted grades feed the
-#'   next projection step. Steps without a `total` keep the most recent
-#'   adjustment factor (initially one), including for new entry classes.
-#'   Rescaling requires a finite, positive unadjusted school total; when both
-#'   projected and target totals are zero, the adjustment is one. Missing or
-#'   infinite projected totals and positive targets on zero projections error.
+#'   An optional step `total` rescales that year's grades, including the entry
+#'   grade, after entry replacement. It must be one finite, non-negative school
+#'   total, or `"base"` for the sum of the aligned base grades. The rescaled
+#'   grades are both recorded and carried into the next step. Steps without a
+#'   `total` apply no adjustment, so a projection continues from the last
+#'   rescaled grades with the supplied `entry` values. The projected school
+#'   total must be finite and positive to rescale; when both it and the target
+#'   are zero, the adjustment is one. A missing or infinite projected total, or
+#'   a positive target on a zero projection, is an error. A zero target empties
+#'   that year, so only later entry classes remain for a later target to rescale.
 #' @param start_year Optional integer label for the base year; output years run
 #'   from `start_year + 1`. An explicit value and all resulting years must be
 #'   within the R integer range. If `NULL`, the year is derived from `base$year`
