@@ -672,10 +672,14 @@ test_that("targets do not hide missing or infinite projected totals", {
     ),
     class = "enrollcast_error_projection_total"
   )
+  # Named values keep the snapshot portable: R parses 1e-300 slightly
+  # differently on macOS arm64, which changes how the literal deparses.
+  tiny <- 1e-300
+  huge <- 1e300
   expect_enrollcast_error(
     project_enrollment(
       c(K = 0, `1` = 0, `2` = 0),
-      schedule = list(list(matrix = m, entry = 1e-300, total = 1e300))
+      schedule = list(list(matrix = m, entry = tiny, total = huge))
     ),
     class = "enrollcast_error_projection_total"
   )
