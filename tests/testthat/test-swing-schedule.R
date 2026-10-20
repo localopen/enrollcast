@@ -1,97 +1,214 @@
-test_that("swing_schedule lays out swing, recovery, and normal regimes", {
+test_that("swing_schedule matches issue #8's expected cohort trajectory", {
+  grades <- c("K", "1", "2", "3", "4", "5")
+  base <- c(K = 60, `1` = 58, `2` = 55, `3` = 60, `4` = 64, `5` = 30)
+  ratios <- data.frame(
+    grade_from = grades[-6],
+    grade_to = grades[-1],
+    ratio = c(0.98, 0.97, 0.98, 0.97, 0.95)
+  )
+  entry <- rep(62, 6)
+  target <- c(345, 360, 368, 374)
+  s <- swing_schedule(
+    ratios,
+    horizon = 6,
+    swing_years = 0,
+    recovery = target,
+    entry = entry,
+    grade_order = grades
+  )
+  p <- project_enrollment(base, schedule = s, start_year = 2026)
+  normal <- project_enrollment(
+    base,
+    ratios,
+    horizon = 6,
+    entry = entry,
+    start_year = 2026
+  )
+  normal_totals <- tapply(normal$enrollment, normal$year, sum)
+  adjustment <- c(
+    target / normal_totals[1:4],
+    rep(target[4] / normal_totals[4], 2)
+  )
+  expected <- normal
+  expected$enrollment <- normal$enrollment * rep(adjustment, each = 6)
+
+  expect_equal(p, expected)
+  expect_equal(
+    as.numeric(round(tapply(p$enrollment, p$year, sum))),
+    c(345, 360, 368, 374, 377, 379)
+  )
+  expect_equal(round(p$enrollment[p$grade == "5"]), c(60, 58, 54, 55, 56, 58))
+  expect_equal(round(p$enrollment[p$grade == "K"]), c(61, 65, 67, 67, 67, 67))
+})
+
+test_that("swing and recovery keep normal grade shares and annual entries", {
+  entry <- c(85, 90, 95, 100, 105, 110)
   s <- swing_schedule(
     fixture_ratios(),
     horizon = 6,
     swing_years = 2,
-    recovery = c(1.10, 1.10, 1.05),
-    entry = 130
+    recovery = c(225, 245, 260),
+    entry = entry
   )
   expect_length(s, 6)
-  expect_identical(s[[1]]$matrix, s[[2]]$matrix) # identity, repeated
-  expect_identical(diag(s[[1]]$matrix), c(K = 1, `1` = 1, `2` = 1))
-  expect_null(s[[1]]$entry)
-  expect_equal(diag(s[[3]]$matrix), c(K = 1.10, `1` = 1.10, `2` = 1.10))
-  expect_null(s[[4]]$entry)
-  expect_identical(s[[6]]$entry, 130) # normal year carries entry
-})
+  expect_identical(s[[1]]$matrix, progression_matrix(fixture_ratios()))
+  expect_identical(s[[1]]$total, "base")
+  expect_identical(s[[2]]$total, "base")
+  expect_identical(s[[3]]$total, 225)
+  expect_null(s[[6]]$total)
+  expect_identical(vapply(s, function(step) step$entry, numeric(1)), entry)
 
-test_that("swing_schedule reproduces the worked trajectory", {
-  s <- swing_schedule(
+  base <- c(K = 80, `1` = 66, `2` = 60)
+  p <- project_enrollment(base, schedule = s)
+  normal <- project_enrollment(
+    base,
     fixture_ratios(),
     horizon = 6,
-    swing_years = 2,
-    recovery = c(1.10, 1.10, 1.05),
-    entry = 130
+    entry = entry
   )
-  p <- project_enrollment(c(K = 80, `1` = 66, `2` = 60), schedule = s)
-  k <- p$enrollment[p$grade == "K"]
-  expect_equal(k, c(80, 80, 88, 96.8, 101.64, 130))
-  expect_equal(p$enrollment[p$year == 6 & p$grade == "1"], 0.925 * 101.64)
+  normal_totals <- tapply(normal$enrollment, normal$year, sum)
+  adjustment <- c(
+    c(206, 206, 225, 245, 260) / normal_totals[1:5],
+    260 / normal_totals[5]
+  )
+  expect_equal(
+    p$enrollment,
+    normal$enrollment * rep(as.numeric(adjustment), each = 3)
+  )
+  expect_equal(
+    as.numeric(tapply(p$enrollment, p$year, sum)[1:5]),
+    c(206, 206, 225, 245, 260)
+  )
 })
 
-test_that("grade-specific recovery uses a matrix of multipliers", {
-  # G x 1: one recovery year, per-grade
-  rec <- matrix(c(1.2, 1.1, 1.0), nrow = 3)
+test_that("all-swing and swing-only targets still advance the grade mix", {
+  base <- c(K = 80, `1` = 66, `2` = 60)
+  for (swing_years in c(1, 3)) {
+    s <- swing_schedule(
+      fixture_ratios(),
+      horizon = 3,
+      swing_years = swing_years,
+      recovery = numeric(0),
+      entry = c(85, 90, 95)
+    )
+    p <- project_enrollment(base, schedule = s)
+    normal <- project_enrollment(
+      base,
+      fixture_ratios(),
+      horizon = 3,
+      entry = c(85, 90, 95)
+    )
+    normal_totals <- tapply(normal$enrollment, normal$year, sum)
+    adjustment <- 206 / normal_totals[pmin(1:3, swing_years)]
+    expect_equal(
+      p$enrollment,
+      normal$enrollment * rep(as.numeric(adjustment), each = 3)
+    )
+  }
+})
+
+test_that("no swing or recovery reproduces the normal ratios projection", {
+  entry <- c(130, 140)
   s <- swing_schedule(
     fixture_ratios(),
     horizon = 2,
-    swing_years = 1,
-    recovery = rec,
-    entry = NULL
-  )
-  expect_equal(diag(s[[2]]$matrix), c(K = 1.2, `1` = 1.1, `2` = 1.0))
-})
-
-test_that("named recovery matrices are aligned to projection grade order", {
-  rec <- matrix(
-    c(1.0, 1.2, 1.1),
-    ncol = 1,
-    dimnames = list(c("2", "K", "1"), "year1")
-  )
-  s <- swing_schedule(
-    fixture_ratios(),
-    horizon = 1,
     swing_years = 0,
-    recovery = rec
+    recovery = numeric(0),
+    entry = entry
   )
-  expect_equal(diag(s[[1]]$matrix), c(K = 1.2, `1` = 1.1, `2` = 1.0))
+  expect_equal(
+    project_enrollment(proj_base(), schedule = s),
+    project_enrollment(
+      proj_base(),
+      fixture_ratios(),
+      horizon = 2,
+      entry = entry
+    )
+  )
 })
 
-test_that("zero normal years requires empty entry", {
-  s <- swing_schedule(
-    fixture_ratios(),
-    horizon = 3,
-    swing_years = 1,
-    recovery = c(1.1, 1.05),
-    entry = NULL
-  )
-  expect_length(s, 3)
-  expect_null(s[[3]]$entry)
-})
-
-test_that("all-swing schedule is valid", {
+test_that("swing targets resolve against the aligned base at projection time", {
   s <- swing_schedule(
     fixture_ratios(),
     horizon = 2,
     swing_years = 2,
     recovery = numeric(0),
-    entry = NULL
+    entry = c(85, 90)
   )
-  expect_identical(diag(s[[2]]$matrix), c(K = 1, `1` = 1, `2` = 1))
+  for (base in list(
+    c(K = 80, `1` = 66, `2` = 60),
+    c(`2` = 20, K = 40, `1` = 30)
+  )) {
+    p <- project_enrollment(base, schedule = s)
+    expect_equal(
+      as.numeric(tapply(p$enrollment, p$year, sum)),
+      rep(sum(base), 2)
+    )
+  }
 })
 
-test_that("zero swing years starts with the recovery diagonal", {
+test_that("per-year ratios and matrices support changing ratios and opening grades", {
+  ratios <- fixture_ratios()
+  closed <- progression_matrix(ratios)
+  closed["2", ] <- 0
+  changed <- ratios
+  changed$ratio <- c(0.8, 1.1)
   s <- swing_schedule(
-    fixture_ratios(),
+    list(closed, closed, changed, ratios),
+    horizon = 4,
+    swing_years = 1,
+    recovery = c(200, 230),
+    entry = c(80, 90, 100, 110),
+    grade_order = c("K", "1", "2")
+  )
+  base <- c(K = 80, `1` = 60, `2` = 0)
+  p <- project_enrollment(base, schedule = s)
+  normal <- cbind(
+    c(80, 74, 0),
+    c(90, 74, 0),
+    c(100, 72, 81.4),
+    c(110, 92.5, 72 * ratios$ratio[2])
+  )
+  adjustment <- c(
+    c(140, 200, 230) / colSums(normal)[1:3],
+    230 / sum(normal[, 3])
+  )
+  expect_equal(p$enrollment, as.vector(sweep(normal, 2, adjustment, "*")))
+  expect_equal(p$enrollment[p$grade == "2"][1:2], c(0, 0))
+  expect_gt(p$enrollment[p$year == 3 & p$grade == "2"], 0)
+})
+
+test_that("one reusable projection matrix equals a reusable ratios table", {
+  args <- list(
     horizon = 2,
     swing_years = 0,
-    recovery = 1.1,
-    entry = 130
+    recovery = 350,
+    entry = c(130, 140)
   )
-  expect_length(s, 2)
-  expect_equal(diag(s[[1]]$matrix), c(K = 1.1, `1` = 1.1, `2` = 1.1))
-  expect_null(s[[1]]$entry)
-  expect_identical(s[[2]]$entry, 130)
+  from_table <- do.call(
+    swing_schedule,
+    c(list(ratios = fixture_ratios()), args)
+  )
+  from_matrix <- do.call(
+    swing_schedule,
+    c(list(ratios = progression_matrix(fixture_ratios())), args)
+  )
+  expect_identical(from_matrix, from_table)
+})
+
+test_that("entry data frames cover all projected years", {
+  entry <- data.frame(value = c(130, 140, 150))
+  s <- swing_schedule(
+    fixture_ratios(),
+    horizon = 3,
+    swing_years = 1,
+    recovery = 350,
+    entry = entry
+  )
+  expect_identical(
+    vapply(s, function(step) step$entry, numeric(1)),
+    entry$value
+  )
 })
 
 test_that("swing_schedule rejects an over-long swing+recovery", {
@@ -100,37 +217,57 @@ test_that("swing_schedule rejects an over-long swing+recovery", {
       fixture_ratios(),
       horizon = 2,
       swing_years = 2,
-      recovery = 1.1,
-      entry = NULL
+      recovery = 350,
+      entry = c(130, 140)
     ),
     class = "enrollcast_error_swing_too_long"
   )
 })
 
-test_that("swing_schedule needs entry for normal years", {
+test_that("entry is required even without post-recovery years", {
   expect_enrollcast_error(
     swing_schedule(
       fixture_ratios(),
-      horizon = 4,
+      horizon = 2,
       swing_years = 1,
-      recovery = c(1.1, 1.05),
-      entry = NULL
+      recovery = 350
+    ),
+    class = "enrollcast_error_entry_required"
+  )
+  expect_error(
+    swing_schedule(
+      fixture_ratios(),
+      horizon = 2,
+      swing_years = 2,
+      recovery = numeric(0)
     ),
     class = "enrollcast_error_entry_required"
   )
 })
 
-test_that("entry length matches the number of normal years", {
+test_that("entry length includes swing and recovery years", {
   expect_enrollcast_error(
     swing_schedule(
       fixture_ratios(),
-      horizon = 5,
+      horizon = 3,
       swing_years = 1,
-      recovery = 1.1,
-      entry = c(130, 140)
+      recovery = 350,
+      entry = 130
     ),
     class = "enrollcast_error_entry_length"
   )
+  for (entry in list(numeric(0), c(130, 140), rep(130, 4))) {
+    expect_error(
+      swing_schedule(
+        fixture_ratios(),
+        horizon = 3,
+        swing_years = 1,
+        recovery = 350,
+        entry = entry
+      ),
+      class = "enrollcast_error_entry_length"
+    )
+  }
 })
 
 test_that("swing_years must be a non-negative integer", {
@@ -139,146 +276,141 @@ test_that("swing_years must be a non-negative integer", {
       fixture_ratios(),
       horizon = 3,
       swing_years = -1,
-      recovery = 1.1,
-      entry = 130
+      recovery = 350,
+      entry = rep(130, 3)
     ),
     class = "enrollcast_error_swing_years"
   )
-})
-
-test_that("swing_years rejects non-finite and missing values cleanly", {
-  for (swing_years in list(NA_real_, Inf, NaN, c(0, 1), "1")) {
+  for (swing_years in list(NA_real_, Inf, NaN, c(0, 1), "1", 0.5)) {
     expect_error(
       swing_schedule(
         fixture_ratios(),
         horizon = 3,
         swing_years = swing_years,
-        recovery = 1.1,
-        entry = 130
+        recovery = 350,
+        entry = rep(130, 3)
       ),
       class = "enrollcast_error_swing_years"
     )
   }
 })
 
-test_that("recovery matrix must have one row per grade", {
-  expect_enrollcast_error(
-    swing_schedule(
-      fixture_ratios(),
-      horizon = 2,
-      swing_years = 1,
-      recovery = matrix(c(1.1, 1.2), nrow = 2),
-      entry = NULL
-    ),
-    class = "enrollcast_error_recovery_dim"
-  )
-  expect_error(
-    swing_schedule(
-      fixture_ratios(),
-      horizon = 2,
-      swing_years = 1,
-      recovery = matrix(c(Inf, 1.2), nrow = 2),
-      entry = NULL
-    ),
-    class = "enrollcast_error_recovery_dim"
-  )
-})
-
-test_that("recovery must be numeric or a matrix", {
+test_that("recovery must be a vector of target totals", {
   expect_enrollcast_error(
     swing_schedule(
       fixture_ratios(),
       horizon = 3,
       swing_years = 1,
       recovery = "oops",
-      entry = 130
+      entry = rep(130, 3)
     ),
     class = "enrollcast_error_recovery_type"
   )
-})
-
-test_that("recovery values must be finite non-missing and non-negative", {
-  expect_snapshot(
-    swing_schedule(
-      fixture_ratios(),
-      horizon = 3,
-      swing_years = 0,
-      recovery = c(1.1, Inf),
-      entry = 130
-    ),
-    error = TRUE
-  )
-  invalid <- list(
-    c(1, NA_real_),
-    c(1, Inf),
-    c(1, -1),
-    matrix(TRUE, nrow = 3),
-    matrix("1", nrow = 3),
-    matrix(c(1, NA_real_, 1), nrow = 3),
-    matrix(c(1, Inf, 1), nrow = 3),
-    matrix(c(1, -1, 1), nrow = 3)
-  )
-  for (recovery in invalid) {
+  for (recovery in list(NULL, list(350), matrix(350, nrow = 3), TRUE)) {
     expect_error(
       swing_schedule(
         fixture_ratios(),
         horizon = 3,
         swing_years = 0,
         recovery = recovery,
-        entry = 130
+        entry = rep(130, 3)
+      ),
+      class = "enrollcast_error_recovery_type"
+    )
+  }
+})
+
+test_that("recovery totals must be finite non-missing and non-negative", {
+  expect_enrollcast_error(
+    swing_schedule(
+      fixture_ratios(),
+      horizon = 3,
+      swing_years = 0,
+      recovery = c(350, Inf),
+      entry = rep(130, 3)
+    ),
+    class = "enrollcast_error_recovery_values"
+  )
+  for (recovery in list(c(350, NA_real_), c(350, NaN), c(350, -1))) {
+    expect_error(
+      swing_schedule(
+        fixture_ratios(),
+        horizon = 3,
+        swing_years = 0,
+        recovery = recovery,
+        entry = rep(130, 3)
       ),
       class = "enrollcast_error_recovery_values"
     )
   }
 })
 
-test_that("named recovery grades must uniquely match projection grades", {
-  expect_snapshot(
-    swing_schedule(
-      fixture_ratios(),
-      horizon = 1,
-      swing_years = 0,
-      recovery = matrix(
-        1.1,
-        nrow = 3,
-        dimnames = list(c("K", "K", "2"), NULL)
-      )
-    ),
-    error = TRUE
-  )
-  invalid_names <- list(
-    c("K", "K", "2"),
-    c("K", "1", "3"),
-    c("K", NA, "2"),
-    c("K", "", "2")
-  )
-  for (grade_names in invalid_names) {
-    recovery <- matrix(
-      c(1.1, 1.1, 1.1),
-      ncol = 1,
-      dimnames = list(grade_names, NULL)
-    )
-    expect_error(
-      swing_schedule(
-        fixture_ratios(),
-        horizon = 1,
-        swing_years = 0,
-        recovery = recovery
-      ),
-      class = "enrollcast_error_recovery_names"
-    )
-  }
-})
-
-test_that("entry must be empty when there are no normal years", {
+test_that("per-year ratios require one valid table or matrix per year", {
   expect_enrollcast_error(
     swing_schedule(
-      fixture_ratios(),
-      horizon = 3,
-      swing_years = 1,
-      recovery = c(1.1, 1.05),
-      entry = 130
+      list(fixture_ratios()),
+      horizon = 2,
+      swing_years = 0,
+      recovery = 350,
+      entry = c(130, 140)
     ),
-    class = "enrollcast_error_entry_unexpected"
+    class = "enrollcast_error_swing_ratios"
+  )
+  expect_error(
+    swing_schedule(
+      list(fixture_ratios(), 42),
+      horizon = 2,
+      swing_years = 0,
+      recovery = 350,
+      entry = c(130, 140)
+    ),
+    class = "enrollcast_error_ratios_type"
+  )
+})
+
+test_that("per-year matrices must share grade names and order", {
+  m <- progression_matrix(fixture_ratios())
+  reordered <- m[3:1, 3:1]
+  expect_enrollcast_error(
+    swing_schedule(
+      list(m, reordered),
+      horizon = 2,
+      swing_years = 0,
+      recovery = 350,
+      entry = c(130, 140)
+    ),
+    class = "enrollcast_error_schedule_inconsistent"
+  )
+  expect_enrollcast_error(
+    swing_schedule(
+      reordered,
+      horizon = 2,
+      swing_years = 0,
+      recovery = 350,
+      entry = c(130, 140),
+      grade_order = c("K", "1", "2")
+    ),
+    class = "enrollcast_error_schedule_inconsistent"
+  )
+  expect_error(
+    swing_schedule(
+      unname(m),
+      horizon = 2,
+      swing_years = 0,
+      recovery = 350,
+      entry = c(130, 140)
+    ),
+    class = "enrollcast_error_step_dimnames"
+  )
+  m[1, 1] <- -1
+  expect_error(
+    swing_schedule(
+      m,
+      horizon = 2,
+      swing_years = 0,
+      recovery = 350,
+      entry = c(130, 140)
+    ),
+    class = "enrollcast_error_step_values"
   )
 })

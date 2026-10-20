@@ -46,11 +46,16 @@ and map when projecting multiple schools or sectors.
   value with a warning when `entry = NULL`).
 - `project_enrollment()` returns projected years only; it does not include the
   base year.
-- A schedule step is `list(matrix, entry)`. `entry = NULL` means do not
+- A schedule step is `list(matrix, entry)` with an optional `total` for output
+  rescaling (`"base"` uses the aligned base total). Unadjusted cohorts feed the
+  next step; steps without a target retain the last output adjustment factor.
+  `entry = NULL` means do not
   overwrite that year's entry grade; all step matrices must have identical row
   and column grade names in the same order.
-- `swing_schedule()` holds enrollment flat during swing years, applies recovery
-  multipliers, then resumes normal projection.
+- `swing_schedule()` advances cohorts with an entry value every year. Swing
+  outputs match the base total, recovery outputs match annual target totals,
+  and later years retain the final adjustment, including on new entry classes.
+  Ratios may vary by year through a list of tables or named matrices.
 - Grade order is semantic. Prefer an ordered factor or explicit `grade_order`;
   mixed labels such as `K`, `1`, `2` otherwise fall back to alphabetical order
   with a warning.

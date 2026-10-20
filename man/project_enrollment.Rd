@@ -46,7 +46,15 @@ matrix multiplication spreads missingness to all grade results because zero
 times a missing value is still missing. A non-\code{NULL} entry value then
 restores only the entry grade. Matrix row and column names must be unique
 and identical in the same order; all steps must use the same names. A
-step's \code{entry} must be \code{NULL} or one finite, non-negative number.}
+step's \code{entry} must be \code{NULL} or one finite, non-negative number.
+An optional step \code{total} rescales that year's output grades after entry
+replacement. It must be one finite, non-negative school total, or \code{"base"}
+for the sum of the aligned base grades. The unadjusted grades feed the
+next projection step. Steps without a \code{total} keep the most recent
+adjustment factor (initially one), including for new entry classes.
+Rescaling requires a finite, positive unadjusted school total; when both
+projected and target totals are zero, the adjustment is one. Missing or
+infinite projected totals and positive targets on zero projections error.}
 
 \item{start_year}{Optional integer label for the base year; output years run
 from \code{start_year + 1}. An explicit value and all resulting years must be

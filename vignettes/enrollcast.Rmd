@@ -92,21 +92,76 @@ head(combined)
 
 A school temporarily relocated during modernization typically sees depressed
 enrollment that recovers after it returns. `swing_schedule()` builds a per-year
-projection schedule: enrollment is held flat during the swing, scaled by
-recovery multipliers for a few years, then projected normally.
-
-Schedules may contain `NA` or `NaN` matrix coefficients. These values are
-preserved and warned about rather than imputed. A missing coefficient can make
-its output grade missing. If that missing enrollment remains after the entry
-grade is replaced, the next matrix multiplication spreads missingness to all
-grade results because zero times a missing value is still missing. A non-`NULL`
-entry value then restores only the entry grade.
+projection schedule. Classes move up normally and a new entry class arrives
+every year, including during swing and recovery. Each swing year's output is
+rescaled to the base-year school total, and each recovery year's output is
+rescaled to an explicit school target total.
 
 ```{r}
 depressed <- c(K = 80, `1` = 66, `2` = 60)
 schedule <- swing_schedule(ratios,
   horizon = 6, swing_years = 2,
-  recovery = c(1.10, 1.10, 1.05), entry = 130
+  recovery = c(225, 245, 260), entry = rep(90, 6)
 )
-project_enrollment(depressed, schedule = schedule, start_year = 2023)
+recovered <- project_enrollment(depressed, schedule = schedule, start_year = 2023)
+recovered
+tapply(recovered$enrollment, recovered$year, sum)
 ```
+
+The first two annual totals equal `sum(depressed)` (206), followed by the
+recovery targets 225, 245, and 260. The grade mix still follows the normal
+projection. Rescaling changes the recorded output, while the next year's
+cohorts advance from the unadjusted projection. For normal grade vector
+`n[h]` and target `T[h]`, the output is `n[h] * T[h] / sum(n[h])`.
+After the last target year, that year's adjustment factor continues to apply
+to every projected grade, including each new entry class. Thus later totals
+can rise or fall with the normal projection, and reported entry enrollment can
+differ from the supplied unadjusted `entry` values.
+
+This replaces the former behavior that froze the grade mix during swing and
+recovery. To migrate an earlier call, supply entry values for the entire
+`horizon` and replace recovery multipliers with annual totals. For old
+whole-school multipliers `multipliers`, the equivalent target path is
+`sum(depressed) * cumprod(multipliers)`. Grade-specific recovery multiplier
+matrices are no longer accepted.
+
+### Changing ratios and opening grades
+
+Supply a list of `horizon` ratios tables or projection matrices to vary ratios
+by year. Matrices must share identical row and column grade names in the same
+order, including grades that have yet to open. A zero destination row keeps a
+grade closed; restore its progression ratio in the year it opens. An entry of
+zero keeps the entry grade closed.
+
+```{r}
+m <- progression_matrix(ratios)
+closed <- m
+closed["2", ] <- 0
+opening <- swing_schedule(
+  ratios = list(closed, closed, m, m),
+  horizon = 4, swing_years = 1,
+  recovery = c(225, 245), entry = rep(90, 4)
+)
+project_enrollment(c(K = 80, `1` = 66, `2` = 0), schedule = opening)
+```
+
+### Schedule targets and missing values
+
+A schedule step is `list(matrix = m, entry = value)`, with an optional `total`
+for output rescaling. `total = "base"` uses the sum of the aligned base grades;
+a numeric `total` gives the target directly. A step without a target retains
+the last adjustment factor, initially one. Hand-built identity or diagonal
+steps remain available through `project_enrollment()`.
+
+Schedules may contain `NA` or `NaN` matrix coefficients. These values are
+preserved and warned about rather than imputed. A missing coefficient can make
+its output grade missing. If that missing enrollment remains after entry
+replacement, the next matrix multiplication spreads missingness to all grade
+results because zero times a missing value is still missing. A non-`NULL` entry
+value then restores only the entry grade.
+
+Rescaling requires a finite, positive unadjusted school total. A missing or
+infinite total, or a positive target on a zero projection, raises an error.
+When both the projection and target total are zero, the adjustment is one.
+A zero target on a positive projection produces zero output without erasing
+the unadjusted cohorts, so a later positive target can still restore enrollment.

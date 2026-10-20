@@ -547,3 +547,133 @@ test_that("check_schedule rejects inconsistent grade dimnames", {
     class = "enrollcast_error_schedule_inconsistent"
   )
 })
+
+test_that("schedule totals scale output after entry without feeding back", {
+  m <- progression_matrix(fixture_ratios())
+  schedule <- list(
+    list(matrix = m, entry = 80, total = 100),
+    list(matrix = m, entry = 90, total = 300),
+    list(matrix = m, entry = 100)
+  )
+  p <- project_enrollment(proj_base(), schedule = schedule)
+  normal <- project_enrollment(
+    proj_base(),
+    fixture_ratios(),
+    horizon = 3,
+    entry = c(80, 90, 100)
+  )
+  totals <- tapply(normal$enrollment, normal$year, sum)
+  adjustment <- c(100 / totals[1], 300 / totals[2], 300 / totals[2])
+  expect_equal(
+    p$enrollment,
+    normal$enrollment * rep(as.numeric(adjustment), each = 3)
+  )
+})
+
+test_that("step totals are validated before projection", {
+  m <- progression_matrix(fixture_ratios())
+  expect_enrollcast_error(
+    project_enrollment(
+      proj_base(),
+      schedule = list(list(matrix = m, entry = 130, total = Inf))
+    ),
+    class = "enrollcast_error_step_total"
+  )
+  for (total in list(
+    NA_real_,
+    NaN,
+    -1,
+    c(200, 300),
+    TRUE,
+    "200",
+    "other",
+    list(200)
+  )) {
+    expect_error(
+      project_enrollment(
+        proj_base(),
+        schedule = list(list(matrix = m, entry = 130, total = total))
+      ),
+      class = "enrollcast_error_step_total"
+    )
+  }
+})
+
+test_that("zero targets can recover from the unadjusted cohort projection", {
+  s <- swing_schedule(
+    fixture_ratios(),
+    horizon = 3,
+    swing_years = 0,
+    recovery = c(0, 300),
+    entry = c(130, 140, 150)
+  )
+  p <- project_enrollment(proj_base(), schedule = s)
+  expect_equal(p$enrollment[p$year == 1], c(0, 0, 0))
+  expect_equal(sum(p$enrollment[p$year == 2]), 300)
+  expect_true(all(p$enrollment[p$year == 3] > 0))
+
+  s[[2]]$total <- NULL
+  p <- project_enrollment(proj_base(), schedule = s)
+  expect_equal(p$enrollment, rep(0, 9))
+})
+
+test_that("zero projections accept zero targets with an adjustment of one", {
+  base <- c(K = 0, `1` = 0, `2` = 0)
+  s <- swing_schedule(
+    fixture_ratios(),
+    horizon = 2,
+    swing_years = 1,
+    recovery = numeric(0),
+    entry = c(0, 20)
+  )
+  p <- project_enrollment(base, schedule = s)
+  expect_equal(p$enrollment, c(0, 0, 0, 20, 0, 0))
+})
+
+test_that("positive targets on a zero projection fail cleanly", {
+  base <- c(K = 0, `1` = 0, `2` = 0)
+  s <- swing_schedule(
+    fixture_ratios(),
+    horizon = 1,
+    swing_years = 0,
+    recovery = 100,
+    entry = 0
+  )
+  expect_enrollcast_error(
+    project_enrollment(base, schedule = s, start_year = 2026),
+    class = "enrollcast_error_projection_total"
+  )
+})
+
+test_that("targets do not hide missing or infinite projected totals", {
+  ratios <- fixture_ratios()
+  ratios$ratio[2] <- NA_real_
+  s <- suppressWarnings(swing_schedule(
+    ratios,
+    horizon = 1,
+    swing_years = 0,
+    recovery = 300,
+    entry = 130
+  ))
+  expect_enrollcast_error(
+    suppressWarnings(project_enrollment(proj_base(), schedule = s)),
+    class = "enrollcast_error_projection_total"
+  )
+
+  m <- progression_matrix(fixture_ratios())
+  m[2, 1] <- 2
+  expect_error(
+    project_enrollment(
+      c(K = .Machine$double.xmax, `1` = 0, `2` = 0),
+      schedule = list(list(matrix = m, entry = 0, total = 300))
+    ),
+    class = "enrollcast_error_projection_total"
+  )
+  expect_enrollcast_error(
+    project_enrollment(
+      c(K = 0, `1` = 0, `2` = 0),
+      schedule = list(list(matrix = m, entry = 1e-300, total = 1e300))
+    ),
+    class = "enrollcast_error_projection_total"
+  )
+})

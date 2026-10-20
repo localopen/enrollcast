@@ -205,3 +205,39 @@
       i Step 1 grades: "K", "1", and "2".
       x Differing step: 2.
 
+# step totals are validated before projection
+
+    Code
+      project_enrollment(proj_base(), schedule = list(list(matrix = m, entry = 130,
+        total = Inf)))
+    Condition
+      Error in `project_enrollment()`:
+      ! Each `schedule` step total must be `NULL`, `"base"`, or one finite, non-negative number.
+
+# positive targets on a zero projection fail cleanly
+
+    Code
+      project_enrollment(base, schedule = s, start_year = 2026)
+    Condition
+      Error in `run_projection()`:
+      ! Cannot rescale projected year 2027 to its target total.
+      i Projected enrollment must have a finite, positive total, or both the projected and target totals must be zero.
+
+# targets do not hide missing or infinite projected totals
+
+    Code
+      suppressWarnings(project_enrollment(proj_base(), schedule = s))
+    Condition
+      Error in `run_projection()`:
+      ! Cannot rescale projected year 1 to its target total.
+      i Projected enrollment must have a finite, positive total, or both the projected and target totals must be zero.
+
+---
+
+    Code
+      project_enrollment(c(K = 0, `1` = 0, `2` = 0), schedule = list(list(matrix = m,
+        entry = 1e-300, total = 1e+300)))
+    Condition
+      Error in `run_projection()`:
+      ! The target adjustment for projected year 1 must be finite.
+

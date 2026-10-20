@@ -82,6 +82,27 @@ check_step_entry <- function(entry, call = rlang::caller_env()) {
   }
 }
 
+# A target controls output rescaling, leaving the cohort state unadjusted.
+check_step_total <- function(total, call = rlang::caller_env()) {
+  if (
+    !is.null(total) &&
+      !identical(total, "base") &&
+      !(is.numeric(total) &&
+        length(total) == 1 &&
+        is.finite(total) &&
+        total >= 0)
+  ) {
+    ec_abort(
+      paste0(
+        "Each {.arg schedule} step {.field total} must be {.code NULL}, ",
+        "{.code \"base\"}, or one finite, non-negative number."
+      ),
+      class = "enrollcast_error_step_total",
+      call = call
+    )
+  }
+}
+
 check_step_matrix <- function(step, call = rlang::caller_env()) {
   if (!is.list(step) || is.null(step$matrix)) {
     ec_abort(
@@ -164,6 +185,31 @@ check_step <- function(step, call = rlang::caller_env()) {
   m <- check_step_matrix(step, call = call)
   go <- check_step_dimnames(m, call = call)
   check_step_entry(step$entry, call = call)
+  check_step_total(step[["total"]], call = call)
+  go
+}
+
+# Check the shared grade order for a sequence of projection matrices.
+check_schedule_orders <- function(orders, call = rlang::caller_env()) {
+  go <- orders[[1]]
+  differing <- which(!vapply(orders, identical, logical(1), go))
+  if (length(differing) > 0) {
+    ec_abort(
+      c(
+        paste0(
+          "All {.arg schedule} step matrices must share ",
+          "the same grade dimnames in the same order."
+        ),
+        "i" = "Step 1 grades: {.val {go}}.",
+        "x" = paste0(
+          "{cli::qty(length(differing))}Differing ",
+          "step{?s}: {.val {differing}}."
+        )
+      ),
+      class = "enrollcast_error_schedule_inconsistent",
+      call = call
+    )
+  }
   go
 }
 
@@ -184,25 +230,7 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
     )
   }
   orders <- lapply(schedule, check_step, call = call)
-  go <- orders[[1]]
-  differing <- which(!vapply(orders, identical, logical(1), go))
-  if (length(differing) > 0) {
-    ec_abort(
-      c(
-        paste0(
-          "All {.arg schedule} step matrices must share ",
-          "the same grade dimnames in the same order."
-        ),
-        "i" = "Step 1 grades: {.val {go}}.",
-        "x" = paste0(
-          "{cli::qty(length(differing))}Differing ",
-          "step{?s}: {.val {differing}}."
-        )
-      ),
-      class = "enrollcast_error_schedule_inconsistent",
-      call = call
-    )
-  }
+  go <- check_schedule_orders(orders, call = call)
 
   missing_by_step <- vapply(
     schedule,
@@ -349,18 +377,53 @@ resolve_out_years <- function(
   if (is.null(start_year)) seq_len(horizon) else start_year + seq_len(horizon)
 }
 
-# Advance enrollment through a per-year sequence of projection steps.
+# Calculate an output adjustment without changing the normal cohort state.
+total_adjustment <- function(total, n, year, call = rlang::caller_env()) {
+  projected <- sum(n)
+  if (!is.finite(projected) || (projected == 0 && total > 0)) {
+    ec_abort(
+      c(
+        "Cannot rescale projected year {.val {year}} to its target total.",
+        "i" = paste0(
+          "Projected enrollment must have a finite, positive total, ",
+          "or both the projected and target totals must be zero."
+        )
+      ),
+      class = "enrollcast_error_projection_total",
+      call = call
+    )
+  }
+  adjustment <- if (projected == 0) 1 else total / projected
+  if (!is.finite(adjustment)) {
+    ec_abort(
+      "The target adjustment for projected year {.val {year}} must be finite.",
+      class = "enrollcast_error_projection_total",
+      call = call
+    )
+  }
+  adjustment
+}
+
+# Advance unadjusted cohorts and rescale only the recorded output.
 run_projection <- function(steps, base_vec, out_years) {
   go <- names(base_vec)
   entry_grade <- go[1]
   n <- base_vec
+  adjustment <- 1
   out <- matrix(NA_real_, nrow = length(go), ncol = length(out_years))
   for (h in seq_along(out_years)) {
     n <- drop(steps[[h]]$matrix %*% n)
     if (!is.null(steps[[h]]$entry)) {
       n[entry_grade] <- steps[[h]]$entry
     }
-    out[, h] <- n
+    total <- steps[[h]][["total"]]
+    if (!is.null(total)) {
+      if (identical(total, "base")) {
+        total <- sum(base_vec)
+      }
+      adjustment <- total_adjustment(total, n, out_years[[h]])
+    }
+    out[, h] <- n * adjustment
   }
   data.frame(
     year = rep(out_years, each = length(go)),
@@ -401,6 +464,14 @@ run_projection <- function(steps, base_vec, out_years) {
 #'   restores only the entry grade. Matrix row and column names must be unique
 #'   and identical in the same order; all steps must use the same names. A
 #'   step's `entry` must be `NULL` or one finite, non-negative number.
+#'   An optional step `total` rescales that year's output grades after entry
+#'   replacement. It must be one finite, non-negative school total, or `"base"`
+#'   for the sum of the aligned base grades. The unadjusted grades feed the
+#'   next projection step. Steps without a `total` keep the most recent
+#'   adjustment factor (initially one), including for new entry classes.
+#'   Rescaling requires a finite, positive unadjusted school total; when both
+#'   projected and target totals are zero, the adjustment is one. Missing or
+#'   infinite projected totals and positive targets on zero projections error.
 #' @param start_year Optional integer label for the base year; output years run
 #'   from `start_year + 1`. An explicit value and all resulting years must be
 #'   within the R integer range. If `NULL`, the year is derived from `base$year`
