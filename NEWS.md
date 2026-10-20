@@ -12,6 +12,8 @@
   year's grades, with `"base"` referring to the aligned base total. The rescaled
   grades feed the next step.
 
+# enrollcast 0.2.0
+
 # enrollcast 0.1.0
 
 * Initial CRAN release.
