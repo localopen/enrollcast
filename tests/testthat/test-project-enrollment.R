@@ -683,4 +683,12 @@ test_that("targets do not hide missing or infinite projected totals", {
     ),
     class = "enrollcast_error_projection_total"
   )
+  # The factor underflowing to zero must not silently empty the school.
+  expect_enrollcast_error(
+    project_enrollment(
+      c(K = huge, `1` = 0, `2` = 0),
+      schedule = list(list(matrix = m, entry = 0, total = tiny))
+    ),
+    class = "enrollcast_error_projection_total"
+  )
 })

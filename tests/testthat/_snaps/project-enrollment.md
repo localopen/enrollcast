@@ -239,5 +239,14 @@
         entry = tiny, total = huge)))
     Condition
       Error in `run_projection()`:
-      ! The target adjustment for projected year 1 must be finite.
+      ! The target adjustment for projected year 1 must be finite, and non-zero when the target is positive.
+
+---
+
+    Code
+      project_enrollment(c(K = huge, `1` = 0, `2` = 0), schedule = list(list(matrix = m,
+        entry = 0, total = tiny)))
+    Condition
+      Error in `run_projection()`:
+      ! The target adjustment for projected year 1 must be finite, and non-zero when the target is positive.
 

@@ -394,9 +394,12 @@ total_adjustment <- function(total, n, year, call = rlang::caller_env()) {
     )
   }
   adjustment <- if (projected == 0) 1 else total / projected
-  if (!is.finite(adjustment)) {
+  if (!is.finite(adjustment) || (adjustment == 0 && total > 0)) {
     ec_abort(
-      "The target adjustment for projected year {.val {year}} must be finite.",
+      paste0(
+        "The target adjustment for projected year {.val {year}} must be ",
+        "finite, and non-zero when the target is positive."
+      ),
       class = "enrollcast_error_projection_total",
       call = call
     )
