@@ -2,6 +2,7 @@ url: https://localopen.github.io/enrollcast/
 template:
   bootstrap: 5
   bootswatch: pulse
+  assets: assets/
 news:
   releases:
   - text: "enrollcast 0.1.0"
