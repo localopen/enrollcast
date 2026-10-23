@@ -409,7 +409,12 @@ total_adjustment <- function(total, n, year, call = rlang::caller_env()) {
 
 # Advance cohorts one step at a time; a step's target rescales the grades that
 # are recorded and carried into the next step.
-run_projection <- function(steps, base_vec, out_years) {
+run_projection <- function(
+  steps,
+  base_vec,
+  out_years,
+  call = rlang::caller_env()
+) {
   go <- names(base_vec)
   entry_grade <- go[1]
   n <- base_vec
@@ -424,7 +429,7 @@ run_projection <- function(steps, base_vec, out_years) {
       if (identical(total, "base")) {
         total <- sum(base_vec)
       }
-      n <- n * total_adjustment(total, n, out_years[[h]])
+      n <- n * total_adjustment(total, n, out_years[[h]], call = call)
     }
     out[, h] <- n
   }

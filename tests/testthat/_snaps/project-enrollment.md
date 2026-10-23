@@ -219,7 +219,7 @@
     Code
       project_enrollment(base, schedule = s, start_year = 2026)
     Condition
-      Error in `run_projection()`:
+      Error in `project_enrollment()`:
       ! Cannot rescale projected year 2027 to its target total.
       i Projected enrollment must have a finite, positive total, or both the projected and target totals must be zero.
 
@@ -228,7 +228,7 @@
     Code
       suppressWarnings(project_enrollment(proj_base(), schedule = s))
     Condition
-      Error in `run_projection()`:
+      Error in `project_enrollment()`:
       ! Cannot rescale projected year 1 to its target total.
       i Projected enrollment must have a finite, positive total, or both the projected and target totals must be zero.
 
@@ -238,7 +238,7 @@
       project_enrollment(c(K = 0, `1` = 0, `2` = 0), schedule = list(list(matrix = m,
         entry = tiny, total = huge)))
     Condition
-      Error in `run_projection()`:
+      Error in `project_enrollment()`:
       ! The target adjustment for projected year 1 must be finite, and non-zero when the target is positive.
 
 ---
@@ -247,6 +247,6 @@
       project_enrollment(c(K = huge, `1` = 0, `2` = 0), schedule = list(list(matrix = m,
         entry = 0, total = tiny)))
     Condition
-      Error in `run_projection()`:
+      Error in `project_enrollment()`:
       ! The target adjustment for projected year 1 must be finite, and non-zero when the target is positive.
 
