@@ -16,35 +16,35 @@ swing_schedule(
 \arguments{
 \item{ratios}{A ratios table as accepted by \code{\link[=progression_matrix]{progression_matrix()}}, a square
 projection matrix with grade dimnames, or a list of \code{horizon} such tables
-or matrices (one per projected year, including swing and recovery).
-All matrices must use identical grade dimnames in the same order, matching
-\code{grade_order} when supplied. To open a grade later, include it in every
-year's matrix and use a zero destination row until it opens.}
+or matrices, one per projected year including swing and recovery years.
+All matrices must have identical grade dimnames in the same order, matching
+\code{grade_order} if supplied. To open a grade later, include it in every
+year's matrix and give it a zero row until it opens.}
 
 \item{horizon}{Number of years to project (a positive integer).}
 
-\item{swing_years}{Number of leading swing years (a non-negative integer).
-Each year's school total is held at the total of \code{base} supplied to
-\code{\link[=project_enrollment]{project_enrollment()}}, while its grade mix progresses normally.}
+\item{swing_years}{Number of swing years at the start (a non-negative
+integer). In these years the school total stays at the total of the \code{base}
+passed to \code{\link[=project_enrollment]{project_enrollment()}}, while the grade mix progresses normally.}
 
-\item{recovery}{Numeric vector of annual school target totals, one per year
-immediately after the swing. Values must be finite, non-missing, and
-non-negative. Use \code{numeric(0)} for no recovery window. These are totals,
-replacing the former year-over-year multipliers and grade-specific matrices.}
+\item{recovery}{Annual school target totals for the years right after the
+swing, one value per year. Values must be finite, non-missing, and
+non-negative. Use \code{numeric(0)} for no recovery years. These are totals,
+not year-over-year multipliers.}
 
 \item{entry}{Required exogenous entry-grade enrollment for every projected
 year, including swing and recovery: a numeric vector of length \code{horizon},
 or a data frame with an \code{enrollment} or \code{value} column. Values must be
 finite, non-missing, and non-negative. In swing and recovery years the
-entry grade is rescaled along with the other grades, so reported entry
-enrollment is the supplied value times that year's adjustment, and a larger
-entry class gives a larger reported one. In later years the supplied values
+entry grade is rescaled with the other grades, so reported entry enrollment
+is the supplied value times that year's rescaling factor. A larger entry
+class still gives a larger reported one. In later years the supplied values
 are used as given.}
 
 \item{grade_order}{Optional character vector giving the low-to-high grade
-order for every year. If omitted, each ratios table's order is reconstructed
-from its transition chain; supplied matrices retain their dimname order.
-All years must resolve to the same grade order.}
+order for every year. If omitted, each ratios table's order is rebuilt from
+its chain of transitions, and supplied matrices keep their dimname order.
+Every year must end up with the same grade order.}
 }
 \value{
 A list of \code{horizon} projection steps suitable for the \code{schedule}
@@ -53,21 +53,22 @@ argument of \code{\link[=project_enrollment]{project_enrollment()}}. Each step c
 a numeric \code{total}.
 }
 \description{
-Assembles a per-year \code{\link[=project_enrollment]{project_enrollment()}} schedule for a school passing
-through a temporary relocation ("swing"). Every year advances the normal
-cohort projection with grade progression ratios and a new entry class.
-The output grades are then rescaled to the base-year school total during
-swing years and to the supplied annual totals during recovery.
+Builds a per-year \code{\link[=project_enrollment]{project_enrollment()}} schedule for a school that moves to
+temporary space ("swing") and then recovers. Every year, classes move up by
+the grade progression ratios and a new entry class arrives. The grades are
+then rescaled to the base-year school total in swing years, and to the annual
+totals you supply in recovery years.
 }
 \details{
 The rescaled grades are the students who move up the next year. After the
-last swing or recovery year nothing is adjusted: the projection continues
+last swing or recovery year, nothing is rescaled: the projection continues
 from the recovered grades using the progression ratios and the supplied
-\code{entry} values. Later totals then follow the ratios, and drift toward the
-level the ratios and entry values sustain if the final target is far from it.
-If a school's own ratios are inflated by recovery growth, supply ordinary
-ratios for the years after recovery through a list for \code{ratios}. This
-replaces the former freeze-then-multiply behavior.
+\code{entry} values. If the final target is far from the level the ratios and
+entry values can sustain, later totals drift toward that level. Recovery
+growth can also inflate a school's own ratios; in that case, pass \code{ratios} as
+a list and use ordinary ratios for the years after recovery.
+
+To update calls written for enrollcast 0.1.0, see \code{vignette("enrollcast")}.
 }
 \examples{
 ratios <- data.frame(

@@ -461,11 +461,38 @@ run_projection <- function(
 
 #' Project enrollment forward
 #'
-#' Projects grade-level enrollment forward an arbitrary horizon using the grade
-#' progression ratio method. Internally builds a projection matrix from `ratios`
-#' and advances enrollment one year at a time (one matrix-vector product per
-#' projected year), overwriting the entry grade with the supplied exogenous
-#' value each year. `ratios` is optional when a `schedule` is supplied.
+#' Projects grade-level enrollment forward any number of years with the grade
+#' progression ratio method. It builds a projection matrix from `ratios` and
+#' advances enrollment one year at a time (one matrix-vector product per year),
+#' replacing the entry grade each year with the value you supply. `ratios` is
+#' optional when you supply a `schedule`.
+#'
+#' @section Schedules:
+#' Each step is `list(matrix = <square projection matrix>, entry = <NULL or a
+#' single number>)`, with an optional `total`. Each matrix must be numeric and
+#' square, and its non-missing coefficients must be finite and non-negative. Row
+#' and column names must be unique and identical, in the same order, and every
+#' step must use the same names. A step's `entry` must be `NULL` or one finite,
+#' non-negative number.
+#'
+#' A step's `total` rescales that year's grades, entry grade included, after the
+#' entry value is applied. It is either one finite, non-negative school total or
+#' `"base"`, the sum of the base grades. The rescaled grades are recorded and
+#' carried into the next step. Steps without a `total` aren't rescaled, so the
+#' projection continues from the last rescaled grades with the supplied `entry`
+#' values.
+#'
+#' Rescaling needs a finite, positive projected total. A missing or infinite
+#' projected total is an error, and so is a positive target on a zero
+#' projection. If both the projection and the target are zero, the grades are
+#' left as they are. A zero target empties that year, so a later target has only
+#' the entry classes that arrive afterwards to rescale.
+#'
+#' `NA`/`NaN` coefficients are kept, with a warning. A missing coefficient can
+#' make its grade missing in the output. If that grade is still missing after
+#' the entry value is applied, the next matrix multiplication makes every grade
+#' missing, because zero times a missing value is still missing. A non-`NULL`
+#' entry value then restores only the entry grade.
 #'
 #' @inheritParams progression_matrix
 #' @param base Most recent observed enrollment: either a data frame with
@@ -476,36 +503,16 @@ run_projection <- function(
 #' @param entry Exogenous entry-grade enrollment for each projected year: a
 #'   numeric vector of length `horizon`, or a data frame with an `enrollment`
 #'   or `value` column. Values must be finite, non-missing, and non-negative. If
-#'   `NULL`, the entry grade is held constant at its base value and a warning is
-#'   issued.
+#'   `NULL`, the entry grade stays at its base value, with a warning.
 #' @param schedule Optional prebuilt projection schedule: a list of per-year
-#'   steps, each `list(matrix = <square projection matrix>, entry = <NULL or a
-#'   single number>)`, as produced by [swing_schedule()]. When supplied,
-#'   `ratios` and `entry` must be `NULL` and `horizon` defaults to the schedule
-#'   length. Each matrix must be numeric and square; non-missing coefficients
-#'   must be finite and non-negative. `NA`/`NaN` coefficients are preserved and
-#'   trigger a warning. A missing coefficient can make its output row missing.
-#'   If that missing enrollment remains after entry replacement, the next
-#'   matrix multiplication spreads missingness to all grade results because zero
-#'   times a missing value is still missing. A non-`NULL` entry value then
-#'   restores only the entry grade. Matrix row and column names must be unique
-#'   and identical in the same order; all steps must use the same names. A
-#'   step's `entry` must be `NULL` or one finite, non-negative number.
-#'   An optional step `total` rescales that year's grades, including the entry
-#'   grade, after entry replacement. It must be one finite, non-negative school
-#'   total, or `"base"` for the sum of the aligned base grades. The rescaled
-#'   grades are both recorded and carried into the next step. Steps without a
-#'   `total` apply no adjustment, so a projection continues from the last
-#'   rescaled grades with the supplied `entry` values. The projected school
-#'   total must be finite and positive to rescale; when both it and the target
-#'   are zero, the adjustment is one. A missing or infinite projected total, or
-#'   a positive target on a zero projection, is an error. A zero target empties
-#'   that year, so only later entry classes remain for a later target to rescale.
-#' @param start_year Optional integer label for the base year; output years run
-#'   from `start_year + 1`. An explicit value and all resulting years must be
-#'   within the R integer range. If `NULL`, the year is derived from `base$year`
-#'   when present; that column must contain one unambiguous integer within the
-#'   same range. With no year column, output years are `1..horizon`.
+#'   steps, such as one produced by [swing_schedule()]. See the Schedules
+#'   section for what a step contains. When supplied, `ratios` and `entry` must
+#'   be `NULL`, and `horizon` defaults to the number of steps.
+#' @param start_year Optional integer label for the base year; output years
+#'   start at `start_year + 1`. It and every resulting year must fit in R's
+#'   integer range. If `NULL`, the year comes from `base$year` when present;
+#'   that column must hold a single integer value in the same range. Without a
+#'   year column, output years are `1` to `horizon`.
 #'
 #' @return A long data frame with columns `year`, `grade`, and `enrollment`,
 #'   covering the projected years only.

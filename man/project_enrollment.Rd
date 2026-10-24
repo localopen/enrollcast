@@ -22,59 +22,67 @@ must be finite, non-missing, and non-negative.}
 \item{ratios}{A data frame or data-frame subclass with columns \code{grade_from},
 \code{grade_to}, and \code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}.
 \code{grade_from} and \code{grade_to} must not be missing. \code{ratio} must be numeric,
-non-negative, and finite; an infinite ratio (from a zero-enrollment
-feeder) is rejected,
-while \code{NA}/\code{NaN} ratios (e.g. from sparse history) are kept in the matrix
-with a warning.}
+non-negative, and finite. An infinite ratio (from a feeder grade with zero
+enrollment) is an error. \code{NA}/\code{NaN} ratios, for example from sparse
+history, stay in the matrix with a warning.}
 
 \item{horizon}{Number of years to project (a positive integer).}
 
 \item{entry}{Exogenous entry-grade enrollment for each projected year: a
 numeric vector of length \code{horizon}, or a data frame with an \code{enrollment}
 or \code{value} column. Values must be finite, non-missing, and non-negative. If
-\code{NULL}, the entry grade is held constant at its base value and a warning is
-issued.}
+\code{NULL}, the entry grade stays at its base value, with a warning.}
 
 \item{schedule}{Optional prebuilt projection schedule: a list of per-year
-steps, each \verb{list(matrix = <square projection matrix>, entry = <NULL or a single number>)}, as produced by \code{\link[=swing_schedule]{swing_schedule()}}. When supplied,
-\code{ratios} and \code{entry} must be \code{NULL} and \code{horizon} defaults to the schedule
-length. Each matrix must be numeric and square; non-missing coefficients
-must be finite and non-negative. \code{NA}/\code{NaN} coefficients are preserved and
-trigger a warning. A missing coefficient can make its output row missing.
-If that missing enrollment remains after entry replacement, the next
-matrix multiplication spreads missingness to all grade results because zero
-times a missing value is still missing. A non-\code{NULL} entry value then
-restores only the entry grade. Matrix row and column names must be unique
-and identical in the same order; all steps must use the same names. A
-step's \code{entry} must be \code{NULL} or one finite, non-negative number.
-An optional step \code{total} rescales that year's grades, including the entry
-grade, after entry replacement. It must be one finite, non-negative school
-total, or \code{"base"} for the sum of the aligned base grades. The rescaled
-grades are both recorded and carried into the next step. Steps without a
-\code{total} apply no adjustment, so a projection continues from the last
-rescaled grades with the supplied \code{entry} values. The projected school
-total must be finite and positive to rescale; when both it and the target
-are zero, the adjustment is one. A missing or infinite projected total, or
-a positive target on a zero projection, is an error. A zero target empties
-that year, so only later entry classes remain for a later target to rescale.}
+steps, such as one produced by \code{\link[=swing_schedule]{swing_schedule()}}. See the Schedules
+section for what a step contains. When supplied, \code{ratios} and \code{entry} must
+be \code{NULL}, and \code{horizon} defaults to the number of steps.}
 
-\item{start_year}{Optional integer label for the base year; output years run
-from \code{start_year + 1}. An explicit value and all resulting years must be
-within the R integer range. If \code{NULL}, the year is derived from \code{base$year}
-when present; that column must contain one unambiguous integer within the
-same range. With no year column, output years are \verb{1..horizon}.}
+\item{start_year}{Optional integer label for the base year; output years
+start at \code{start_year + 1}. It and every resulting year must fit in R's
+integer range. If \code{NULL}, the year comes from \code{base$year} when present;
+that column must hold a single integer value in the same range. Without a
+year column, output years are \code{1} to \code{horizon}.}
 }
 \value{
 A long data frame with columns \code{year}, \code{grade}, and \code{enrollment},
 covering the projected years only.
 }
 \description{
-Projects grade-level enrollment forward an arbitrary horizon using the grade
-progression ratio method. Internally builds a projection matrix from \code{ratios}
-and advances enrollment one year at a time (one matrix-vector product per
-projected year), overwriting the entry grade with the supplied exogenous
-value each year. \code{ratios} is optional when a \code{schedule} is supplied.
+Projects grade-level enrollment forward any number of years with the grade
+progression ratio method. It builds a projection matrix from \code{ratios} and
+advances enrollment one year at a time (one matrix-vector product per year),
+replacing the entry grade each year with the value you supply. \code{ratios} is
+optional when you supply a \code{schedule}.
 }
+\section{Schedules}{
+
+Each step is \verb{list(matrix = <square projection matrix>, entry = <NULL or a single number>)}, with an optional \code{total}. Each matrix must be numeric and
+square, and its non-missing coefficients must be finite and non-negative. Row
+and column names must be unique and identical, in the same order, and every
+step must use the same names. A step's \code{entry} must be \code{NULL} or one finite,
+non-negative number.
+
+A step's \code{total} rescales that year's grades, entry grade included, after the
+entry value is applied. It is either one finite, non-negative school total or
+\code{"base"}, the sum of the base grades. The rescaled grades are recorded and
+carried into the next step. Steps without a \code{total} aren't rescaled, so the
+projection continues from the last rescaled grades with the supplied \code{entry}
+values.
+
+Rescaling needs a finite, positive projected total. A missing or infinite
+projected total is an error, and so is a positive target on a zero
+projection. If both the projection and the target are zero, the grades are
+left as they are. A zero target empties that year, so a later target has only
+the entry classes that arrive afterwards to rescale.
+
+\code{NA}/\code{NaN} coefficients are kept, with a warning. A missing coefficient can
+make its grade missing in the output. If that grade is still missing after
+the entry value is applied, the next matrix multiplication makes every grade
+missing, because zero times a missing value is still missing. A non-\code{NULL}
+entry value then restores only the entry grade.
+}
+
 \examples{
 history <- data.frame(
   year = rep(2021:2023, each = 3),
