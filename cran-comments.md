@@ -14,6 +14,8 @@ package is at an early stage and I know of no reverse dependencies.
 Tested with `R CMD check --as-cran` on:
 
 * local macOS (aarch64), R release
+* R-hub (R-devel): Linux, macOS (x86_64), macOS (arm64), macOS arm64 with
+  sanitizers, and Windows
 
 ## Method reference
 
