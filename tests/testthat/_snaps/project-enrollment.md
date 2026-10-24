@@ -239,7 +239,7 @@
         entry = tiny, total = huge)))
     Condition
       Error in `project_enrollment()`:
-      ! The target adjustment for projected year 1 must be finite, and non-zero when the target is positive.
+      ! Rescaling projected year 1 must give finite grades, with a non-zero total when the target is positive.
 
 ---
 
@@ -248,5 +248,14 @@
         entry = 0, total = tiny)))
     Condition
       Error in `project_enrollment()`:
-      ! The target adjustment for projected year 1 must be finite, and non-zero when the target is positive.
+      ! Rescaling projected year 1 must give finite grades, with a non-zero total when the target is positive.
+
+---
+
+    Code
+      project_enrollment(c(K = 0.5, `1` = 0, `2` = 0), schedule = list(list(matrix = m /
+        2, entry = 0.5, total = smallest)))
+    Condition
+      Error in `project_enrollment()`:
+      ! Rescaling projected year 1 must give finite grades, with a non-zero total when the target is positive.
 

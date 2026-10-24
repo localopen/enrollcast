@@ -691,4 +691,13 @@ test_that("targets do not hide missing or infinite projected totals", {
     ),
     class = "enrollcast_error_projection_total"
   )
+  # Each per-grade product can underflow even when the factor does not.
+  smallest <- 5e-324
+  expect_enrollcast_error(
+    project_enrollment(
+      c(K = 0.5, `1` = 0, `2` = 0),
+      schedule = list(list(matrix = m / 2, entry = 0.5, total = smallest))
+    ),
+    class = "enrollcast_error_projection_total"
+  )
 })

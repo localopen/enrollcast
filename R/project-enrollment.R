@@ -394,8 +394,8 @@ resolve_out_years <- function(
   if (is.null(start_year)) seq_len(horizon) else start_year + seq_len(horizon)
 }
 
-# Calculate the factor that rescales projected grades to a target total.
-total_adjustment <- function(total, n, year, call = rlang::caller_env()) {
+# Rescale projected grades to a target total.
+rescale_to_total <- function(total, n, year, call = rlang::caller_env()) {
   projected <- sum(n)
   if (!is.finite(projected) || (projected == 0 && total > 0)) {
     ec_abort(
@@ -410,18 +410,20 @@ total_adjustment <- function(total, n, year, call = rlang::caller_env()) {
       call = call
     )
   }
-  adjustment <- if (projected == 0) 1 else total / projected
-  if (!is.finite(adjustment) || (adjustment == 0 && total > 0)) {
+  # Check the scaled grades, not the factor: per-grade products can underflow
+  # to zero even when the factor itself does not.
+  scaled <- if (projected == 0) n else n * (total / projected)
+  if (!all(is.finite(scaled)) || (sum(scaled) == 0 && total > 0)) {
     ec_abort(
       paste0(
-        "The target adjustment for projected year {.val {year}} must be ",
-        "finite, and non-zero when the target is positive."
+        "Rescaling projected year {.val {year}} must give finite grades, ",
+        "with a non-zero total when the target is positive."
       ),
       class = "enrollcast_error_projection_total",
       call = call
     )
   }
-  adjustment
+  scaled
 }
 
 # Advance cohorts one step at a time; a step's target rescales the grades that
@@ -446,7 +448,7 @@ run_projection <- function(
       if (identical(total, "base")) {
         total <- sum(base_vec)
       }
-      n <- n * total_adjustment(total, n, out_years[[h]], call = call)
+      n <- rescale_to_total(total, n, out_years[[h]], call = call)
     }
     out[, h] <- n
   }
