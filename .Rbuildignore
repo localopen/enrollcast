@@ -22,4 +22,5 @@
 ^_dev$
 ^[.]?air[.]toml$
 ^[.]?jarl[.]toml$
-^context7.json
+^context7[.]json$
+^\.posit$
