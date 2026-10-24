@@ -17,11 +17,11 @@ library(enrollcast)
 
 ## The grade progression ratio method
 
-The cohort survival / grade progression ratio method projects enrollment by
-asking: of the students in grade *g* this year, how many appear in grade *g+1*
-next year? That ratio captures net retention, migration, and repetition.
-`enrollcast` estimates these ratios from history and applies them forward with
-a matrix projection.
+The grade progression ratio method, also called cohort survival, projects
+enrollment from one question: of this year's students in grade *g*, how many
+will be in grade *g+1* next year? The answer, a ratio, folds net retention,
+migration, and grade repetition into one number. `enrollcast` estimates these
+ratios from past enrollment and applies them with a matrix projection.
 
 ## A small district
 
@@ -41,16 +41,16 @@ ratios <- progression_ratios(history, method = "mean")
 ratios
 ```
 
-Ratios are calculated only from observed adjacent calendar-year pairs. If the
-history contains a gap, `progression_ratios()` warns and uses the adjacent pairs
-on either side without constructing a transition across the missing period. A
-history with no adjacent year pair cannot produce progression ratios and is
-rejected. Gap detection examines the complete supplied history before `n_years`
-selects the most recent adjacent transitions, so an older gap still warns even
-when it lies outside the selected transitions.
+`progression_ratios()` only uses pairs of consecutive calendar years. If the
+history has a gap, it warns and uses the consecutive pairs on either side; it
+never builds a transition across the missing years. A history with no
+consecutive pair is an error. The gap check covers the whole history before
+`n_years` picks the most recent transitions, so an old gap still warns even if
+it falls outside the transitions you asked for.
 
-The ratios sit on the sub-diagonal of the projection matrix; the entry-grade row
-is zero because entry is supplied exogenously.
+Each ratio sits on the sub-diagonal of the projection matrix, where it moves
+students from one grade into the next. The entry-grade row is zero because you
+supply entry enrollment yourself.
 
 ```{r}
 progression_matrix(ratios)
@@ -58,8 +58,8 @@ progression_matrix(ratios)
 
 ## Step 2: project forward
 
-The entry grade (kindergarten here) has no feeder grade, so you supply its
-future values — for example from a birth-cohort or housing model.
+The entry grade (kindergarten here) has no grade below it, so you supply its
+future values, for example from a birth-cohort or housing model.
 
 ```{r}
 base <- history[history$year == 2023, c("grade", "enrollment")]
@@ -73,10 +73,10 @@ projection <- project_enrollment(
 projection
 ```
 
-## Stitching history and projection
+## Combining history and projection
 
-`project_enrollment()` returns projected years only. Combine with history for
-plotting:
+`project_enrollment()` returns only the projected years. To plot history and
+projection together, bind them:
 
 ```{r}
 observed <- data.frame(
@@ -90,23 +90,89 @@ head(combined)
 
 ## Modeling a school modernization swing
 
-A school temporarily relocated during modernization typically sees depressed
-enrollment that recovers after it returns. `swing_schedule()` builds a per-year
-projection schedule: enrollment is held flat during the swing, scaled by
-recovery multipliers for a few years, then projected normally.
-
-Schedules may contain `NA` or `NaN` matrix coefficients. These values are
-preserved and warned about rather than imputed. A missing coefficient can make
-its output grade missing. If that missing enrollment remains after the entry
-grade is replaced, the next matrix multiplication spreads missingness to all
-grade results because zero times a missing value is still missing. A non-`NULL`
-entry value then restores only the entry grade.
+A school that moves to temporary space during a modernization (a "swing")
+usually loses students, then regains them after it moves back.
+`swing_schedule()` builds a year-by-year schedule for this. Every year,
+including swing and recovery years, classes move up by the progression ratios
+and a new entry class arrives. The grades are then rescaled to a school total:
+the base-year total in swing years, and a target you supply in recovery
+years.
 
 ```{r}
 depressed <- c(K = 80, `1` = 66, `2` = 60)
 schedule <- swing_schedule(ratios,
   horizon = 6, swing_years = 2,
-  recovery = c(1.10, 1.10, 1.05), entry = 130
+  recovery = c(225, 245, 260), entry = rep(90, 6)
 )
-project_enrollment(depressed, schedule = schedule, start_year = 2023)
+recovered <- project_enrollment(depressed, schedule = schedule, start_year = 2023)
+recovered
+tapply(recovered$enrollment, recovered$year, sum)
 ```
+
+The first two totals equal `sum(depressed)`, 206, and the next three are the
+recovery targets 225, 245, and 260. In each of these years, every grade is
+multiplied by the same factor, the target divided by the projected total
+(`T[h] / sum(n[h])`), so the grades add up to the target. Those rescaled grades
+are the students who move up the following year. The entry class is rescaled
+too, so reported entry enrollment in these years is the supplied value times
+that factor. A larger supplied entry class still gives a larger reported one.
+
+After the last target year, nothing is rescaled. The school carries on from the
+recovered grades using the progression ratios and the supplied `entry` values,
+which are reported as given. If the final target is far from the level the
+ratios and entry values can sustain, later totals drift toward that level.
+Recovery growth can also inflate a school's own ratios. In that case, pass
+`ratios` as a list and use ordinary ratios for the years after recovery (see
+the next section).
+
+### Changing ratios and opening grades
+
+To vary ratios by year, pass a list of `horizon` ratios tables or projection
+matrices. Every matrix must use the same grade names, in the same order, for
+its rows and columns, including grades that haven't opened yet. A grade stays
+closed while its row is zero; give it its progression ratio from the year it
+opens. An entry value of zero keeps the entry grade closed. Targets are
+whole-school totals, so set each one for the grades open that year.
+
+```{r}
+m <- progression_matrix(ratios)
+closed <- m
+closed["2", ] <- 0
+opening <- swing_schedule(
+  ratios = list(closed, closed, m, m),
+  horizon = 4, swing_years = 1,
+  recovery = c(165, 235), entry = rep(90, 4)
+)
+project_enrollment(c(K = 80, `1` = 66, `2` = 0), schedule = opening)
+```
+
+### Schedule targets and missing values
+
+Each step in a schedule is `list(matrix = m, entry = value)`, plus an optional
+`total` that rescales that year's grades. `total = "base"` uses the sum of the
+base-year grades, and a number sets the target directly. The rescaled grades
+carry into the next step. A step without a `total` isn't rescaled. You can
+still build identity or diagonal steps by hand and pass them to
+`project_enrollment()`.
+
+Schedule matrices can contain `NA` or `NaN` coefficients.
+`project_enrollment()` keeps them and warns instead of filling them in. A
+missing coefficient can make its grade missing in the output. If that grade is
+still missing after the entry value is applied, the next year's matrix
+multiplication makes every grade missing, because zero times a missing value
+is still missing. A non-`NULL` entry value then restores only the entry grade.
+
+Rescaling needs a finite, positive projected total. A missing or infinite total
+is an error, and so is a positive target when the projection is zero. If both
+the projection and the target are zero, the grades are left as they are. A
+zero target on a positive projection empties the school that year, so a later
+target has only the entry classes that arrive afterwards to rescale.
+
+### Updating code written for enrollcast 0.1.0
+
+In enrollcast 0.1.0, `swing_schedule()` froze the grade mix during swing and
+recovery years and took recovery multipliers. To update an older call, supply
+`entry` values for the whole `horizon` and replace the multipliers with annual
+totals. Whole-school multipliers `multipliers` become the targets
+`sum(depressed) * cumprod(multipliers)`. Grade-specific recovery matrices are
+no longer accepted.

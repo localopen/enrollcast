@@ -44,3 +44,25 @@ proj_base <- function() {
     enrollment = c(120, 99, 91)
   )
 }
+
+# Independent reference for carried rescaling: classes move up, the entry class
+# is overwritten, and a year's total (NA for none) rescales the grades that are
+# recorded and carried into the next year. Returns a grade-by-year matrix.
+reference_carry <- function(base, matrices, entry, totals = NULL) {
+  n <- base
+  out <- matrix(
+    NA_real_,
+    nrow = length(base),
+    ncol = length(entry),
+    dimnames = list(names(base), NULL)
+  )
+  for (h in seq_along(entry)) {
+    n <- drop(matrices[[h]] %*% n)
+    n[[1]] <- entry[[h]]
+    if (h <= length(totals) && !is.na(totals[[h]])) {
+      n <- n * totals[[h]] / sum(n)
+    }
+    out[, h] <- n
+  }
+  out
+}

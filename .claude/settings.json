@@ -1,0 +1,12 @@
+{
+  "enabledPlugins": {
+    "humanizer@humanizer": true,
+    "github@posit-dev-skills": true,
+    "open-source@posit-dev-skills": true,
+    "posit-dev@posit-dev-skills": true,
+    "r-lib@posit-dev-skills": true,
+    "context7@anthropic-plugin-directory": true,
+    "claude-md-management@anthropic-plugin-directory": true,
+    "superpowers@claude-plugins-official": true
+  }
+}

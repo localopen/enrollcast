@@ -10,26 +10,25 @@ progression_matrix(ratios, grade_order = NULL)
 \item{ratios}{A data frame or data-frame subclass with columns \code{grade_from},
 \code{grade_to}, and \code{ratio}, as returned by \code{\link[=progression_ratios]{progression_ratios()}}.
 \code{grade_from} and \code{grade_to} must not be missing. \code{ratio} must be numeric,
-non-negative, and finite; an infinite ratio (from a zero-enrollment
-feeder) is rejected,
-while \code{NA}/\code{NaN} ratios (e.g. from sparse history) are kept in the matrix
-with a warning.}
+non-negative, and finite. An infinite ratio (from a feeder grade with zero
+enrollment) is an error. \code{NA}/\code{NaN} ratios, for example from sparse
+history, stay in the matrix with a warning.}
 
 \item{grade_order}{Optional character vector giving the low-to-high grade
-order. If omitted, the order is reconstructed from the transition chain.
-Every non-entry grade in \code{grade_order} must appear as a \code{grade_to} in
-\code{ratios}. Must not contain duplicates or missing values.}
+order. If omitted, the order is rebuilt from the chain of transitions.
+Every grade in \code{grade_order} except the entry grade must appear as a
+\code{grade_to} in \code{ratios}. It must not contain duplicates or missing values.}
 }
 \value{
 A square numeric matrix with grade dimnames.
 }
 \description{
-Assembles the projection matrix used to advance enrollment. Progression
-ratios are placed on the sub-diagonal (each non-entry grade is fed by the
-grade below); the entry-grade row is left at zero because entry enrollment is
-supplied exogenously to \code{\link[=project_enrollment]{project_enrollment()}}. The ratios must form a single
-low-to-high chain: each \code{grade_to} must be the grade immediately above its
-\code{grade_from} in the resolved order.
+Builds the matrix that advances enrollment by one year. Progression ratios go
+on the sub-diagonal, so each grade above the entry grade is fed by the grade
+below it. The entry-grade row is zero because you supply entry enrollment to
+\code{\link[=project_enrollment]{project_enrollment()}} yourself. The ratios must form a single chain from the
+lowest grade to the highest: each \code{grade_to} must be the grade directly above
+its \code{grade_from}.
 }
 \examples{
 ratios <- data.frame(
