@@ -19,7 +19,7 @@ check_recovery <- function(recovery, call = rlang::caller_env()) {
   }
 }
 
-# Number of normal (GPR) years; errors if swing + recovery exceed the horizon.
+# Validate swing_years and that swing + recovery years fit within the horizon.
 check_swing <- function(
   swing_years,
   n_recovery,
@@ -33,8 +33,7 @@ check_swing <- function(
       call = call
     )
   }
-  n_normal <- horizon - swing_years - n_recovery
-  if (n_normal < 0) {
+  if (swing_years + n_recovery > horizon) {
     ec_abort(
       c(
         paste0(
@@ -47,7 +46,6 @@ check_swing <- function(
       call = call
     )
   }
-  n_normal
 }
 
 # Convert one ratios table or a supplied projection matrix to a named matrix.
@@ -55,8 +53,9 @@ swing_matrix <- function(ratios, grade_order, call = rlang::caller_env()) {
   if (!is.matrix(ratios)) {
     return(progression_matrix(ratios, grade_order))
   }
-  m <- check_step_matrix(list(matrix = ratios), call = call)
-  go <- check_step_dimnames(m, call = call)
+  what <- "Each {.arg ratios} matrix"
+  m <- check_step_matrix(list(matrix = ratios), what = what, call = call)
+  go <- check_step_dimnames(m, what = what, call = call)
   if (!is.null(grade_order)) {
     grade_order <- as.character(grade_order)
     check_grade_order_arg(grade_order, call = call)
@@ -98,7 +97,11 @@ swing_matrices <- function(
     call = call
   )
   orders <- lapply(matrices, rownames)
-  check_schedule_orders(orders, call = call)
+  check_schedule_orders(
+    orders,
+    what = "All {.arg ratios} matrices",
+    call = call
+  )
   matrices
 }
 

@@ -82,7 +82,7 @@ check_step_entry <- function(entry, call = rlang::caller_env()) {
   }
 }
 
-# A target controls output rescaling, leaving the cohort state unadjusted.
+# A target rescales the year's grades; the rescaled grades feed the next step.
 check_step_total <- function(total, call = rlang::caller_env()) {
   if (
     !is.null(total) &&
@@ -103,7 +103,12 @@ check_step_total <- function(total, call = rlang::caller_env()) {
   }
 }
 
-check_step_matrix <- function(step, call = rlang::caller_env()) {
+# `what` names the matrix in messages, so swing_schedule() can blame `ratios`.
+check_step_matrix <- function(
+  step,
+  what = "Each {.arg schedule} step {.field matrix}",
+  call = rlang::caller_env()
+) {
   if (!is.list(step) || is.null(step$matrix)) {
     ec_abort(
       c(
@@ -121,7 +126,7 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   if (!is.matrix(m) || nrow(m) != ncol(m)) {
     ec_abort(
       c(
-        "Each {.arg schedule} step {.field matrix} must be square.",
+        paste0(what, " must be square."),
         "x" = "This matrix is {nrow(m)}x{ncol(m)}."
       ),
       class = "enrollcast_error_step_not_square",
@@ -135,7 +140,8 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   ) {
     ec_abort(
       paste0(
-        "Each {.arg schedule} step {.field matrix} must contain non-negative ",
+        what,
+        " must contain non-negative ",
         "numeric values or {.val {NA}}/{.val {NaN}}, without infinite values."
       ),
       class = "enrollcast_error_step_values",
@@ -145,14 +151,19 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   m
 }
 
-check_step_dimnames <- function(m, call = rlang::caller_env()) {
+check_step_dimnames <- function(
+  m,
+  what = "Each {.arg schedule} step {.field matrix}",
+  call = rlang::caller_env()
+) {
   rn <- rownames(m)
   cn <- colnames(m)
   if (is.null(rn) || is.null(cn)) {
     ec_abort(
       c(
         paste0(
-          "Each {.arg schedule} step {.field matrix} must have present, ",
+          what,
+          " must have present, ",
           "unique, identical row and column names in the same order."
         ),
         "x" = "This matrix is missing row or column names."
@@ -165,7 +176,8 @@ check_step_dimnames <- function(m, call = rlang::caller_env()) {
     ec_abort(
       c(
         paste0(
-          "Each {.arg schedule} step {.field matrix} must have present, ",
+          what,
+          " must have present, ",
           "unique, identical row and column names in the same order."
         ),
         "x" = paste0(
@@ -190,14 +202,19 @@ check_step <- function(step, call = rlang::caller_env()) {
 }
 
 # Check the shared grade order for a sequence of projection matrices.
-check_schedule_orders <- function(orders, call = rlang::caller_env()) {
+check_schedule_orders <- function(
+  orders,
+  what = "All {.arg schedule} step matrices",
+  call = rlang::caller_env()
+) {
   go <- orders[[1]]
   differing <- which(!vapply(orders, identical, logical(1), go))
   if (length(differing) > 0) {
     ec_abort(
       c(
         paste0(
-          "All {.arg schedule} step matrices must share ",
+          what,
+          " must share ",
           "the same grade dimnames in the same order."
         ),
         "i" = "Step 1 grades: {.val {go}}.",

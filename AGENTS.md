@@ -39,7 +39,8 @@ and map when projecting multiple schools or sectors.
   with a warning.
 - Missingness spreads. A missing ratio makes its output row missing, and because
   `0 * NA` is `NA`, the next matrix product carries that missingness into every
-  grade. A non-`NULL` `entry` restores only the entry grade.
+  grade. A non-`NULL` `entry` restores only the entry grade. The exception is a
+  step with a `total`: a missing projected total there is an error.
 - `progression_ratios()` scans the complete supplied history for calendar-year
   gaps before `n_years` selects recent transitions, so an older gap still warns
   even when it falls outside the selected window.

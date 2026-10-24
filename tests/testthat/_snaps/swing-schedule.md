@@ -69,7 +69,7 @@
       entry = c(130, 140))
     Condition
       Error in `swing_schedule()`:
-      ! All `schedule` step matrices must share the same grade dimnames in the same order.
+      ! All `ratios` matrices must share the same grade dimnames in the same order.
       i Step 1 grades: "K", "1", and "2".
       x Differing step: 2.
 
@@ -81,4 +81,33 @@
     Condition
       Error in `swing_schedule()`:
       ! Projection matrix dimnames must match `grade_order` in order.
+
+---
+
+    Code
+      swing_schedule(matrix(1:6, nrow = 2), horizon = 2, swing_years = 0, recovery = 350,
+      entry = c(130, 140))
+    Condition
+      Error in `swing_schedule()`:
+      ! Each `ratios` matrix must be square.
+      x This matrix is 2x3.
+
+---
+
+    Code
+      swing_schedule(unname(m), horizon = 2, swing_years = 0, recovery = 350, entry = c(
+        130, 140))
+    Condition
+      Error in `swing_schedule()`:
+      ! Each `ratios` matrix must have present, unique, identical row and column names in the same order.
+      x This matrix is missing row or column names.
+
+---
+
+    Code
+      swing_schedule(m, horizon = 2, swing_years = 0, recovery = 350, entry = c(130,
+        140))
+    Condition
+      Error in `swing_schedule()`:
+      ! Each `ratios` matrix must contain non-negative numeric values or NA/NaN, without infinite values.
 

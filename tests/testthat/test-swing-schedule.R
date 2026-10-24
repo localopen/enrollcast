@@ -381,7 +381,17 @@ test_that("per-year matrices must share grade names and order", {
     ),
     class = "enrollcast_error_schedule_inconsistent"
   )
-  expect_error(
+  expect_enrollcast_error(
+    swing_schedule(
+      matrix(1:6, nrow = 2),
+      horizon = 2,
+      swing_years = 0,
+      recovery = 350,
+      entry = c(130, 140)
+    ),
+    class = "enrollcast_error_step_not_square"
+  )
+  expect_enrollcast_error(
     swing_schedule(
       unname(m),
       horizon = 2,
@@ -392,7 +402,7 @@ test_that("per-year matrices must share grade names and order", {
     class = "enrollcast_error_step_dimnames"
   )
   m[1, 1] <- -1
-  expect_error(
+  expect_enrollcast_error(
     swing_schedule(
       m,
       horizon = 2,
