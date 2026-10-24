@@ -23,17 +23,24 @@ and map when projecting multiple schools or sectors.
   value with a warning when `entry = NULL`).
 - `project_enrollment()` returns projected years only; it does not include the
   base year.
-- A schedule step is `list(matrix, entry)`. `entry = NULL` means do not
-  overwrite that year's entry grade; all step matrices must have identical row
-  and column grade names in the same order.
-- `swing_schedule()` holds enrollment flat during swing years, applies recovery
-  multipliers, then resumes normal projection.
+- A schedule step is `list(matrix, entry)` with an optional `total` that
+  rescales that year's grades, entry grade included (`"base"` uses the aligned
+  base total). The rescaled grades feed the next step; steps without a target
+  apply no adjustment. `entry = NULL` means do not overwrite that year's entry
+  grade; all step matrices must have identical row and column grade names in the
+  same order.
+- `swing_schedule()` advances cohorts with an entry value every year. Swing
+  years match the base total and recovery years match annual target totals;
+  later years continue from the rescaled grades with the supplied entry values
+  and no adjustment. Ratios may vary by year through a list of tables or named
+  matrices.
 - Grade order is semantic. Prefer an ordered factor or explicit `grade_order`;
   mixed labels such as `K`, `1`, `2` otherwise fall back to alphabetical order
   with a warning.
 - Missingness spreads. A missing ratio makes its output row missing, and because
   `0 * NA` is `NA`, the next matrix product carries that missingness into every
-  grade. A non-`NULL` `entry` restores only the entry grade.
+  grade. A non-`NULL` `entry` restores only the entry grade. The exception is a
+  step with a `total`: a missing projected total there is an error.
 - `progression_ratios()` scans the complete supplied history for calendar-year
   gaps before `n_years` selects recent transitions, so an older gap still warns
   even when it falls outside the selected window.

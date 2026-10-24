@@ -1,6 +1,16 @@
 # enrollcast (development version)
 
-# enrollcast 0.2.0
+* `swing_schedule()` now advances cohorts and takes new entry classes in every
+  year, rescaling to the base total during swing and explicit annual target
+  totals during recovery (#8). The rescaled grades move up the next year, and
+  nothing is adjusted after recovery: the projection continues from the
+  recovered grades with the supplied entry classes. Recovery totals replace
+  multipliers, and grade-specific recovery matrices are no longer accepted;
+  `entry` must now cover the full horizon. Per-year ratios tables or projection
+  matrices support changing ratios and grades opening later.
+* Projection schedule steps accept an optional `total` that rescales that
+  year's grades, with `"base"` referring to the aligned base total. The rescaled
+  grades feed the next step.
 
 # enrollcast 0.1.0
 

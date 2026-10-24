@@ -82,7 +82,33 @@ check_step_entry <- function(entry, call = rlang::caller_env()) {
   }
 }
 
-check_step_matrix <- function(step, call = rlang::caller_env()) {
+# A target rescales the year's grades; the rescaled grades feed the next step.
+check_step_total <- function(total, call = rlang::caller_env()) {
+  if (
+    !is.null(total) &&
+      !identical(total, "base") &&
+      !(is.numeric(total) &&
+        length(total) == 1 &&
+        is.finite(total) &&
+        total >= 0)
+  ) {
+    ec_abort(
+      paste0(
+        "Each {.arg schedule} step {.field total} must be {.code NULL}, ",
+        "{.code \"base\"}, or one finite, non-negative number."
+      ),
+      class = "enrollcast_error_step_total",
+      call = call
+    )
+  }
+}
+
+# `what` names the matrix in messages, so swing_schedule() can blame `ratios`.
+check_step_matrix <- function(
+  step,
+  what = "Each {.arg schedule} step {.field matrix}",
+  call = rlang::caller_env()
+) {
   if (!is.list(step) || is.null(step$matrix)) {
     ec_abort(
       c(
@@ -100,7 +126,7 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   if (!is.matrix(m) || nrow(m) != ncol(m)) {
     ec_abort(
       c(
-        "Each {.arg schedule} step {.field matrix} must be square.",
+        paste0(what, " must be square."),
         "x" = "This matrix is {nrow(m)}x{ncol(m)}."
       ),
       class = "enrollcast_error_step_not_square",
@@ -114,7 +140,8 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   ) {
     ec_abort(
       paste0(
-        "Each {.arg schedule} step {.field matrix} must contain non-negative ",
+        what,
+        " must contain non-negative ",
         "numeric values or {.val {NA}}/{.val {NaN}}, without infinite values."
       ),
       class = "enrollcast_error_step_values",
@@ -124,14 +151,19 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   m
 }
 
-check_step_dimnames <- function(m, call = rlang::caller_env()) {
+check_step_dimnames <- function(
+  m,
+  what = "Each {.arg schedule} step {.field matrix}",
+  call = rlang::caller_env()
+) {
   rn <- rownames(m)
   cn <- colnames(m)
   if (is.null(rn) || is.null(cn)) {
     ec_abort(
       c(
         paste0(
-          "Each {.arg schedule} step {.field matrix} must have present, ",
+          what,
+          " must have present, ",
           "unique, identical row and column names in the same order."
         ),
         "x" = "This matrix is missing row or column names."
@@ -144,7 +176,8 @@ check_step_dimnames <- function(m, call = rlang::caller_env()) {
     ec_abort(
       c(
         paste0(
-          "Each {.arg schedule} step {.field matrix} must have present, ",
+          what,
+          " must have present, ",
           "unique, identical row and column names in the same order."
         ),
         "x" = paste0(
@@ -164,6 +197,36 @@ check_step <- function(step, call = rlang::caller_env()) {
   m <- check_step_matrix(step, call = call)
   go <- check_step_dimnames(m, call = call)
   check_step_entry(step$entry, call = call)
+  check_step_total(step[["total"]], call = call)
+  go
+}
+
+# Check the shared grade order for a sequence of projection matrices.
+check_schedule_orders <- function(
+  orders,
+  what = "All {.arg schedule} step matrices",
+  call = rlang::caller_env()
+) {
+  go <- orders[[1]]
+  differing <- which(!vapply(orders, identical, logical(1), go))
+  if (length(differing) > 0) {
+    ec_abort(
+      c(
+        paste0(
+          what,
+          " must share ",
+          "the same grade dimnames in the same order."
+        ),
+        "i" = "Step 1 grades: {.val {go}}.",
+        "x" = paste0(
+          "{cli::qty(length(differing))}Differing ",
+          "step{?s}: {.val {differing}}."
+        )
+      ),
+      class = "enrollcast_error_schedule_inconsistent",
+      call = call
+    )
+  }
   go
 }
 
@@ -184,25 +247,7 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
     )
   }
   orders <- lapply(schedule, check_step, call = call)
-  go <- orders[[1]]
-  differing <- which(!vapply(orders, identical, logical(1), go))
-  if (length(differing) > 0) {
-    ec_abort(
-      c(
-        paste0(
-          "All {.arg schedule} step matrices must share ",
-          "the same grade dimnames in the same order."
-        ),
-        "i" = "Step 1 grades: {.val {go}}.",
-        "x" = paste0(
-          "{cli::qty(length(differing))}Differing ",
-          "step{?s}: {.val {differing}}."
-        )
-      ),
-      class = "enrollcast_error_schedule_inconsistent",
-      call = call
-    )
-  }
+  go <- check_schedule_orders(orders, call = call)
 
   missing_by_step <- vapply(
     schedule,
@@ -349,8 +394,46 @@ resolve_out_years <- function(
   if (is.null(start_year)) seq_len(horizon) else start_year + seq_len(horizon)
 }
 
-# Advance enrollment through a per-year sequence of projection steps.
-run_projection <- function(steps, base_vec, out_years) {
+# Rescale projected grades to a target total.
+rescale_to_total <- function(total, n, year, call = rlang::caller_env()) {
+  projected <- sum(n)
+  if (!is.finite(projected) || (projected == 0 && total > 0)) {
+    ec_abort(
+      c(
+        "Cannot rescale projected year {.val {year}} to its target total.",
+        "i" = paste0(
+          "Projected enrollment must have a finite, positive total, ",
+          "or both the projected and target totals must be zero."
+        )
+      ),
+      class = "enrollcast_error_projection_total",
+      call = call
+    )
+  }
+  # Check the scaled grades, not the factor: per-grade products can underflow
+  # to zero even when the factor itself does not.
+  scaled <- if (projected == 0) n else n * (total / projected)
+  if (!all(is.finite(scaled)) || (sum(scaled) == 0 && total > 0)) {
+    ec_abort(
+      paste0(
+        "Rescaling projected year {.val {year}} must give finite grades, ",
+        "with a non-zero total when the target is positive."
+      ),
+      class = "enrollcast_error_projection_total",
+      call = call
+    )
+  }
+  scaled
+}
+
+# Advance cohorts one step at a time; a step's target rescales the grades that
+# are recorded and carried into the next step.
+run_projection <- function(
+  steps,
+  base_vec,
+  out_years,
+  call = rlang::caller_env()
+) {
   go <- names(base_vec)
   entry_grade <- go[1]
   n <- base_vec
@@ -359,6 +442,13 @@ run_projection <- function(steps, base_vec, out_years) {
     n <- drop(steps[[h]]$matrix %*% n)
     if (!is.null(steps[[h]]$entry)) {
       n[entry_grade] <- steps[[h]]$entry
+    }
+    total <- steps[[h]][["total"]]
+    if (!is.null(total)) {
+      if (identical(total, "base")) {
+        total <- sum(base_vec)
+      }
+      n <- rescale_to_total(total, n, out_years[[h]], call = call)
     }
     out[, h] <- n
   }
@@ -401,6 +491,16 @@ run_projection <- function(steps, base_vec, out_years) {
 #'   restores only the entry grade. Matrix row and column names must be unique
 #'   and identical in the same order; all steps must use the same names. A
 #'   step's `entry` must be `NULL` or one finite, non-negative number.
+#'   An optional step `total` rescales that year's grades, including the entry
+#'   grade, after entry replacement. It must be one finite, non-negative school
+#'   total, or `"base"` for the sum of the aligned base grades. The rescaled
+#'   grades are both recorded and carried into the next step. Steps without a
+#'   `total` apply no adjustment, so a projection continues from the last
+#'   rescaled grades with the supplied `entry` values. The projected school
+#'   total must be finite and positive to rescale; when both it and the target
+#'   are zero, the adjustment is one. A missing or infinite projected total, or
+#'   a positive target on a zero projection, is an error. A zero target empties
+#'   that year, so only later entry classes remain for a later target to rescale.
 #' @param start_year Optional integer label for the base year; output years run
 #'   from `start_year + 1`. An explicit value and all resulting years must be
 #'   within the R integer range. If `NULL`, the year is derived from `base$year`

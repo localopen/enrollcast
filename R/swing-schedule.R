@@ -1,13 +1,17 @@
-check_recovery_values <- function(recovery, call = rlang::caller_env()) {
-  bad <- !is.numeric(recovery) ||
-    anyNA(recovery) ||
-    !all(is.finite(recovery)) ||
-    any(recovery < 0)
-  if (bad) {
+# Recovery is expressed as annual school totals, not growth multipliers.
+check_recovery <- function(recovery, call = rlang::caller_env()) {
+  if (!is.numeric(recovery) || !is.null(dim(recovery))) {
+    ec_abort(
+      "{.arg recovery} must be a numeric vector of annual target totals.",
+      class = "enrollcast_error_recovery_type",
+      call = call
+    )
+  }
+  if (anyNA(recovery) || !all(is.finite(recovery)) || any(recovery < 0)) {
     ec_abort(
       paste0(
-        "{.arg recovery} values must be numeric, ",
-        "finite, non-missing, and non-negative."
+        "{.arg recovery} totals must be finite, ",
+        "non-missing, and non-negative."
       ),
       class = "enrollcast_error_recovery_values",
       call = call
@@ -15,61 +19,7 @@ check_recovery_values <- function(recovery, call = rlang::caller_env()) {
   }
 }
 
-align_recovery_matrix <- function(recovery, go, call = rlang::caller_env()) {
-  G <- length(go)
-  if (nrow(recovery) != G) {
-    ec_abort(
-      c(
-        "{.arg recovery} matrix must have one row per grade.",
-        "x" = "Expected {G} row{?s} but got {nrow(recovery)}."
-      ),
-      class = "enrollcast_error_recovery_dim",
-      call = call
-    )
-  }
-  rn <- rownames(recovery)
-  if (is.null(rn)) {
-    return(recovery)
-  }
-  if (!has_unique_names(rn) || !setequal(rn, go)) {
-    ec_abort(
-      paste0(
-        "Named {.arg recovery} matrix rows must be ",
-        "unique and exactly match the projection grades."
-      ),
-      class = "enrollcast_error_recovery_names",
-      call = call
-    )
-  }
-  recovery[go, , drop = FALSE]
-}
-
-# Normalize recovery multipliers (scalar-per-year vector or grade-by-year
-# matrix) to a per-year list of length-G diagonal vectors.
-recovery_diagonals <- function(recovery, go, call = rlang::caller_env()) {
-  G <- length(go)
-  if (is.matrix(recovery)) {
-    recovery <- align_recovery_matrix(recovery, go, call = call)
-    check_recovery_values(recovery, call = call)
-    return(lapply(seq_len(ncol(recovery)), function(j) {
-      recovery[, j]
-    }))
-  }
-  if (!is.numeric(recovery)) {
-    ec_abort(
-      c(
-        "{.arg recovery} must be a numeric vector or a grade-by-year matrix.",
-        "x" = "You supplied {.obj_type_friendly {recovery}}."
-      ),
-      class = "enrollcast_error_recovery_type",
-      call = call
-    )
-  }
-  check_recovery_values(recovery, call = call)
-  lapply(recovery, rep, times = G)
-}
-
-# Number of normal (GPR) years; errors if swing + recovery exceed the horizon.
+# Validate swing_years and that swing + recovery years fit within the horizon.
 check_swing <- function(
   swing_years,
   n_recovery,
@@ -83,8 +33,7 @@ check_swing <- function(
       call = call
     )
   }
-  n_normal <- horizon - swing_years - n_recovery
-  if (n_normal < 0) {
+  if (swing_years + n_recovery > horizon) {
     ec_abort(
       c(
         paste0(
@@ -97,69 +46,114 @@ check_swing <- function(
       call = call
     )
   }
-  n_normal
 }
 
-# Validate exogenous entry for the normal years; return it as a numeric vector.
-normal_entry <- function(entry, n_normal, call = rlang::caller_env()) {
-  if (n_normal == 0) {
-    if (length(entry) > 0) {
+# Convert one ratios table or a supplied projection matrix to a named matrix.
+swing_matrix <- function(ratios, grade_order, call = rlang::caller_env()) {
+  if (!is.matrix(ratios)) {
+    return(progression_matrix(ratios, grade_order))
+  }
+  what <- "Each {.arg ratios} matrix"
+  m <- check_step_matrix(list(matrix = ratios), what = what, call = call)
+  go <- check_step_dimnames(m, what = what, call = call)
+  if (!is.null(grade_order)) {
+    grade_order <- as.character(grade_order)
+    check_grade_order_arg(grade_order, call = call)
+    if (!identical(go, grade_order)) {
       ec_abort(
-        "{.arg entry} must be empty when there are no normal (GPR) years.",
-        class = "enrollcast_error_entry_unexpected",
+        "Projection matrix dimnames must match {.arg grade_order} in order.",
+        class = "enrollcast_error_schedule_inconsistent",
         call = call
       )
     }
-    return(numeric(0))
   }
-  if (is.null(entry)) {
+  m
+}
+
+# Resolve a single reusable input or one table/matrix for every projected year.
+swing_matrices <- function(
+  ratios,
+  horizon,
+  grade_order,
+  call = rlang::caller_env()
+) {
+  if (is.data.frame(ratios) || is.matrix(ratios)) {
+    return(rep(list(swing_matrix(ratios, grade_order, call = call)), horizon))
+  }
+  if (!is.list(ratios) || length(ratios) != horizon) {
     ec_abort(
       paste0(
-        "{.arg entry} is required for the ",
-        "{n_normal} normal year{?s} after recovery."
+        "{.arg ratios} must be a ratios table, a projection matrix, ",
+        "or a list of {.arg horizon} tables or matrices."
       ),
-      class = "enrollcast_error_entry_required",
+      class = "enrollcast_error_swing_ratios",
       call = call
     )
   }
-  as_entry_vector(entry, n_normal, call = call)
-}
-
-# A diagonal projection step with the given grade dimnames.
-diag_step <- function(d, go) {
-  m <- diag(d, nrow = length(go))
-  dimnames(m) <- list(go, go)
-  list(matrix = m, entry = NULL)
+  matrices <- lapply(
+    ratios,
+    swing_matrix,
+    grade_order = grade_order,
+    call = call
+  )
+  orders <- lapply(matrices, rownames)
+  check_schedule_orders(
+    orders,
+    what = "All {.arg ratios} matrices",
+    call = call
+  )
+  matrices
 }
 
 #' Build a swing/recovery projection schedule
 #'
 #' Assembles a per-year [project_enrollment()] schedule for a school passing
-#' through a temporary relocation ("swing"): enrollment is held flat at the
-#' depressed observed level during the swing (identity steps), scaled by
-#' year-over-year recovery multipliers for the recovery window (diagonal steps),
-#' then projected with the grade progression ratio method (the normal
-#' projection matrix) for the remaining years.
+#' through a temporary relocation ("swing"). Every year advances the normal
+#' cohort projection with grade progression ratios and a new entry class.
+#' The output grades are then rescaled to the base-year school total during
+#' swing years and to the supplied annual totals during recovery.
+#'
+#' The rescaled grades are the students who move up the next year. After the
+#' last swing or recovery year nothing is adjusted: the projection continues
+#' from the recovered grades using the progression ratios and the supplied
+#' `entry` values. Later totals then follow the ratios, and drift toward the
+#' level the ratios and entry values sustain if the final target is far from it.
+#' If a school's own ratios are inflated by recovery growth, supply ordinary
+#' ratios for the years after recovery through a list for `ratios`. This
+#' replaces the former freeze-then-multiply behavior.
 #'
 #' @inheritParams project_enrollment
 #' @inheritParams progression_matrix
-#' @param swing_years Number of leading years the school is swinging (a
-#'   non-negative integer); enrollment is held flat at `base`.
-#' @param recovery Recovery multipliers applied for one year each, immediately
-#'   after the swing and compounding on the prior year: a numeric vector
-#'   (whole-school, one multiplier per recovery year) or a grade-by-year numeric
-#'   matrix (one row per grade). Values must be finite, non-missing, and
-#'   non-negative. Named matrix rows are matched and reordered by grade;
-#'   unnamed rows are interpreted in projection grade order. Use `numeric(0)`
-#'   for no recovery window.
-#' @param entry Exogenous entry-grade enrollment for the normal grade
-#'   progression ratio years only: one finite, non-missing, non-negative
-#'   numeric value for each of the
-#'   `horizon - swing_years - length(recovery)` years after recovery. Must be
-#'   empty when there are no normal years.
+#' @param ratios A ratios table as accepted by [progression_matrix()], a square
+#'   projection matrix with grade dimnames, or a list of `horizon` such tables
+#'   or matrices (one per projected year, including swing and recovery).
+#'   All matrices must use identical grade dimnames in the same order, matching
+#'   `grade_order` when supplied. To open a grade later, include it in every
+#'   year's matrix and use a zero destination row until it opens.
+#' @param swing_years Number of leading swing years (a non-negative integer).
+#'   Each year's school total is held at the total of `base` supplied to
+#'   [project_enrollment()], while its grade mix progresses normally.
+#' @param recovery Numeric vector of annual school target totals, one per year
+#'   immediately after the swing. Values must be finite, non-missing, and
+#'   non-negative. Use `numeric(0)` for no recovery window. These are totals,
+#'   replacing the former year-over-year multipliers and grade-specific matrices.
+#' @param entry Required exogenous entry-grade enrollment for every projected
+#'   year, including swing and recovery: a numeric vector of length `horizon`,
+#'   or a data frame with an `enrollment` or `value` column. Values must be
+#'   finite, non-missing, and non-negative. In swing and recovery years the
+#'   entry grade is rescaled along with the other grades, so reported entry
+#'   enrollment is the supplied value times that year's adjustment, and a larger
+#'   entry class gives a larger reported one. In later years the supplied values
+#'   are used as given.
+#' @param grade_order Optional character vector giving the low-to-high grade
+#'   order for every year. If omitted, each ratios table's order is reconstructed
+#'   from its transition chain; supplied matrices retain their dimname order.
+#'   All years must resolve to the same grade order.
 #'
 #' @return A list of `horizon` projection steps suitable for the `schedule`
-#'   argument of [project_enrollment()].
+#'   argument of [project_enrollment()]. Each step contains `matrix` and
+#'   `entry`; swing steps also have `total = "base"` and recovery steps have
+#'   a numeric `total`.
 #' @export
 #'
 #' @examples
@@ -168,7 +162,7 @@ diag_step <- function(d, go) {
 #' )
 #' schedule <- swing_schedule(ratios,
 #'   horizon = 6, swing_years = 2,
-#'   recovery = c(1.10, 1.10, 1.05), entry = 130
+#'   recovery = c(225, 245, 260), entry = rep(90, 6)
 #' )
 #' project_enrollment(c(K = 80, `1` = 66, `2` = 60), schedule = schedule)
 swing_schedule <- function(
@@ -180,16 +174,22 @@ swing_schedule <- function(
   grade_order = NULL
 ) {
   horizon <- check_horizon(horizon)
-  m <- progression_matrix(ratios, grade_order)
-  go <- rownames(m)
-  diags <- recovery_diagonals(recovery, go)
-  n_normal <- check_swing(swing_years, length(diags), horizon)
-  entry_vals <- normal_entry(entry, n_normal)
-
-  swing <- rep(list(diag_step(1, go)), swing_years)
-  recov <- lapply(diags, diag_step, go = go)
-  normal <- lapply(seq_len(n_normal), function(k) {
-    list(matrix = m, entry = entry_vals[[k]])
+  check_recovery(recovery)
+  check_swing(swing_years, length(recovery), horizon)
+  matrices <- swing_matrices(ratios, horizon, grade_order)
+  if (is.null(entry)) {
+    ec_abort(
+      "{.arg entry} is required for all {horizon} projected year{?s}.",
+      class = "enrollcast_error_entry_required"
+    )
+  }
+  entry_vals <- as_entry_vector(entry, horizon)
+  targets <- c(rep(list("base"), swing_years), as.list(recovery))
+  lapply(seq_len(horizon), function(h) {
+    step <- list(matrix = matrices[[h]], entry = entry_vals[[h]])
+    if (h <= length(targets)) {
+      step$total <- targets[[h]]
+    }
+    step
   })
-  c(swing, recov, normal)
 }

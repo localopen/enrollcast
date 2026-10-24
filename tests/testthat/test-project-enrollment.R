@@ -547,3 +547,157 @@ test_that("check_schedule rejects inconsistent grade dimnames", {
     class = "enrollcast_error_schedule_inconsistent"
   )
 })
+
+test_that("schedule totals rescale after entry and feed the next step", {
+  m <- progression_matrix(fixture_ratios())
+  schedule <- list(
+    list(matrix = m, entry = 80, total = 100),
+    list(matrix = m, entry = 90, total = 300),
+    list(matrix = m, entry = 100)
+  )
+  p <- project_enrollment(proj_base(), schedule = schedule)
+  base <- stats::setNames(proj_base()$enrollment, proj_base()$grade)
+  expect_equal(
+    p$enrollment,
+    as.vector(reference_carry(
+      base,
+      rep(list(m), 3),
+      c(80, 90, 100),
+      c(100, 300, NA)
+    ))
+  )
+  expect_equal(sum(p$enrollment[p$year == 2]), 300)
+  # A step without a total applies no adjustment, so its entry is as supplied.
+  expect_equal(p$enrollment[p$year == 3][[1]], 100)
+})
+
+test_that("step totals are validated before projection", {
+  m <- progression_matrix(fixture_ratios())
+  expect_enrollcast_error(
+    project_enrollment(
+      proj_base(),
+      schedule = list(list(matrix = m, entry = 130, total = Inf))
+    ),
+    class = "enrollcast_error_step_total"
+  )
+  for (total in list(
+    NA_real_,
+    NaN,
+    -1,
+    c(200, 300),
+    TRUE,
+    "200",
+    "other",
+    list(200)
+  )) {
+    expect_error(
+      project_enrollment(
+        proj_base(),
+        schedule = list(list(matrix = m, entry = 130, total = total))
+      ),
+      class = "enrollcast_error_step_total"
+    )
+  }
+})
+
+test_that("a zero target empties the year and only later entry classes remain", {
+  m <- progression_matrix(fixture_ratios())
+  s <- swing_schedule(
+    fixture_ratios(),
+    horizon = 3,
+    swing_years = 0,
+    recovery = c(0, 300),
+    entry = c(130, 140, 150)
+  )
+  p <- project_enrollment(proj_base(), schedule = s)
+  expect_equal(p$enrollment[p$year == 1], c(0, 0, 0))
+  # Only the new entry class is left to rescale to the next target.
+  expect_equal(p$enrollment[p$year == 2], c(300, 0, 0))
+  expect_equal(p$enrollment[p$year == 3], c(150, unname(m[2, 1]) * 300, 0))
+
+  s[[2]]$total <- NULL
+  p <- project_enrollment(proj_base(), schedule = s)
+  expect_equal(p$enrollment[p$year == 2], c(140, 0, 0))
+})
+
+test_that("zero projections accept zero targets with an adjustment of one", {
+  base <- c(K = 0, `1` = 0, `2` = 0)
+  s <- swing_schedule(
+    fixture_ratios(),
+    horizon = 2,
+    swing_years = 1,
+    recovery = numeric(0),
+    entry = c(0, 20)
+  )
+  p <- project_enrollment(base, schedule = s)
+  expect_equal(p$enrollment, c(0, 0, 0, 20, 0, 0))
+})
+
+test_that("positive targets on a zero projection fail cleanly", {
+  base <- c(K = 0, `1` = 0, `2` = 0)
+  s <- swing_schedule(
+    fixture_ratios(),
+    horizon = 1,
+    swing_years = 0,
+    recovery = 100,
+    entry = 0
+  )
+  expect_enrollcast_error(
+    project_enrollment(base, schedule = s, start_year = 2026),
+    class = "enrollcast_error_projection_total"
+  )
+})
+
+test_that("targets do not hide missing or infinite projected totals", {
+  ratios <- fixture_ratios()
+  ratios$ratio[2] <- NA_real_
+  s <- suppressWarnings(swing_schedule(
+    ratios,
+    horizon = 1,
+    swing_years = 0,
+    recovery = 300,
+    entry = 130
+  ))
+  expect_enrollcast_error(
+    suppressWarnings(project_enrollment(proj_base(), schedule = s)),
+    class = "enrollcast_error_projection_total"
+  )
+
+  m <- progression_matrix(fixture_ratios())
+  m[2, 1] <- 2
+  expect_error(
+    project_enrollment(
+      c(K = .Machine$double.xmax, `1` = 0, `2` = 0),
+      schedule = list(list(matrix = m, entry = 0, total = 300))
+    ),
+    class = "enrollcast_error_projection_total"
+  )
+  # Named values keep the snapshot portable: R parses 1e-300 slightly
+  # differently on macOS arm64, which changes how the literal deparses.
+  tiny <- 1e-300
+  huge <- 1e300
+  expect_enrollcast_error(
+    project_enrollment(
+      c(K = 0, `1` = 0, `2` = 0),
+      schedule = list(list(matrix = m, entry = tiny, total = huge))
+    ),
+    class = "enrollcast_error_projection_total"
+  )
+  # The factor underflowing to zero must not silently empty the school.
+  expect_enrollcast_error(
+    project_enrollment(
+      c(K = huge, `1` = 0, `2` = 0),
+      schedule = list(list(matrix = m, entry = 0, total = tiny))
+    ),
+    class = "enrollcast_error_projection_total"
+  )
+  # Each per-grade product can underflow even when the factor does not.
+  smallest <- 5e-324
+  expect_enrollcast_error(
+    project_enrollment(
+      c(K = 0.5, `1` = 0, `2` = 0),
+      schedule = list(list(matrix = m / 2, entry = 0.5, total = smallest))
+    ),
+    class = "enrollcast_error_projection_total"
+  )
+})
