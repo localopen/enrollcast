@@ -1,10 +1,10 @@
 # enrollcast
 
-`enrollcast` projects school enrollment using the cohort survival /
-grade progression ratio method, implemented as a matrix projection. It
-works at any level of aggregation (school, district, LEA, city-wide) and
-any number of grades, because it operates on a single grade-by-year
-enrollment series.
+`enrollcast` projects school enrollment with the cohort survival / grade
+progression ratio method, implemented as a matrix projection. It works
+on one grade-by-year enrollment series at a time, so you can use it at
+any level (school, district, local education agency, or city) and with
+any number of grades.
 
 **Awesome hex logo provided by Adam Higerd.**
 
@@ -78,8 +78,8 @@ progression_matrix(ratios)
 
 ### Multiple aggregation units
 
-`enrollcast` projects one series per call. To project many schools or
-LEAs, split and map:
+`enrollcast` projects one series per call. To project several schools or
+local education agencies, split the data and map over the pieces:
 
 ``` r
 

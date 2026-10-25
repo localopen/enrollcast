@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">enrollcast</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,15 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="enrollcast-020">enrollcast 0.2.0<a class="anchor" aria-label="anchor" href="#enrollcast-020"></a></h2><p class="text-muted">CRAN release: 2026-10-24</p>
+<ul><li>
+<code><a href="../reference/swing_schedule.html">swing_schedule()</a></code> now moves classes up and adds a new entry class every year, including swing and recovery years (<a href="https://github.com/localopen/enrollcast/issues/8" class="external-link">#8</a>). Swing years are rescaled to the base total and recovery years to the totals you supply, and the rescaled grades are the ones that move up the next year. After recovery nothing is rescaled: the projection continues from the recovered grades with the supplied entry values.</li>
+<li>Breaking: <code><a href="../reference/swing_schedule.html">swing_schedule()</a></code>’s <code>recovery</code> now takes annual school totals instead of multipliers, grade-specific recovery matrices are no longer accepted, and <code>entry</code> must cover the whole horizon. The vignette shows how to convert older calls.</li>
+<li>
+<code><a href="../reference/swing_schedule.html">swing_schedule()</a></code>’s <code>ratios</code> can be a list with one ratios table or projection matrix per year, for ratios that change or grades that open later.</li>
+<li>Schedule steps accept an optional <code>total</code> that rescales that year’s grades; <code>"base"</code> means the base-year total. The rescaled grades carry into the next step.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="enrollcast-010">enrollcast 0.1.0<a class="anchor" aria-label="anchor" href="#enrollcast-010"></a></h2><p class="text-muted">CRAN release: 2026-08-26</p>
 <ul><li>Initial CRAN release.</li>
 <li>
@@ -50,7 +59,8 @@
 <li>
 <code><a href="../reference/swing_schedule.html">swing_schedule()</a></code> builds per-year schedules that hold enrollment flat during swing years, apply recovery multipliers, then resume normal projection.</li>
 </ul></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">enrollcast</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,12 +77,12 @@
 <div class="section level2">
 <h2 id="the-grade-progression-ratio-method">The grade progression ratio method<a class="anchor" aria-label="anchor" href="#the-grade-progression-ratio-method"></a>
 </h2>
-<p>The cohort survival / grade progression ratio method projects
-enrollment by asking: of the students in grade <em>g</em> this year, how
-many appear in grade <em>g+1</em> next year? That ratio captures net
-retention, migration, and repetition. <code>enrollcast</code> estimates
-these ratios from history and applies them forward with a matrix
-projection.</p>
+<p>The grade progression ratio method, also called cohort survival,
+projects enrollment from one question: of this year’s students in grade
+<em>g</em>, how many will be in grade <em>g+1</em> next year? The
+answer, a ratio, folds net retention, migration, and grade repetition
+into one number. <code>enrollcast</code> estimates these ratios from
+past enrollment and applies them with a matrix projection.</p>
 </div>
 <div class="section level2">
 <h2 id="a-small-district">A small district<a class="anchor" aria-label="anchor" href="#a-small-district"></a>
@@ -114,16 +114,16 @@ projection.</p>
 <span><span class="co">#&gt;   grade_from grade_to     ratio</span></span>
 <span><span class="co">#&gt; 1          K        1 0.9250000</span></span>
 <span><span class="co">#&gt; 2          1        2 0.9678363</span></span></code></pre></div>
-<p>Ratios are calculated only from observed adjacent calendar-year
-pairs. If the history contains a gap, <code><a href="../reference/progression_ratios.html">progression_ratios()</a></code>
-warns and uses the adjacent pairs on either side without constructing a
-transition across the missing period. A history with no adjacent year
-pair cannot produce progression ratios and is rejected. Gap detection
-examines the complete supplied history before <code>n_years</code>
-selects the most recent adjacent transitions, so an older gap still
-warns even when it lies outside the selected transitions.</p>
-<p>The ratios sit on the sub-diagonal of the projection matrix; the
-entry-grade row is zero because entry is supplied exogenously.</p>
+<p><code><a href="../reference/progression_ratios.html">progression_ratios()</a></code> only uses pairs of consecutive
+calendar years. If the history has a gap, it warns and uses the
+consecutive pairs on either side; it never builds a transition across
+the missing years. A history with no consecutive pair is an error. The
+gap check covers the whole history before <code>n_years</code> picks the
+most recent transitions, so an old gap still warns even if it falls
+outside the transitions you asked for.</p>
+<p>Each ratio sits on the sub-diagonal of the projection matrix, where
+it moves students from one grade into the next. The entry-grade row is
+zero because you supply entry enrollment yourself.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/progression_matrix.html">progression_matrix</a></span><span class="op">(</span><span class="va">ratios</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       K         1 2</span></span>
@@ -134,8 +134,8 @@ entry-grade row is zero because entry is supplied exogenously.</p>
 <div class="section level2">
 <h2 id="step-2-project-forward">Step 2: project forward<a class="anchor" aria-label="anchor" href="#step-2-project-forward"></a>
 </h2>
-<p>The entry grade (kindergarten here) has no feeder grade, so you
-supply its future values — for example from a birth-cohort or housing
+<p>The entry grade (kindergarten here) has no grade below it, so you
+supply its future values, for example from a birth-cohort or housing
 model.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">base</span> <span class="op">&lt;-</span> <span class="va">history</span><span class="op">[</span><span class="va">history</span><span class="op">$</span><span class="va">year</span> <span class="op">==</span> <span class="fl">2023</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"grade"</span>, <span class="st">"enrollment"</span><span class="op">)</span><span class="op">]</span></span>
@@ -159,10 +159,10 @@ model.</p>
 <span><span class="co">#&gt; 9 2026     2  111.90607</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="stitching-history-and-projection">Stitching history and projection<a class="anchor" aria-label="anchor" href="#stitching-history-and-projection"></a>
+<h2 id="combining-history-and-projection">Combining history and projection<a class="anchor" aria-label="anchor" href="#combining-history-and-projection"></a>
 </h2>
-<p><code><a href="../reference/project_enrollment.html">project_enrollment()</a></code> returns projected years only.
-Combine with history for plotting:</p>
+<p><code><a href="../reference/project_enrollment.html">project_enrollment()</a></code> returns only the projected years.
+To plot history and projection together, bind them:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">observed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  year <span class="op">=</span> <span class="va">history</span><span class="op">$</span><span class="va">year</span>,</span>
@@ -182,45 +182,130 @@ Combine with history for plotting:</p>
 <div class="section level2">
 <h2 id="modeling-a-school-modernization-swing">Modeling a school modernization swing<a class="anchor" aria-label="anchor" href="#modeling-a-school-modernization-swing"></a>
 </h2>
-<p>A school temporarily relocated during modernization typically sees
-depressed enrollment that recovers after it returns.
-<code><a href="../reference/swing_schedule.html">swing_schedule()</a></code> builds a per-year projection schedule:
-enrollment is held flat during the swing, scaled by recovery multipliers
-for a few years, then projected normally.</p>
-<p>Schedules may contain <code>NA</code> or <code>NaN</code> matrix
-coefficients. These values are preserved and warned about rather than
-imputed. A missing coefficient can make its output grade missing. If
-that missing enrollment remains after the entry grade is replaced, the
-next matrix multiplication spreads missingness to all grade results
-because zero times a missing value is still missing. A
-non-<code>NULL</code> entry value then restores only the entry
-grade.</p>
+<p>A school that moves to temporary space during a modernization (a
+“swing”) usually loses students, then regains them after it moves back.
+<code><a href="../reference/swing_schedule.html">swing_schedule()</a></code> builds a year-by-year schedule for this.
+Every year, including swing and recovery years, classes move up by the
+progression ratios and a new entry class arrives. The grades are then
+rescaled to a school total: the base-year total in swing years, and a
+target you supply in recovery years.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">depressed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>K <span class="op">=</span> <span class="fl">80</span>, `1` <span class="op">=</span> <span class="fl">66</span>, `2` <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span>
 <span><span class="va">schedule</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/swing_schedule.html">swing_schedule</a></span><span class="op">(</span><span class="va">ratios</span>,</span>
 <span>  horizon <span class="op">=</span> <span class="fl">6</span>, swing_years <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  recovery <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.10</span>, <span class="fl">1.10</span>, <span class="fl">1.05</span><span class="op">)</span>, entry <span class="op">=</span> <span class="fl">130</span></span>
+<span>  recovery <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">225</span>, <span class="fl">245</span>, <span class="fl">260</span><span class="op">)</span>, entry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">90</span>, <span class="fl">6</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/project_enrollment.html">project_enrollment</a></span><span class="op">(</span><span class="va">depressed</span>, schedule <span class="op">=</span> <span class="va">schedule</span>, start_year <span class="op">=</span> <span class="fl">2023</span><span class="op">)</span></span>
+<span><span class="va">recovered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/project_enrollment.html">project_enrollment</a></span><span class="op">(</span><span class="va">depressed</span>, schedule <span class="op">=</span> <span class="va">schedule</span>, start_year <span class="op">=</span> <span class="fl">2023</span><span class="op">)</span></span>
+<span><span class="va">recovered</span></span>
 <span><span class="co">#&gt;    year grade enrollment</span></span>
-<span><span class="co">#&gt; 1  2024     K   80.00000</span></span>
-<span><span class="co">#&gt; 2  2024     1   66.00000</span></span>
-<span><span class="co">#&gt; 3  2024     2   60.00000</span></span>
-<span><span class="co">#&gt; 4  2025     K   80.00000</span></span>
-<span><span class="co">#&gt; 5  2025     1   66.00000</span></span>
-<span><span class="co">#&gt; 6  2025     2   60.00000</span></span>
-<span><span class="co">#&gt; 7  2026     K   88.00000</span></span>
-<span><span class="co">#&gt; 8  2026     1   72.60000</span></span>
-<span><span class="co">#&gt; 9  2026     2   66.00000</span></span>
-<span><span class="co">#&gt; 10 2027     K   96.80000</span></span>
-<span><span class="co">#&gt; 11 2027     1   79.86000</span></span>
-<span><span class="co">#&gt; 12 2027     2   72.60000</span></span>
-<span><span class="co">#&gt; 13 2028     K  101.64000</span></span>
-<span><span class="co">#&gt; 14 2028     1   83.85300</span></span>
-<span><span class="co">#&gt; 15 2028     2   76.23000</span></span>
-<span><span class="co">#&gt; 16 2029     K  130.00000</span></span>
-<span><span class="co">#&gt; 17 2029     1   94.01700</span></span>
-<span><span class="co">#&gt; 18 2029     2   81.15597</span></span></code></pre></div>
+<span><span class="co">#&gt; 1  2024     K   81.35961</span></span>
+<span><span class="co">#&gt; 2  2024     1   66.89568</span></span>
+<span><span class="co">#&gt; 3  2024     2   57.74471</span></span>
+<span><span class="co">#&gt; 4  2025     K   80.60810</span></span>
+<span><span class="co">#&gt; 5  2025     1   67.40417</span></span>
+<span><span class="co">#&gt; 6  2025     2   57.98773</span></span>
+<span><span class="co">#&gt; 7  2026     K   88.12061</span></span>
+<span><span class="co">#&gt; 8  2026     1   73.00547</span></span>
+<span><span class="co">#&gt; 9  2026     2   63.87393</span></span>
+<span><span class="co">#&gt; 10 2027     K   91.05215</span></span>
+<span><span class="co">#&gt; 11 2027     1   82.46448</span></span>
+<span><span class="co">#&gt; 12 2027     2   71.48336</span></span>
+<span><span class="co">#&gt; 13 2028     K   92.11316</span></span>
+<span><span class="co">#&gt; 14 2028     1   86.20077</span></span>
+<span><span class="co">#&gt; 15 2028     2   81.68607</span></span>
+<span><span class="co">#&gt; 16 2029     K   90.00000</span></span>
+<span><span class="co">#&gt; 17 2029     1   85.20467</span></span>
+<span><span class="co">#&gt; 18 2029     2   83.42823</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/tapply.html" class="external-link">tapply</a></span><span class="op">(</span><span class="va">recovered</span><span class="op">$</span><span class="va">enrollment</span>, <span class="va">recovered</span><span class="op">$</span><span class="va">year</span>, <span class="va">sum</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     2024     2025     2026     2027     2028     2029 </span></span>
+<span><span class="co">#&gt; 206.0000 206.0000 225.0000 245.0000 260.0000 258.6329</span></span></code></pre></div>
+<p>The first two totals equal <code>sum(depressed)</code>, 206, and the
+next three are the recovery targets 225, 245, and 260. In each of these
+years, every grade is multiplied by the same factor, the target divided
+by the projected total (<code>T[h] / sum(n[h])</code>), so the grades
+add up to the target. Those rescaled grades are the students who move up
+the following year. The entry class is rescaled too, so reported entry
+enrollment in these years is the supplied value times that factor. A
+larger supplied entry class still gives a larger reported one.</p>
+<p>After the last target year, nothing is rescaled. The school carries
+on from the recovered grades using the progression ratios and the
+supplied <code>entry</code> values, which are reported as given. If the
+final target is far from the level the ratios and entry values can
+sustain, later totals drift toward that level. Recovery growth can also
+inflate a school’s own ratios. In that case, pass <code>ratios</code> as
+a list and use ordinary ratios for the years after recovery (see the
+next section).</p>
+<div class="section level3">
+<h3 id="changing-ratios-and-opening-grades">Changing ratios and opening grades<a class="anchor" aria-label="anchor" href="#changing-ratios-and-opening-grades"></a>
+</h3>
+<p>To vary ratios by year, pass a list of <code>horizon</code> ratios
+tables or projection matrices. Every matrix must use the same grade
+names, in the same order, for its rows and columns, including grades
+that haven’t opened yet. A grade stays closed while its row is zero;
+give it its progression ratio from the year it opens. An entry value of
+zero keeps the entry grade closed. Targets are whole-school totals, so
+set each one for the grades open that year.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/progression_matrix.html">progression_matrix</a></span><span class="op">(</span><span class="va">ratios</span><span class="op">)</span></span>
+<span><span class="va">closed</span> <span class="op">&lt;-</span> <span class="va">m</span></span>
+<span><span class="va">closed</span><span class="op">[</span><span class="st">"2"</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span><span class="va">opening</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/swing_schedule.html">swing_schedule</a></span><span class="op">(</span></span>
+<span>  ratios <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">closed</span>, <span class="va">closed</span>, <span class="va">m</span>, <span class="va">m</span><span class="op">)</span>,</span>
+<span>  horizon <span class="op">=</span> <span class="fl">4</span>, swing_years <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  recovery <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">165</span>, <span class="fl">235</span><span class="op">)</span>, entry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">90</span>, <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/project_enrollment.html">project_enrollment</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>K <span class="op">=</span> <span class="fl">80</span>, `1` <span class="op">=</span> <span class="fl">66</span>, `2` <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>, schedule <span class="op">=</span> <span class="va">opening</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    year grade enrollment</span></span>
+<span><span class="co">#&gt; 1     1     K   80.12195</span></span>
+<span><span class="co">#&gt; 2     1     1   65.87805</span></span>
+<span><span class="co">#&gt; 3     1     2    0.00000</span></span>
+<span><span class="co">#&gt; 4     2     K   90.48654</span></span>
+<span><span class="co">#&gt; 5     2     1   74.51346</span></span>
+<span><span class="co">#&gt; 6     2     2    0.00000</span></span>
+<span><span class="co">#&gt; 7     3     K   86.03966</span></span>
+<span><span class="co">#&gt; 8     3     1   80.01693</span></span>
+<span><span class="co">#&gt; 9     3     2   68.94341</span></span>
+<span><span class="co">#&gt; 10    4     K   90.00000</span></span>
+<span><span class="co">#&gt; 11    4     1   79.58668</span></span>
+<span><span class="co">#&gt; 12    4     2   77.44329</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="schedule-targets-and-missing-values">Schedule targets and missing values<a class="anchor" aria-label="anchor" href="#schedule-targets-and-missing-values"></a>
+</h3>
+<p>Each step in a schedule is
+<code>list(matrix = m, entry = value)</code>, plus an optional
+<code>total</code> that rescales that year’s grades.
+<code>total = "base"</code> uses the sum of the base-year grades, and a
+number sets the target directly. The rescaled grades carry into the next
+step. A step without a <code>total</code> isn’t rescaled. You can still
+build identity or diagonal steps by hand and pass them to
+<code><a href="../reference/project_enrollment.html">project_enrollment()</a></code>.</p>
+<p>Schedule matrices can contain <code>NA</code> or <code>NaN</code>
+coefficients. <code><a href="../reference/project_enrollment.html">project_enrollment()</a></code> keeps them and warns
+instead of filling them in. A missing coefficient can make its grade
+missing in the output. If that grade is still missing after the entry
+value is applied, the next year’s matrix multiplication makes every
+grade missing, because zero times a missing value is still missing. A
+non-<code>NULL</code> entry value then restores only the entry
+grade.</p>
+<p>Rescaling needs a finite, positive projected total. A missing or
+infinite total is an error, and so is a positive target when the
+projection is zero. If both the projection and the target are zero, the
+grades are left as they are. A zero target on a positive projection
+empties the school that year, so a later target has only the entry
+classes that arrive afterwards to rescale.</p>
+</div>
+<div class="section level3">
+<h3 id="updating-code-written-for-enrollcast-0-1-0">Updating code written for enrollcast 0.1.0<a class="anchor" aria-label="anchor" href="#updating-code-written-for-enrollcast-0-1-0"></a>
+</h3>
+<p>In enrollcast 0.1.0, <code><a href="../reference/swing_schedule.html">swing_schedule()</a></code> froze the grade
+mix during swing and recovery years and took recovery multipliers. To
+update an older call, supply <code>entry</code> values for the whole
+<code>horizon</code> and replace the multipliers with annual totals.
+Whole-school multipliers <code>multipliers</code> become the targets
+<code>sum(depressed) * cumprod(multipliers)</code>. Grade-specific
+recovery matrices are no longer accepted.</p>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

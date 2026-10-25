@@ -1,5 +1,30 @@
 # Changelog
 
+## enrollcast 0.2.0
+
+CRAN release: 2026-10-24
+
+- [`swing_schedule()`](https://localopen.github.io/enrollcast/reference/swing_schedule.md)
+  now moves classes up and adds a new entry class every year, including
+  swing and recovery years
+  ([\#8](https://github.com/localopen/enrollcast/issues/8)). Swing years
+  are rescaled to the base total and recovery years to the totals you
+  supply, and the rescaled grades are the ones that move up the next
+  year. After recovery nothing is rescaled: the projection continues
+  from the recovered grades with the supplied entry values.
+- Breaking:
+  [`swing_schedule()`](https://localopen.github.io/enrollcast/reference/swing_schedule.md)’s
+  `recovery` now takes annual school totals instead of multipliers,
+  grade-specific recovery matrices are no longer accepted, and `entry`
+  must cover the whole horizon. The vignette shows how to convert older
+  calls.
+- [`swing_schedule()`](https://localopen.github.io/enrollcast/reference/swing_schedule.md)’s
+  `ratios` can be a list with one ratios table or projection matrix per
+  year, for ratios that change or grades that open later.
+- Schedule steps accept an optional `total` that rescales that year’s
+  grades; `"base"` means the base-year total. The rescaled grades carry
+  into the next step.
+
 ## enrollcast 0.1.0
 
 CRAN release: 2026-08-26

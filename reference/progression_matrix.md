@@ -1,12 +1,13 @@
 # Build the projection matrix
 
-Assembles the projection matrix used to advance enrollment. Progression
-ratios are placed on the sub-diagonal (each non-entry grade is fed by
-the grade below); the entry-grade row is left at zero because entry
-enrollment is supplied exogenously to
-[`project_enrollment()`](https://localopen.github.io/enrollcast/reference/project_enrollment.md).
-The ratios must form a single low-to-high chain: each `grade_to` must be
-the grade immediately above its `grade_from` in the resolved order.
+Builds the matrix that advances enrollment by one year. Progression
+ratios go on the sub-diagonal, so each grade above the entry grade is
+fed by the grade below it. The entry-grade row is zero because you
+supply entry enrollment to
+[`project_enrollment()`](https://localopen.github.io/enrollcast/reference/project_enrollment.md)
+yourself. The ratios must form a single chain from the lowest grade to
+the highest: each `grade_to` must be the grade directly above its
+`grade_from`.
 
 ## Usage
 
@@ -22,16 +23,17 @@ progression_matrix(ratios, grade_order = NULL)
   `grade_to`, and `ratio`, as returned by
   [`progression_ratios()`](https://localopen.github.io/enrollcast/reference/progression_ratios.md).
   `grade_from` and `grade_to` must not be missing. `ratio` must be
-  numeric, non-negative, and finite; an infinite ratio (from a
-  zero-enrollment feeder) is rejected, while `NA`/`NaN` ratios (e.g.
-  from sparse history) are kept in the matrix with a warning.
+  numeric, non-negative, and finite. An infinite ratio (from a feeder
+  grade with zero enrollment) is an error. `NA`/`NaN` ratios, for
+  example from sparse history, stay in the matrix with a warning.
 
 - grade_order:
 
   Optional character vector giving the low-to-high grade order. If
-  omitted, the order is reconstructed from the transition chain. Every
-  non-entry grade in `grade_order` must appear as a `grade_to` in
-  `ratios`. Must not contain duplicates or missing values.
+  omitted, the order is rebuilt from the chain of transitions. Every
+  grade in `grade_order` except the entry grade must appear as a
+  `grade_to` in `ratios`. It must not contain duplicates or missing
+  values.
 
 ## Value
 

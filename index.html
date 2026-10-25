@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">enrollcast</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,7 @@
 </div>
 <!-- badges: start -->
 
-<p><code>enrollcast</code> projects school enrollment using the cohort survival / grade progression ratio method, implemented as a matrix projection. It works at any level of aggregation (school, district, LEA, city-wide) and any number of grades, because it operates on a single grade-by-year enrollment series.</p>
+<p><code>enrollcast</code> projects school enrollment with the cohort survival / grade progression ratio method, implemented as a matrix projection. It works on one grade-by-year enrollment series at a time, so you can use it at any level (school, district, local education agency, or city) and with any number of grades.</p>
 <p><strong>Awesome hex logo provided by Adam Higerd.</strong></p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -131,7 +131,7 @@
 <div class="section level3">
 <h3 id="multiple-aggregation-units">Multiple aggregation units<a class="anchor" aria-label="anchor" href="#multiple-aggregation-units"></a>
 </h3>
-<p><code>enrollcast</code> projects one series per call. To project many schools or LEAs, split and map:</p>
+<p><code>enrollcast</code> projects one series per call. To project several schools or local education agencies, split the data and map over the pieces:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># fmt: skip</span></span>
 <span><span class="va">school_history</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>

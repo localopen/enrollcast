@@ -1,20 +1,20 @@
 # enrollcast: Project School Enrollment with Grade Progression Ratios
 
 Projects school enrollment using the cohort survival / grade progression
-ratio method, implemented as a matrix projection. Works at any level of
-aggregation and any number of grades. Provides functions to compute
-progression ratios from historical grade-level enrollment and to project
-future enrollment forward an arbitrary horizon.
+ratio method described in Webster (1970)
+[doi:10.1080/00220973.1970.11011238](https://doi.org/10.1080/00220973.1970.11011238)
+, implemented as a matrix projection. Works at any level of aggregation
+and any number of grades. Provides functions to compute progression
+ratios from historical grade-level enrollment and to project future
+enrollment forward an arbitrary horizon.
 
 ## See also
 
 Useful links:
 
-- <https://rorylawless.r-universe.dev/enrollcast>
+- <https://localopen.github.io/enrollcast/>
 
 - <https://github.com/localopen/enrollcast>
-
-- <https://localopen.github.io/enrollcast/>
 
 - Report bugs at <https://github.com/localopen/enrollcast/issues>
 
