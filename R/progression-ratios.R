@@ -238,16 +238,16 @@ check_n_years <- function(n_years, call = rlang::caller_env()) {
 #' Compute grade progression ratios
 #'
 #' Calculates cohort survival / grade progression ratios from historical
-#' grade-level enrollment. For each non-entry grade, the ratio is enrollment
-#' in that grade divided by enrollment in the grade below one year earlier,
+#' grade-level enrollment. For each grade above the entry grade, the ratio is
+#' its enrollment divided by enrollment in the grade below one year earlier,
 #' summarised across the available year-to-year transitions.
 #'
-#' Only transitions between observed consecutive calendar years are used. If
-#' the history has one or more calendar-year gaps but still contains an adjacent
-#' year pair, the gaps are reported in a warning and are not bridged. Histories
-#' with no adjacent year pair are rejected. Gap detection examines the complete
-#' supplied history before `n_years` selects recent adjacent transitions, so an
-#' older gap still warns even when it lies outside the selected transitions.
+#' Only transitions between consecutive calendar years are used. If the history
+#' has gaps but at least one pair of consecutive years, the gaps are reported in
+#' a warning and never bridged. A history with no consecutive pair is an error.
+#' The gap check covers the whole history before `n_years` picks the most recent
+#' transitions, so an old gap still warns even if it falls outside the selected
+#' transitions.
 #'
 #' @param data A long data frame or data-frame subclass of historical enrollment
 #'   with one row per grade per year. Enrollment may be `NA`, but non-missing
@@ -259,9 +259,8 @@ check_n_years <- function(n_years, call = rlang::caller_env()) {
 #' @param method How to summarise per-year ratios into one ratio per grade:
 #'   `"mean"` (default), `"geometric"`, `"median"`, `"last"` (most recent
 #'   transition only), or `"weighted"`.
-#' @param n_years Optional. Use only the most recent `n_years` available
-#'   adjacent-year transitions. If `n_years` exceeds the number of available
-#'   transitions, all are used.
+#' @param n_years Optional. Use only the `n_years` most recent transitions
+#'   between consecutive years. If there are fewer, all are used.
 #' @param weights For `method = "weighted"`, a finite, non-missing,
 #'   non-negative numeric vector aligned most-recent to oldest, with one weight
 #'   per transition year used and a positive sum. Do not supply weights for
@@ -288,8 +287,8 @@ check_n_years <- function(n_years, call = rlang::caller_env()) {
 #'
 #' # The same K -> 1 ratio via stats::weighted.mean(). Unlike `weights`
 #' # above, weighted.mean() pairs each weight with the value at the same
-#' # position, and the per-year ratios run oldest to newest -- so the
-#' # weights must be reversed to line up.
+#' # position. The per-year ratios run oldest to newest, so the weights
+#' # must be reversed to line up.
 #' k_ratios <- c(95 / 100, 99 / 110) # 2021->2022, then 2022->2023
 #' stats::weighted.mean(k_ratios, rev(c(2, 1)))
 progression_ratios <- function(

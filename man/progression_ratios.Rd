@@ -29,9 +29,8 @@ columns in \code{data}. Defaults are \code{"year"}, \code{"grade"}, and \code{"e
 \code{"mean"} (default), \code{"geometric"}, \code{"median"}, \code{"last"} (most recent
 transition only), or \code{"weighted"}.}
 
-\item{n_years}{Optional. Use only the most recent \code{n_years} available
-adjacent-year transitions. If \code{n_years} exceeds the number of available
-transitions, all are used.}
+\item{n_years}{Optional. Use only the \code{n_years} most recent transitions
+between consecutive years. If there are fewer, all are used.}
 
 \item{weights}{For \code{method = "weighted"}, a finite, non-missing,
 non-negative numeric vector aligned most-recent to oldest, with one weight
@@ -48,17 +47,17 @@ one row per non-entry grade.
 }
 \description{
 Calculates cohort survival / grade progression ratios from historical
-grade-level enrollment. For each non-entry grade, the ratio is enrollment
-in that grade divided by enrollment in the grade below one year earlier,
+grade-level enrollment. For each grade above the entry grade, the ratio is
+its enrollment divided by enrollment in the grade below one year earlier,
 summarised across the available year-to-year transitions.
 }
 \details{
-Only transitions between observed consecutive calendar years are used. If
-the history has one or more calendar-year gaps but still contains an adjacent
-year pair, the gaps are reported in a warning and are not bridged. Histories
-with no adjacent year pair are rejected. Gap detection examines the complete
-supplied history before \code{n_years} selects recent adjacent transitions, so an
-older gap still warns even when it lies outside the selected transitions.
+Only transitions between consecutive calendar years are used. If the history
+has gaps but at least one pair of consecutive years, the gaps are reported in
+a warning and never bridged. A history with no consecutive pair is an error.
+The gap check covers the whole history before \code{n_years} picks the most recent
+transitions, so an old gap still warns even if it falls outside the selected
+transitions.
 }
 \examples{
 history <- data.frame(
@@ -74,8 +73,8 @@ progression_ratios(history, method = "weighted", weights = c(2, 1))
 
 # The same K -> 1 ratio via stats::weighted.mean(). Unlike `weights`
 # above, weighted.mean() pairs each weight with the value at the same
-# position, and the per-year ratios run oldest to newest -- so the
-# weights must be reversed to line up.
+# position. The per-year ratios run oldest to newest, so the weights
+# must be reversed to line up.
 k_ratios <- c(95 / 100, 99 / 110) # 2021->2022, then 2022->2023
 stats::weighted.mean(k_ratios, rev(c(2, 1)))
 }

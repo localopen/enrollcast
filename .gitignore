@@ -18,3 +18,8 @@ _dev/*
 .DS_Store
 
 **/.claude/settings.local.json
+/doc/
+
+/revdep/
+
+CRAN-SUBMISSION

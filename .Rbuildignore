@@ -22,3 +22,7 @@
 ^_dev$
 ^[.]?air[.]toml$
 ^[.]?jarl[.]toml$
+^context7[.]json$
+^\.posit$
+^revdep$
+^CRAN-SUBMISSION$

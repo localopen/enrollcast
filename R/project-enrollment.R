@@ -82,7 +82,33 @@ check_step_entry <- function(entry, call = rlang::caller_env()) {
   }
 }
 
-check_step_matrix <- function(step, call = rlang::caller_env()) {
+# A target rescales the year's grades; the rescaled grades feed the next step.
+check_step_total <- function(total, call = rlang::caller_env()) {
+  if (
+    !is.null(total) &&
+      !identical(total, "base") &&
+      !(is.numeric(total) &&
+        length(total) == 1 &&
+        is.finite(total) &&
+        total >= 0)
+  ) {
+    ec_abort(
+      paste0(
+        "Each {.arg schedule} step {.field total} must be {.code NULL}, ",
+        "{.code \"base\"}, or one finite, non-negative number."
+      ),
+      class = "enrollcast_error_step_total",
+      call = call
+    )
+  }
+}
+
+# `what` names the matrix in messages, so swing_schedule() can blame `ratios`.
+check_step_matrix <- function(
+  step,
+  what = "Each {.arg schedule} step {.field matrix}",
+  call = rlang::caller_env()
+) {
   if (!is.list(step) || is.null(step$matrix)) {
     ec_abort(
       c(
@@ -100,7 +126,7 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   if (!is.matrix(m) || nrow(m) != ncol(m)) {
     ec_abort(
       c(
-        "Each {.arg schedule} step {.field matrix} must be square.",
+        paste0(what, " must be square."),
         "x" = "This matrix is {nrow(m)}x{ncol(m)}."
       ),
       class = "enrollcast_error_step_not_square",
@@ -114,7 +140,8 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   ) {
     ec_abort(
       paste0(
-        "Each {.arg schedule} step {.field matrix} must contain non-negative ",
+        what,
+        " must contain non-negative ",
         "numeric values or {.val {NA}}/{.val {NaN}}, without infinite values."
       ),
       class = "enrollcast_error_step_values",
@@ -124,14 +151,19 @@ check_step_matrix <- function(step, call = rlang::caller_env()) {
   m
 }
 
-check_step_dimnames <- function(m, call = rlang::caller_env()) {
+check_step_dimnames <- function(
+  m,
+  what = "Each {.arg schedule} step {.field matrix}",
+  call = rlang::caller_env()
+) {
   rn <- rownames(m)
   cn <- colnames(m)
   if (is.null(rn) || is.null(cn)) {
     ec_abort(
       c(
         paste0(
-          "Each {.arg schedule} step {.field matrix} must have present, ",
+          what,
+          " must have present, ",
           "unique, identical row and column names in the same order."
         ),
         "x" = "This matrix is missing row or column names."
@@ -144,7 +176,8 @@ check_step_dimnames <- function(m, call = rlang::caller_env()) {
     ec_abort(
       c(
         paste0(
-          "Each {.arg schedule} step {.field matrix} must have present, ",
+          what,
+          " must have present, ",
           "unique, identical row and column names in the same order."
         ),
         "x" = paste0(
@@ -164,6 +197,36 @@ check_step <- function(step, call = rlang::caller_env()) {
   m <- check_step_matrix(step, call = call)
   go <- check_step_dimnames(m, call = call)
   check_step_entry(step$entry, call = call)
+  check_step_total(step[["total"]], call = call)
+  go
+}
+
+# Check the shared grade order for a sequence of projection matrices.
+check_schedule_orders <- function(
+  orders,
+  what = "All {.arg schedule} step matrices",
+  call = rlang::caller_env()
+) {
+  go <- orders[[1]]
+  differing <- which(!vapply(orders, identical, logical(1), go))
+  if (length(differing) > 0) {
+    ec_abort(
+      c(
+        paste0(
+          what,
+          " must share ",
+          "the same grade dimnames in the same order."
+        ),
+        "i" = "Step 1 grades: {.val {go}}.",
+        "x" = paste0(
+          "{cli::qty(length(differing))}Differing ",
+          "step{?s}: {.val {differing}}."
+        )
+      ),
+      class = "enrollcast_error_schedule_inconsistent",
+      call = call
+    )
+  }
   go
 }
 
@@ -184,25 +247,7 @@ check_schedule <- function(schedule, call = rlang::caller_env()) {
     )
   }
   orders <- lapply(schedule, check_step, call = call)
-  go <- orders[[1]]
-  differing <- which(!vapply(orders, identical, logical(1), go))
-  if (length(differing) > 0) {
-    ec_abort(
-      c(
-        paste0(
-          "All {.arg schedule} step matrices must share ",
-          "the same grade dimnames in the same order."
-        ),
-        "i" = "Step 1 grades: {.val {go}}.",
-        "x" = paste0(
-          "{cli::qty(length(differing))}Differing ",
-          "step{?s}: {.val {differing}}."
-        )
-      ),
-      class = "enrollcast_error_schedule_inconsistent",
-      call = call
-    )
-  }
+  go <- check_schedule_orders(orders, call = call)
 
   missing_by_step <- vapply(
     schedule,
@@ -349,8 +394,46 @@ resolve_out_years <- function(
   if (is.null(start_year)) seq_len(horizon) else start_year + seq_len(horizon)
 }
 
-# Advance enrollment through a per-year sequence of projection steps.
-run_projection <- function(steps, base_vec, out_years) {
+# Rescale projected grades to a target total.
+rescale_to_total <- function(total, n, year, call = rlang::caller_env()) {
+  projected <- sum(n)
+  if (!is.finite(projected) || (projected == 0 && total > 0)) {
+    ec_abort(
+      c(
+        "Cannot rescale projected year {.val {year}} to its target total.",
+        "i" = paste0(
+          "Projected enrollment must have a finite, positive total, ",
+          "or both the projected and target totals must be zero."
+        )
+      ),
+      class = "enrollcast_error_projection_total",
+      call = call
+    )
+  }
+  # Check the scaled grades, not the factor: per-grade products can underflow
+  # to zero even when the factor itself does not.
+  scaled <- if (projected == 0) n else n * (total / projected)
+  if (!all(is.finite(scaled)) || (sum(scaled) == 0 && total > 0)) {
+    ec_abort(
+      paste0(
+        "Rescaling projected year {.val {year}} must give finite grades, ",
+        "with a non-zero total when the target is positive."
+      ),
+      class = "enrollcast_error_projection_total",
+      call = call
+    )
+  }
+  scaled
+}
+
+# Advance cohorts one step at a time; a step's target rescales the grades that
+# are recorded and carried into the next step.
+run_projection <- function(
+  steps,
+  base_vec,
+  out_years,
+  call = rlang::caller_env()
+) {
   go <- names(base_vec)
   entry_grade <- go[1]
   n <- base_vec
@@ -359,6 +442,13 @@ run_projection <- function(steps, base_vec, out_years) {
     n <- drop(steps[[h]]$matrix %*% n)
     if (!is.null(steps[[h]]$entry)) {
       n[entry_grade] <- steps[[h]]$entry
+    }
+    total <- steps[[h]][["total"]]
+    if (!is.null(total)) {
+      if (identical(total, "base")) {
+        total <- sum(base_vec)
+      }
+      n <- rescale_to_total(total, n, out_years[[h]], call = call)
     }
     out[, h] <- n
   }
@@ -371,11 +461,38 @@ run_projection <- function(steps, base_vec, out_years) {
 
 #' Project enrollment forward
 #'
-#' Projects grade-level enrollment forward an arbitrary horizon using the grade
-#' progression ratio method. Internally builds a projection matrix from `ratios`
-#' and advances enrollment one year at a time (one matrix-vector product per
-#' projected year), overwriting the entry grade with the supplied exogenous
-#' value each year. `ratios` is optional when a `schedule` is supplied.
+#' Projects grade-level enrollment forward any number of years with the grade
+#' progression ratio method. It builds a projection matrix from `ratios` and
+#' advances enrollment one year at a time (one matrix-vector product per year),
+#' replacing the entry grade each year with the value you supply. `ratios` is
+#' optional when you supply a `schedule`.
+#'
+#' @section Schedules:
+#' Each step is `list(matrix = <square projection matrix>, entry = <NULL or a
+#' single number>)`, with an optional `total`. Each matrix must be numeric and
+#' square, and its non-missing coefficients must be finite and non-negative. Row
+#' and column names must be unique and identical, in the same order, and every
+#' step must use the same names. A step's `entry` must be `NULL` or one finite,
+#' non-negative number.
+#'
+#' A step's `total` rescales that year's grades, entry grade included, after the
+#' entry value is applied. It is either one finite, non-negative school total or
+#' `"base"`, the sum of the base grades. The rescaled grades are recorded and
+#' carried into the next step. Steps without a `total` aren't rescaled, so the
+#' projection continues from the last rescaled grades with the supplied `entry`
+#' values.
+#'
+#' Rescaling needs a finite, positive projected total. A missing or infinite
+#' projected total is an error, and so is a positive target on a zero
+#' projection. If both the projection and the target are zero, the grades are
+#' left as they are. A zero target empties that year, so a later target has only
+#' the entry classes that arrive afterwards to rescale.
+#'
+#' `NA`/`NaN` coefficients are kept, with a warning. A missing coefficient can
+#' make its grade missing in the output. If that grade is still missing after
+#' the entry value is applied, the next matrix multiplication makes every grade
+#' missing, because zero times a missing value is still missing. A non-`NULL`
+#' entry value then restores only the entry grade.
 #'
 #' @inheritParams progression_matrix
 #' @param base Most recent observed enrollment: either a data frame with
@@ -386,26 +503,16 @@ run_projection <- function(steps, base_vec, out_years) {
 #' @param entry Exogenous entry-grade enrollment for each projected year: a
 #'   numeric vector of length `horizon`, or a data frame with an `enrollment`
 #'   or `value` column. Values must be finite, non-missing, and non-negative. If
-#'   `NULL`, the entry grade is held constant at its base value and a warning is
-#'   issued.
+#'   `NULL`, the entry grade stays at its base value, with a warning.
 #' @param schedule Optional prebuilt projection schedule: a list of per-year
-#'   steps, each `list(matrix = <square projection matrix>, entry = <NULL or a
-#'   single number>)`, as produced by [swing_schedule()]. When supplied,
-#'   `ratios` and `entry` must be `NULL` and `horizon` defaults to the schedule
-#'   length. Each matrix must be numeric and square; non-missing coefficients
-#'   must be finite and non-negative. `NA`/`NaN` coefficients are preserved and
-#'   trigger a warning. A missing coefficient can make its output row missing.
-#'   If that missing enrollment remains after entry replacement, the next
-#'   matrix multiplication spreads missingness to all grade results because zero
-#'   times a missing value is still missing. A non-`NULL` entry value then
-#'   restores only the entry grade. Matrix row and column names must be unique
-#'   and identical in the same order; all steps must use the same names. A
-#'   step's `entry` must be `NULL` or one finite, non-negative number.
-#' @param start_year Optional integer label for the base year; output years run
-#'   from `start_year + 1`. An explicit value and all resulting years must be
-#'   within the R integer range. If `NULL`, the year is derived from `base$year`
-#'   when present; that column must contain one unambiguous integer within the
-#'   same range. With no year column, output years are `1..horizon`.
+#'   steps, such as one produced by [swing_schedule()]. See the Schedules
+#'   section for what a step contains. When supplied, `ratios` and `entry` must
+#'   be `NULL`, and `horizon` defaults to the number of steps.
+#' @param start_year Optional integer label for the base year; output years
+#'   start at `start_year + 1`. It and every resulting year must fit in R's
+#'   integer range. If `NULL`, the year comes from `base$year` when present;
+#'   that column must hold a single integer value in the same range. Without a
+#'   year column, output years are `1` to `horizon`.
 #'
 #' @return A long data frame with columns `year`, `grade`, and `enrollment`,
 #'   covering the projected years only.
